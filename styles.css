@@ -17,6 +17,8 @@ button{font:inherit;cursor:pointer}
 .brand strong,.brand small{display:block}
 .brand small{color:#667085;margin-top:3px}
 .status{color:#087443;background:#eafaf1;border:1px solid #b7ebce;padding:8px 12px;border-radius:999px;font-size:13px}
+.top-actions{display:flex;align-items:center;gap:10px}
+.install-app{border:0;border-radius:999px;padding:10px 16px;background:#1258a6;color:#fff;font-weight:800;box-shadow:0 6px 18px rgba(18,88,166,.2)}
 .hero{max-width:1320px;margin:auto;padding:52px 24px 34px;display:flex;align-items:end;justify-content:space-between;gap:30px}
 .eyebrow{color:#1258a6;font-weight:800}
 .hero h1{margin:12px 0;font-size:clamp(34px,4vw,56px);line-height:1.15;letter-spacing:-1.8px;max-width:760px}
