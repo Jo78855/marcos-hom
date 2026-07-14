@@ -37,6 +37,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [designs, setDesigns] = useState<Design[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [notice, setNotice] = useState('');
+  const [newDesignName, setNewDesignName] = useState('');
+  const [newDesignFile, setNewDesignFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const load = async () => {
     const [s, d, o] = await Promise.all([
       supabase.from('store_settings').select('*').eq('id', 1).single(),
@@ -62,11 +65,41 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     await supabase.from('orders').update({ status }).eq('id', id);
     setOrders(current => current.map(order => order.id === id ? { ...order, status } : order));
   };
+  const addDesign = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!newDesignName.trim() || !newDesignFile) {
+      setNotice('اكتب اسم التصميم واختر صورة من جهازك');
+      return;
+    }
+    setUploading(true);
+    setNotice('');
+    const extension = newDesignFile.name.split('.').pop()?.toLowerCase() || 'webp';
+    const filePath = `${Date.now()}-${crypto.randomUUID()}.${extension}`;
+    const upload = await supabase.storage.from('designs').upload(filePath, newDesignFile, { cacheControl: '3600', upsert: false });
+    if (upload.error) {
+      setNotice(`تعذر رفع الصورة: ${upload.error.message}`);
+      setUploading(false);
+      return;
+    }
+    const { data: publicImage } = supabase.storage.from('designs').getPublicUrl(filePath);
+    const { error } = await supabase.from('designs').insert({ name_ar: newDesignName.trim(), image_url: publicImage.publicUrl, active: true, sort_order: designs.length + 1 });
+    if (error) {
+      await supabase.storage.from('designs').remove([filePath]);
+      setNotice(`تعذر إضافة التصميم: ${error.message}`);
+    } else {
+      setNewDesignName('');
+      setNewDesignFile(null);
+      setNotice('تم رفع التصميم وإضافته للموقع بنجاح');
+      await load();
+    }
+    setUploading(false);
+  };
   return <main className="admin-shell" dir="rtl">
     <header className="admin-header"><div><strong>لوحة تحكم ماركوز هوم</strong><small>إدارة ركن القهوة</small></div><div><a href="/" target="_blank">عرض الموقع</a><button onClick={onLogout}>تسجيل الخروج</button></div></header>
     <div className="admin-content">
-      <section className="admin-card"><h2>الأسعار وواتساب</h2>{settings && <div className="admin-fields"><label>بدون تركيب<input type="number" value={settings.price_without_installation} onChange={e => setSettings({...settings, price_without_installation: Number(e.target.value)})}/></label><label>شامل التركيب<input type="number" value={settings.price_with_installation} onChange={e => setSettings({...settings, price_with_installation: Number(e.target.value)})}/></label><label>رقم واتساب<input value={settings.whatsapp_number} onChange={e => setSettings({...settings, whatsapp_number: e.target.value})}/></label><button onClick={saveSettings}>حفظ التعديلات</button></div>}{notice && <p className="admin-success">{notice}</p>}</section>
-      <section className="admin-card"><h2>التصميمات</h2><div className="admin-designs">{designs.map(item => <div key={item.id}><img src={item.image_url}/><input value={item.name_ar} onChange={e => updateDesign(item, { name_ar: e.target.value })}/><label className="switch"><input type="checkbox" checked={item.active} onChange={e => updateDesign(item, { active: e.target.checked })}/><span>{item.active ? 'ظاهر' : 'مخفي'}</span></label></div>)}</div></section>
+      <section className="admin-card"><h2>أسعار ركن القهوة</h2>{settings && <div className="admin-fields"><label>السعر بدون تركيب (د.ك)<input type="number" value={settings.price_without_installation} onChange={e => setSettings({...settings, price_without_installation: Number(e.target.value)})}/></label><label>السعر شامل التركيب (د.ك)<input type="number" value={settings.price_with_installation} onChange={e => setSettings({...settings, price_with_installation: Number(e.target.value)})}/></label><label>رقم واتساب لاستقبال الطلبات<input value={settings.whatsapp_number} onChange={e => setSettings({...settings, whatsapp_number: e.target.value})}/></label><button onClick={saveSettings}>حفظ الأسعار</button></div>}{notice && <p className="admin-success">{notice}</p>}</section>
+      <section className="admin-card"><h2>إضافة تصميم جديد</h2><form className="add-design-form" onSubmit={addDesign}><label>اسم التصميم<input value={newDesignName} onChange={e => setNewDesignName(e.target.value)} placeholder="مثال: أبيض مع خشب طبيعي" required/></label><label>صورة التصميم<input key={newDesignFile ? 'selected' : 'empty'} type="file" accept="image/png,image/jpeg,image/webp" onChange={e => setNewDesignFile(e.target.files?.[0] || null)} required/></label><button disabled={uploading}>{uploading ? 'جاري رفع الصورة...' : 'رفع وإضافة التصميم'}</button></form><p className="form-hint">الصيغ المقبولة: JPG أو PNG أو WEBP.</p></section>
+      <section className="admin-card"><h2>التصميمات الحالية</h2><div className="admin-designs">{designs.map(item => <div key={item.id}><img src={item.image_url} alt={item.name_ar}/><input aria-label="اسم التصميم" value={item.name_ar} onChange={e => updateDesign(item, { name_ar: e.target.value })}/><label className="switch"><input type="checkbox" checked={item.active} onChange={e => updateDesign(item, { active: e.target.checked })}/><span>{item.active ? 'ظاهر للعملاء' : 'مخفي عن العملاء'}</span></label></div>)}</div></section>
       <section className="admin-card"><div className="card-title"><h2>الطلبات ({orders.length})</h2><button onClick={load}>تحديث</button></div>{orders.length === 0 ? <p className="empty">لا توجد طلبات حتى الآن.</p> : <div className="orders-table">{orders.map(order => <div key={order.id}><span>{new Date(order.created_at).toLocaleString('ar-KW')}</span><strong>{order.designs?.name_ar || 'تصميم'}</strong><span>{order.installation ? 'شامل التركيب' : 'بدون تركيب'}</span><b>{order.total} د.ك</b><select value={order.status} onChange={e => updateOrder(order.id, e.target.value)}><option value="new">جديد</option><option value="contacted">تم التواصل</option><option value="confirmed">مؤكد</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option></select></div>)}</div>}</section>
     </div>
   </main>;
