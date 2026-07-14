@@ -9,6 +9,11 @@ type Settings = {
   whatsapp_number: string;
 };
 
+interface InstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 const fallbackDesigns: Design[] = [
   { id: 'white', name_ar: 'أبيض مع خشب فاتح', image_url: '/coffee/white-lightwood.webp' },
   { id: 'brown', name_ar: 'بني مع ترافرتينو', image_url: '/coffee/brown-travertine.webp' },
@@ -37,6 +42,8 @@ function Storefront() {
   const [withInstallation, setWithInstallation] = useState(false);
   const [approved, setApproved] = useState(false);
   const [sending, setSending] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
+  const [installed, setInstalled] = useState(window.matchMedia('(display-mode: standalone)').matches);
 
   useEffect(() => {
     Promise.all([
@@ -50,6 +57,30 @@ function Storefront() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    const capturePrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as InstallPromptEvent);
+    };
+    const markInstalled = () => { setInstalled(true); setInstallPrompt(null); };
+    window.addEventListener('beforeinstallprompt', capturePrompt);
+    window.addEventListener('appinstalled', markInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', capturePrompt);
+      window.removeEventListener('appinstalled', markInstalled);
+    };
+  }, []);
+
+  const installApp = async () => {
+    if (installPrompt) {
+      await installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      if (choice.outcome === 'accepted') setInstallPrompt(null);
+      return;
+    }
+    alert('على آيفون: افتح الموقع في Safari، اضغط زر المشاركة، ثم اختر «إضافة إلى الشاشة الرئيسية».');
+  };
 
   const price = withInstallation ? settings.price_with_installation : settings.price_without_installation;
   const optionLabel = withInstallation ? 'شامل التركيب' : 'بدون تركيب';
@@ -78,7 +109,7 @@ function Storefront() {
     <main dir="rtl" className="site-shell">
       <header className="topbar">
         <div className="brand"><span className="brand-mark">MH</span><span><strong>ماركوز هوم</strong><small>ركن القهوة</small></span></div>
-        <span className="status">متاح للطلب الآن</span>
+        <div className="top-actions"><span className="status">متاح للطلب الآن</span>{!installed && <button className="install-app" onClick={installApp}>تثبيت التطبيق</button>}</div>
       </header>
       <section className="hero">
         <div><span className="eyebrow">ركن القهوة من ماركوز هوم</span><h1>اختر اللون وطريقة الطلب، وأرسله مباشرة</h1><p>سبعة ألوان جاهزة بسعر {settings.price_without_installation} د.ك بدون تركيب أو {settings.price_with_installation} د.ك شامل التركيب.</p></div>
@@ -105,4 +136,3 @@ function Storefront() {
     </main>
   );
 }
-
