@@ -1,112 +1,108 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import Admin from './components/Admin';
+import { supabase } from './supabase';
 
-type Design = { name: string; image: string };
+type Design = { id: string; name_ar: string; image_url: string };
+type Settings = {
+  price_without_installation: number;
+  price_with_installation: number;
+  whatsapp_number: string;
+};
 
-const designs: Design[] = [
-  { name: 'أبيض مع خشب فاتح', image: '/coffee/white-lightwood.webp' },
-  { name: 'بني مع ترافنتينو', image: '/coffee/brown-travertine.webp' },
-  { name: 'أسود مع خشب فاتح', image: '/coffee/black-lightwood.webp' },
-  { name: 'رمادي غامق مع شيفرون', image: '/coffee/darkgray-chevron.webp' },
-  { name: 'رمادي فاتح مع شيفرون', image: '/coffee/lightgray-chevron.webp' },
-  { name: 'خشبي فاتح مع شيفرون', image: '/coffee/lightwood-chevron.webp' },
-  { name: 'عسلي ماركوز هوم', image: '/coffee/honey-wood.webp' },
+const fallbackDesigns: Design[] = [
+  { id: 'white', name_ar: 'أبيض مع خشب فاتح', image_url: '/coffee/white-lightwood.webp' },
+  { id: 'brown', name_ar: 'بني مع ترافرتينو', image_url: '/coffee/brown-travertine.webp' },
+  { id: 'black', name_ar: 'أسود مع خشب فاتح', image_url: '/coffee/black-lightwood.webp' },
+  { id: 'darkgray', name_ar: 'رمادي غامق مع شيفرون', image_url: '/coffee/darkgray-chevron.webp' },
+  { id: 'lightgray', name_ar: 'رمادي فاتح مع شيفرون', image_url: '/coffee/lightgray-chevron.webp' },
+  { id: 'lightwood', name_ar: 'خشبي فاتح مع شيفرون', image_url: '/coffee/lightwood-chevron.webp' },
+  { id: 'honey', name_ar: 'عسلي ماركوز هوم', image_url: '/coffee/honey-wood.webp' },
 ];
 
-const options = [
-  { label: 'بدون تركيب', price: 35 },
-  { label: 'شامل التركيب', price: 50 },
-];
+const fallbackSettings: Settings = {
+  price_without_installation: 35,
+  price_with_installation: 50,
+  whatsapp_number: '96550204320',
+};
 
 export default function App() {
-  const [design, setDesign] = useState(designs[0]);
-  const [optionIndex, setOptionIndex] = useState(0);
-  const [approved, setApproved] = useState(false);
-  const option = options[optionIndex];
-  const total = approved ? option.price : 0;
+  if (window.location.pathname.startsWith('/admin')) return <Admin />;
+  return <Storefront />;
+}
 
+function Storefront() {
+  const [designs, setDesigns] = useState<Design[]>(fallbackDesigns);
+  const [settings, setSettings] = useState<Settings>(fallbackSettings);
+  const [design, setDesign] = useState<Design>(fallbackDesigns[0]);
+  const [withInstallation, setWithInstallation] = useState(false);
+  const [approved, setApproved] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from('store_settings').select('*').eq('id', 1).single(),
+      supabase.from('designs').select('id,name_ar,image_url').eq('active', true).order('sort_order'),
+    ]).then(([settingsResult, designsResult]) => {
+      if (settingsResult.data) setSettings(settingsResult.data as Settings);
+      if (designsResult.data?.length) {
+        setDesigns(designsResult.data as Design[]);
+        setDesign(designsResult.data[0] as Design);
+      }
+    });
+  }, []);
+
+  const price = withInstallation ? settings.price_with_installation : settings.price_without_installation;
+  const optionLabel = withInstallation ? 'شامل التركيب' : 'بدون تركيب';
+  const total = approved ? price : 0;
   const message = useMemo(() => [
     'مرحباً ماركوز هوم، أرغب بطلب ركن القهوة التالي:',
-    `اللون: ${design.name}`,
-    `طريقة الطلب: ${option.label}`,
-    `السعر الإجمالي: ${option.price} د.ك`,
-  ].join('\n'), [design, option]);
+    `اللون: ${design.name_ar}`,
+    `طريقة الطلب: ${optionLabel}`,
+    `السعر الإجمالي: ${price} د.ك`,
+  ].join('\n'), [design, optionLabel, price]);
 
-  const chooseDesign = (next: Design) => {
-    setDesign(next);
-    setApproved(false);
-  };
-
-  const chooseOption = (index: number) => {
-    setOptionIndex(index);
-    setApproved(false);
+  const chooseDesign = (next: Design) => { setDesign(next); setApproved(false); };
+  const chooseOption = (installed: boolean) => { setWithInstallation(installed); setApproved(false); };
+  const sendOrder = async () => {
+    setSending(true);
+    await supabase.from('orders').insert({
+      design_id: design.id.length === 36 ? design.id : null,
+      installation: withInstallation,
+      total: price,
+    });
+    window.open(`https://wa.me/${settings.whatsapp_number}?text=${encodeURIComponent(message)}`, '_blank');
+    setSending(false);
   };
 
   return (
     <main dir="rtl" className="site-shell">
       <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark">MH</span>
-          <span><strong>ماركوز هوم</strong><small>ركن القهوة</small></span>
-        </div>
+        <div className="brand"><span className="brand-mark">MH</span><span><strong>ماركوز هوم</strong><small>ركن القهوة</small></span></div>
         <span className="status">متاح للطلب الآن</span>
       </header>
-
       <section className="hero">
-        <div>
-          <span className="eyebrow">ركن القهوة من ماركوز هوم</span>
-          <h1>اختر اللون وطريقة الطلب، وأرسله مباشرة</h1>
-          <p>سبعة ألوان جاهزة بسعر 35 د.ك بدون تركيب أو 50 د.ك شامل التركيب.</p>
-        </div>
+        <div><span className="eyebrow">ركن القهوة من ماركوز هوم</span><h1>اختر اللون وطريقة الطلب، وأرسله مباشرة</h1><p>سبعة ألوان جاهزة بسعر {settings.price_without_installation} د.ك بدون تركيب أو {settings.price_with_installation} د.ك شامل التركيب.</p></div>
         <div className="total-card"><small>إجمالي طلبك</small><strong>{total} د.ك</strong></div>
       </section>
-
       <section className="workspace">
         <aside className="controls">
-          <div className="step">
-            <span>1</span>
-            <div>
-              <h2>اختر طريقة الطلب</h2>
-              <div className="option-grid">
-                {options.map((item, index) => (
-                  <button key={item.label} className={optionIndex === index ? 'option active' : 'option'} onClick={() => chooseOption(index)}>
-                    <strong>{item.label}</strong><small>{item.price} د.ك</small>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="step">
-            <span>2</span>
-            <div>
-              <h2>اختر اللون: {design.name}</h2>
-              <div className="design-grid">
-                {designs.map((item) => (
-                  <button key={item.name} className={design.name === item.name ? 'design active' : 'design'} onClick={() => chooseDesign(item)}>
-                    <img src={item.image} alt={item.name} loading="lazy" />
-                    <span>{item.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <button className="approve" onClick={() => setApproved(true)}>اعتماد الاختيار — {option.price} د.ك</button>
+          <div className="step"><span>1</span><div><h2>اختر طريقة الطلب</h2><div className="option-grid">
+            <button className={!withInstallation ? 'option active' : 'option'} onClick={() => chooseOption(false)}><strong>بدون تركيب</strong><small>{settings.price_without_installation} د.ك</small></button>
+            <button className={withInstallation ? 'option active' : 'option'} onClick={() => chooseOption(true)}><strong>شامل التركيب</strong><small>{settings.price_with_installation} د.ك</small></button>
+          </div></div></div>
+          <div className="step"><span>2</span><div><h2>اختر اللون: {design.name_ar}</h2><div className="design-grid">
+            {designs.map((item) => <button key={item.id} className={design.id === item.id ? 'design active' : 'design'} onClick={() => chooseDesign(item)}><img src={item.image_url} alt={item.name_ar} loading="lazy"/><span>{item.name_ar}</span></button>)}
+          </div></div></div>
+          <button className="approve" onClick={() => setApproved(true)}>اعتماد الاختيار — {price} د.ك</button>
         </aside>
-
         <section className="preview">
           <div className="preview-title"><div><small>الصورة الفعلية</small><h2>ركن القهوة المختار</h2></div><span>{approved ? 'تم الاعتماد' : 'اختر ثم اعتمد'}</span></div>
-          <div className="photo-wrap">
-            <img src={design.image} alt={`ركن القهوة - ${design.name}`} />
-            <div className="photo-label"><strong>{design.name}</strong><span>{option.price} د.ك — {option.label}</span></div>
-          </div>
-          <div className="summary">
-            <div><small>السعر الإجمالي</small><strong>{total} د.ك</strong></div>
-            <button disabled={!approved} onClick={() => window.open(`https://wa.me/96550204320?text=${encodeURIComponent(message)}`, '_blank')}>إرسال الطلب عبر واتساب</button>
-          </div>
+          <div className="photo-wrap"><img src={design.image_url} alt={`ركن القهوة - ${design.name_ar}`}/><div className="photo-label"><strong>{design.name_ar}</strong><span>{price} د.ك — {optionLabel}</span></div></div>
+          <div className="summary"><div><small>السعر الإجمالي</small><strong>{total} د.ك</strong></div><button disabled={!approved || sending} onClick={sendOrder}>{sending ? 'جاري التسجيل...' : 'إرسال الطلب عبر واتساب'}</button></div>
           <p className="hint">غيّر اللون أو طريقة الطلب ثم اضغط «اعتماد الاختيار» قبل الإرسال.</p>
         </section>
       </section>
     </main>
   );
 }
+
