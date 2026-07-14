@@ -1,7 +1,7 @@
 services:
   marcos-home-designer:
     build:
-      context: https://github.com/Jo78855/marcos-hom.git#main
+      context: .
     container_name: marcos-home-designer
     restart: unless-stopped
     ports:
