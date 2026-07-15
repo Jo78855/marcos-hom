@@ -4,7 +4,7 @@ import { supabase } from '../supabase';
 
 type Settings = { price_without_installation: number; price_with_installation: number; whatsapp_number: string };
 type Design = { id: string; name_ar: string; image_url: string; active: boolean; sort_order: number };
-type Order = { id: string; total: number; installation: boolean; status: string; created_at: string; designs: { name_ar: string } | null };
+type Order = { id: string; customer_name: string | null; customer_phone: string | null; design_id: string | null; total: number; installation: boolean; status: string; created_at: string; design_name?: string };
 
 export default function Admin() {
   const [session, setSession] = useState<Session | null>(null);
@@ -40,17 +40,33 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [newDesignName, setNewDesignName] = useState('');
   const [newDesignFile, setNewDesignFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState('');
   const load = async () => {
+    setOrdersLoading(true);
+    setOrdersError('');
     const [s, d, o] = await Promise.all([
       supabase.from('store_settings').select('*').eq('id', 1).single(),
       supabase.from('designs').select('*').order('sort_order'),
-      supabase.from('orders').select('*,designs(name_ar)').order('created_at', { ascending: false }),
+      supabase.from('orders').select('*').order('created_at', { ascending: false }),
     ]);
     if (s.data) setSettings(s.data as Settings);
     if (d.data) setDesigns(d.data as Design[]);
-    if (o.data) setOrders(o.data as unknown as Order[]);
+    if (o.error) setOrdersError(`تعذر تحميل الطلبات: ${o.error.message}`);
+    if (o.data) {
+      const names = new Map((d.data || []).map(item => [item.id, item.name_ar]));
+      setOrders((o.data as Order[]).map(order => ({ ...order, design_name: order.design_id ? names.get(order.design_id) : 'تصميم' })));
+    }
+    setLastUpdated(new Date().toLocaleTimeString('ar-KW'));
+    setOrdersLoading(false);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const timer = window.setInterval(load, 15000);
+    window.addEventListener('focus', load);
+    return () => { window.clearInterval(timer); window.removeEventListener('focus', load); };
+  }, []);
   const saveSettings = async () => {
     if (!settings) return;
     const { error } = await supabase.from('store_settings').update({ ...settings, updated_at: new Date().toISOString() }).eq('id', 1);
@@ -100,7 +116,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       <section className="admin-card"><h2>أسعار ركن القهوة</h2>{settings && <div className="admin-fields"><label>السعر بدون تركيب (د.ك)<input type="number" value={settings.price_without_installation} onChange={e => setSettings({...settings, price_without_installation: Number(e.target.value)})}/></label><label>السعر شامل التركيب (د.ك)<input type="number" value={settings.price_with_installation} onChange={e => setSettings({...settings, price_with_installation: Number(e.target.value)})}/></label><label>رقم واتساب لاستقبال الطلبات<input value={settings.whatsapp_number} onChange={e => setSettings({...settings, whatsapp_number: e.target.value})}/></label><button onClick={saveSettings}>حفظ الأسعار</button></div>}{notice && <p className="admin-success">{notice}</p>}</section>
       <section className="admin-card"><h2>إضافة تصميم جديد</h2><form className="add-design-form" onSubmit={addDesign}><label>اسم التصميم<input value={newDesignName} onChange={e => setNewDesignName(e.target.value)} placeholder="مثال: أبيض مع خشب طبيعي" required/></label><label>صورة التصميم<input key={newDesignFile ? 'selected' : 'empty'} type="file" accept="image/png,image/jpeg,image/webp" onChange={e => setNewDesignFile(e.target.files?.[0] || null)} required/></label><button disabled={uploading}>{uploading ? 'جاري رفع الصورة...' : 'رفع وإضافة التصميم'}</button></form><p className="form-hint">الصيغ المقبولة: JPG أو PNG أو WEBP.</p></section>
       <section className="admin-card"><h2>التصميمات الحالية</h2><div className="admin-designs">{designs.map(item => <div key={item.id}><img src={item.image_url} alt={item.name_ar}/><input aria-label="اسم التصميم" value={item.name_ar} onChange={e => updateDesign(item, { name_ar: e.target.value })}/><label className="switch"><input type="checkbox" checked={item.active} onChange={e => updateDesign(item, { active: e.target.checked })}/><span>{item.active ? 'ظاهر للعملاء' : 'مخفي عن العملاء'}</span></label></div>)}</div></section>
-      <section className="admin-card"><div className="card-title"><h2>الطلبات ({orders.length})</h2><button onClick={load}>تحديث</button></div>{orders.length === 0 ? <p className="empty">لا توجد طلبات حتى الآن.</p> : <div className="orders-table">{orders.map(order => <div key={order.id}><span>{new Date(order.created_at).toLocaleString('ar-KW')}</span><strong>{order.designs?.name_ar || 'تصميم'}</strong><span>{order.installation ? 'شامل التركيب' : 'بدون تركيب'}</span><b>{order.total} د.ك</b><select value={order.status} onChange={e => updateOrder(order.id, e.target.value)}><option value="new">جديد</option><option value="contacted">تم التواصل</option><option value="confirmed">مؤكد</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option></select></div>)}</div>}</section>
+      <section className="admin-card"><div className="card-title"><div><h2>الطلبات ({orders.length})</h2>{lastUpdated && <small>آخر تحديث: {lastUpdated} — تحديث تلقائي كل 15 ثانية</small>}</div><button onClick={load} disabled={ordersLoading}>{ordersLoading ? 'جاري التحديث...' : 'تحديث الآن'}</button></div>{ordersError && <p className="admin-error">{ordersError}</p>}{orders.length === 0 ? <p className="empty">لا توجد طلبات مسجلة حتى الآن. نفّذ طلبًا جديدًا بعد تحديث الموقع.</p> : <div className="orders-table">{orders.map(order => <div key={order.id}><span>{new Date(order.created_at).toLocaleString('ar-KW')}</span><strong>{order.customer_name || 'عميل'}<small>{order.customer_phone || 'بدون رقم'}</small></strong><span>{order.design_name || 'تصميم'}</span><span>{order.installation ? 'شامل التركيب' : 'بدون تركيب'}</span><b>{order.total} د.ك</b><select value={order.status} onChange={e => updateOrder(order.id, e.target.value)}><option value="new">جديد</option><option value="contacted">تم التواصل</option><option value="confirmed">مؤكد</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option></select></div>)}</div>}</section>
     </div>
   </main>;
 }
