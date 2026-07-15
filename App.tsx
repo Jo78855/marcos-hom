@@ -42,6 +42,9 @@ function Storefront() {
   const [withInstallation, setWithInstallation] = useState(false);
   const [approved, setApproved] = useState(false);
   const [sending, setSending] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [orderError, setOrderError] = useState('');
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(window.matchMedia('(display-mode: standalone)').matches);
 
@@ -87,20 +90,35 @@ function Storefront() {
   const total = approved ? price : 0;
   const message = useMemo(() => [
     'مرحباً ماركوز هوم، أرغب بطلب ركن القهوة التالي:',
+    `الاسم: ${customerName}`,
+    `رقم الهاتف: ${customerPhone}`,
     `اللون: ${design.name_ar}`,
     `طريقة الطلب: ${optionLabel}`,
     `السعر الإجمالي: ${price} د.ك`,
-  ].join('\n'), [design, optionLabel, price]);
+  ].join('\n'), [customerName, customerPhone, design, optionLabel, price]);
 
   const chooseDesign = (next: Design) => { setDesign(next); setApproved(false); };
   const chooseOption = (installed: boolean) => { setWithInstallation(installed); setApproved(false); };
   const sendOrder = async () => {
+    setOrderError('');
+    if (!customerName.trim() || !customerPhone.trim()) {
+      setOrderError('اكتب الاسم ورقم الهاتف أولًا');
+      return;
+    }
     setSending(true);
-    await supabase.from('orders').insert({
+    const { error } = await supabase.from('orders').insert({
+      customer_name: customerName.trim(),
+      customer_phone: customerPhone.trim(),
       design_id: design.id.length === 36 ? design.id : null,
       installation: withInstallation,
       total: price,
+      status: 'new',
     });
+    if (error) {
+      setOrderError(`تعذر تسجيل الطلب: ${error.message}`);
+      setSending(false);
+      return;
+    }
     window.open(`https://wa.me/${settings.whatsapp_number}?text=${encodeURIComponent(message)}`, '_blank');
     setSending(false);
   };
@@ -124,6 +142,7 @@ function Storefront() {
           <div className="step"><span>2</span><div><h2>اختر اللون: {design.name_ar}</h2><div className="design-grid">
             {designs.map((item) => <button key={item.id} className={design.id === item.id ? 'design active' : 'design'} onClick={() => chooseDesign(item)}><img src={item.image_url} alt={item.name_ar} loading="lazy"/><span>{item.name_ar}</span></button>)}
           </div></div></div>
+          <div className="step"><span>3</span><div><h2>بيانات التواصل</h2><div className="customer-fields"><input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="الاسم"/><input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} inputMode="tel" placeholder="رقم الهاتف"/></div>{orderError && <p className="order-error">{orderError}</p>}</div></div>
           <button className="approve" onClick={() => setApproved(true)}>اعتماد الاختيار — {price} د.ك</button>
         </aside>
         <section className="preview">
