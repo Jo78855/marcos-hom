@@ -44,6 +44,9 @@ button{font:inherit;cursor:pointer}
 .design span{display:block;padding:8px 6px;font-size:11px}
 .design.active{border-color:#1258a6;box-shadow:0 0 0 3px rgba(18,88,166,.1);color:#1258a6}
 .approve{border:0;border-radius:15px;padding:16px;background:linear-gradient(135deg,#1258a6,#0a376a);color:#fff;font-weight:800}
+.customer-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.customer-fields input{width:100%;padding:12px;border:1px solid #d0d5dd;border-radius:10px;font:inherit}
+.order-error{margin:9px 0 0;color:#b42318;font-size:13px}
 .preview{padding:24px}
 .preview-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .preview-title small{color:#1258a6;font-weight:700}
@@ -104,7 +107,10 @@ button{font:inherit;cursor:pointer}
 .admin-designs input{margin:10px;width:calc(100% - 20px)}
 .switch{display:flex;gap:7px;align-items:center;padding:0 10px}
 .card-title{display:flex;justify-content:space-between}
-.orders-table>div{display:grid;grid-template-columns:1.2fr 1.4fr 1fr .7fr 1fr;gap:12px;align-items:center;padding:13px 0;border-top:1px solid #eaecf0}
+.orders-table>div{display:grid;grid-template-columns:1.2fr 1.3fr 1.2fr 1fr .7fr 1fr;gap:12px;align-items:center;padding:13px 0;border-top:1px solid #eaecf0}
+.orders-table strong small{display:block;color:#667085;font-weight:400;margin-top:4px}
+.card-title small{color:#667085}
+.card-title button:disabled{opacity:.55;cursor:wait}
 .orders-table select{padding:9px;border:1px solid #d0d5dd;border-radius:8px}
 .empty{color:#667085}
 @media(max-width:800px){.admin-fields,.admin-designs{grid-template-columns:1fr 1fr}
