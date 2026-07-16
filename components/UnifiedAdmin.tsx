@@ -15,13 +15,6 @@ type UnifiedOrder = {
 };
 
 const productLabel: Record<Product, string> = { coffee: 'ركن القهوة', fire: 'الفير المعطر' };
-const statusLabel: Record<string, string> = {
-  new: 'جديد',
-  contacted: 'تم التواصل',
-  confirmed: 'مؤكد',
-  completed: 'مكتمل',
-  cancelled: 'ملغي',
-};
 
 export default function UnifiedAdmin() {
   const [session, setSession] = useState<Session | null>(null);
@@ -73,6 +66,7 @@ function UnifiedDashboard({ onLogout }: { onLogout: () => void }) {
   const [lastUpdated, setLastUpdated] = useState('');
   const [query, setQuery] = useState('');
   const [productFilter, setProductFilter] = useState<'all' | Product>('all');
+  const [updatingOrder, setUpdatingOrder] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -120,6 +114,26 @@ function UnifiedDashboard({ onLogout }: { onLogout: () => void }) {
     window.addEventListener('focus', load);
     return () => { window.clearInterval(timer); window.removeEventListener('focus', load); };
   }, []);
+
+  const updateOrderStatus = async (order: UnifiedOrder, status: string) => {
+    const orderKey = `${order.product}-${order.id}`;
+    setUpdatingOrder(orderKey);
+    setError('');
+    const table = order.product === 'fire' ? 'fire_orders' : 'orders';
+    const { error: updateError } = await supabase.from(table).update({ status }).eq('id', order.id);
+    if (updateError) {
+      setError('تعذر تحديث حالة الطلب. حاول مرة أخرى.');
+    } else {
+      setOrders(current => current.map(item => item.id === order.id && item.product === order.product ? { ...item, status } : item));
+    }
+    setUpdatingOrder('');
+  };
+
+  const whatsappLink = (order: UnifiedOrder) => {
+    const phone = order.customerPhone.replace(/\D/g, '');
+    const message = `مرحباً ${order.customerName}، معك ماركوز هوم بخصوص طلب ${productLabel[order.product]}.`;
+    return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}` : '';
+  };
 
   const customers = useMemo(() => {
     const byPhone = new Map<string, { name: string; phone: string; orders: number; total: number; products: Set<Product>; lastOrder: string }>();
@@ -178,8 +192,9 @@ function UnifiedDashboard({ onLogout }: { onLogout: () => void }) {
             <strong>{order.customerName}<small>{order.customerPhone}</small></strong>
             <span>{order.selection}</span>
             <b>{order.total === null ? 'حسب الطلب' : `${order.total} د.ك`}</b>
-            <span>{statusLabel[order.status] || order.status}</span>
+            <select aria-label="حالة الطلب" value={order.status} disabled={updatingOrder === `${order.product}-${order.id}`} onChange={event => updateOrderStatus(order, event.target.value)}><option value="new">جديد</option><option value="contacted">تم التواصل</option><option value="confirmed">مؤكد</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option></select>
             <time>{new Date(order.createdAt).toLocaleString('ar-KW')}</time>
+            {whatsappLink(order) ? <a className="customer-whatsapp" href={whatsappLink(order)} target="_blank" rel="noreferrer">واتساب</a> : <span />}
           </div>)}
           {!loading && filteredOrders.length === 0 && <p className="empty">لا توجد نتائج مطابقة.</p>}
         </div>
@@ -195,6 +210,7 @@ function UnifiedDashboard({ onLogout }: { onLogout: () => void }) {
             <span>{[...customer.products].map(product => productLabel[product]).join('، ')}</span>
             <b>{customer.total} د.ك</b>
             <time>{new Date(customer.lastOrder).toLocaleDateString('ar-KW')}</time>
+            {customer.phone.replace(/\D/g, '') && <a className="customer-whatsapp" href={`https://wa.me/${customer.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer">فتح واتساب</a>}
           </div>)}
         </div>
       </section>
