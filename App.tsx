@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Admin from './components/Admin';
 import FireAdmin from './components/FireAdmin';
 import FireStorefront from './components/FireStorefront';
+import UnifiedAdmin from './components/UnifiedAdmin';
 import { supabase } from './supabase';
 
 type Design = { id: string; name_ar: string; image_url: string };
@@ -34,6 +35,7 @@ const fallbackSettings: Settings = {
 
 export default function App() {
   const isFireApp = window.location.hostname.startsWith('fire.') || window.location.pathname.startsWith('/fire');
+  if (window.location.pathname.startsWith('/admin/overview')) return <UnifiedAdmin />;
   if (isFireApp && window.location.pathname.startsWith('/admin')) return <FireAdmin />;
   if (isFireApp) return <FireStorefront />;
   if (window.location.pathname.startsWith('/admin')) return <Admin />;
