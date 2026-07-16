@@ -116,11 +116,33 @@ button{font:inherit;cursor:pointer}
 .card-title button:disabled{opacity:.55;cursor:wait}
 .orders-table select{padding:9px;border:1px solid #d0d5dd;border-radius:8px}
 .empty{color:#667085}
+.fire-site{background:linear-gradient(180deg,#fff7ed 0,#f5f7fb 420px)}
+.fire-mark{background:linear-gradient(145deg,#d97706,#7c2d12)}
+.fire-status{color:#9a3412;background:#fff7ed;border-color:#fed7aa}
+.fire-install,.fire-approve{background:linear-gradient(135deg,#d97706,#9a3412)}
+.fire-eyebrow{color:#b45309}
+.fire-total{background:linear-gradient(145deg,#292524,#7c2d12)}
+.fire-size-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.fire-size:last-child{grid-column:1/-1}
+.fire-photo{background:#fff}
+.fire-photo>img{object-fit:contain;object-position:center;padding:22px}
+.fire-admin-sizes{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.fire-admin-sizes>label,.fire-whatsapp{font-weight:700}
+.fire-admin-sizes>label>input,.fire-whatsapp>input{width:100%;display:block;margin:8px 0;padding:12px;border:1px solid #d0d5dd;border-radius:10px}
+.fire-admin-sizes .switch{padding:0;font-weight:400}
+.fire-whatsapp{display:block;max-width:360px;margin-top:20px}
+.fire-save{margin-top:14px;border:0;border-radius:11px;padding:13px 28px;background:#b45309;color:#fff;font-weight:800}
+.fire-orders>div{display:grid;grid-template-columns:1.2fr 1.3fr 1fr .8fr 1fr;gap:12px;align-items:center;padding:13px 0;border-top:1px solid #eaecf0}
+.fire-orders strong small{display:block;color:#667085;font-weight:400;margin-top:4px}
+.fire-orders select{padding:9px;border:1px solid #d0d5dd;border-radius:8px}
 @media(max-width:800px){.admin-fields,.admin-designs{grid-template-columns:1fr 1fr}
 .orders-table>div{grid-template-columns:1fr 1fr}
+.fire-admin-sizes{grid-template-columns:1fr 1fr}
+.fire-orders>div{grid-template-columns:1fr 1fr}
 .admin-header{padding:0 14px}
 .admin-header a{display:none}
 }
 @media(max-width:520px){.admin-fields,.admin-designs{grid-template-columns:1fr}
+.fire-admin-sizes{grid-template-columns:1fr}
 .admin-card{padding:17px}
 }

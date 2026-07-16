@@ -1,5 +1,6 @@
-const CACHE_NAME = 'marcos-home-v1';
-const APP_SHELL = ['/', '/manifest.webmanifest', '/icons/icon.svg'];
+const CACHE_NAME = 'marcos-home-v2';
+const MANIFEST = self.location.hostname.startsWith('fire.') ? '/fire-manifest.webmanifest' : '/manifest.webmanifest';
+const APP_SHELL = ['/', MANIFEST, '/icons/icon.svg'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));

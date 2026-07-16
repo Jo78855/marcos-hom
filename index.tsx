@@ -9,6 +9,13 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+
+if (window.location.hostname.startsWith('fire.') || window.location.pathname.startsWith('/fire')) {
+  document.title = 'ماركوز هوم | جهاز الفير المعطر';
+  document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.setAttribute('href', '/fire-manifest.webmanifest');
+  document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute('content', '#b45309');
+}
+
 root.render(
   <React.StrictMode>
     <App />

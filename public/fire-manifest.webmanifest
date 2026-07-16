@@ -1,0 +1,15 @@
+{
+  "name": "ماركوز هوم - جهاز الفير المعطر",
+  "short_name": "الفير المعطر",
+  "description": "اختيار وطلب جهاز الفير المعطر من ماركوز هوم",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#b45309",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
