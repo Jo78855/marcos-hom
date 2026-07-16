@@ -158,13 +158,16 @@ button{font:inherit;cursor:pointer}
 .unified-title{align-items:center;gap:16px}
 .unified-filters{display:grid;grid-template-columns:1fr 220px;gap:12px;margin:18px 0}
 .unified-filters input,.unified-filters select{width:100%;padding:12px;border:1px solid #d0d5dd;border-radius:10px;background:#fff;font:inherit}
-.unified-orders>div{display:grid;grid-template-columns:.8fr 1.2fr 1fr .7fr .8fr 1.1fr;gap:12px;align-items:center;padding:13px 0;border-top:1px solid #eaecf0}
+.unified-orders>div{display:grid;grid-template-columns:.8fr 1.2fr 1fr .7fr .9fr 1.1fr .6fr;gap:12px;align-items:center;padding:13px 0;border-top:1px solid #eaecf0}
 .unified-orders strong small,.unified-customers strong small{display:block;color:#667085;font-weight:400;margin-top:4px}
 .unified-orders time,.unified-customers time{color:#667085;font-size:13px}
+.unified-orders select{padding:9px;border:1px solid #d0d5dd;border-radius:8px;background:#fff;font:inherit}
+.unified-orders select:disabled{opacity:.55}
 .product-pill{display:inline-block;width:max-content;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800}
 .product-pill.coffee{background:#eaf2ff;color:#1258a6}
 .product-pill.fire{background:#fff1e6;color:#b45309}
 .unified-customers{margin-top:18px}
-.unified-customers>div{display:grid;grid-template-columns:1.3fr .7fr 1.2fr .7fr .8fr;gap:12px;align-items:center;padding:13px 0;border-top:1px solid #eaecf0}
+.unified-customers>div{display:grid;grid-template-columns:1.3fr .7fr 1.2fr .7fr .8fr .8fr;gap:12px;align-items:center;padding:13px 0;border-top:1px solid #eaecf0}
+.customer-whatsapp{display:inline-block;width:max-content;padding:8px 11px;border-radius:9px;background:#eafaf1;color:#087443;text-decoration:none;font-size:12px;font-weight:800}
 @media(max-width:900px){.unified-stats{grid-template-columns:repeat(2,1fr)}.unified-orders>div,.unified-customers>div{grid-template-columns:1fr 1fr}.unified-filters{grid-template-columns:1fr}.unified-header a{display:inline-block}}
 @media(max-width:560px){.unified-stats{grid-template-columns:1fr 1fr}.unified-header{align-items:flex-start;gap:10px}.unified-header div:last-child{gap:6px}.unified-header a,.unified-header button{font-size:12px;padding:8px}.unified-orders>div,.unified-customers>div{grid-template-columns:1fr}.unified-title{align-items:flex-start}.unified-title h2{margin-bottom:5px}}
