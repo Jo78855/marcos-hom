@@ -1,26 +1,23 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Marco's Home — WordPress Control
 
-# Marco's Home
+هذا الفرع مستقل عن تطبيق React الموجود على الفرع `main`.
 
-مشروع موقع ماركوز هوم للتصميمات والديكور.
+الغرض منه هو نشر إضافة WordPress صغيرة وآمنة إلى:
 
-> تجربة عملية: تمت إضافة هذه الرسالة بواسطة Codex من خلال GitHub، داخل فرع منفصل وآمن للمراجعة.
+`wp-content/plugins/marcos-home-control`
 
-# Run and deploy your AI Studio app
+## طريقة الربط في Hostinger
 
-This contains everything you need to run your app locally.
+- Repository: `https://github.com/Jo78855/marcos-hom.git`
+- Branch: `wordpress-control`
+- Install path: مجلد الإضافة `wp-content/plugins/marcos-home-control`
+- فعّل Auto Deployment بعد نجاح أول نشر.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1l_i0bGglMQIL9pupQIwrAkOGtH1qPWCe
+بعد أول نشر، فعّل الإضافة مرة واحدة من: إضافات ← الإضافات المنصّبة ← Marco's Home Control.
 
-## Run Locally
+## الأمان
 
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- لا توجد كلمات مرور أو مفاتيح داخل المستودع.
+- الفرع لا يحتوي ملفات تطبيق React.
+- التعديلات المستقبلية تظل معزولة داخل إضافة WordPress.
+- لا يُعدّل الموقع الحي إلا بعد النشر والتفعيل.

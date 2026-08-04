@@ -1,8 +1,0 @@
-services:
-  marcos-home-designer:
-    build:
-      context: .
-    container_name: marcos-home-designer
-    restart: unless-stopped
-    ports:
-      - "8085:80"
