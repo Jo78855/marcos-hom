@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.2.0
+ * Version: 1.3.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.2.0');
+define('MH_CONTROL_VERSION', '1.3.0');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -170,7 +170,8 @@ function mh_control_homepage_markup(): string {
         </section>
     </main>
     <?php
-    return (string) ob_get_clean();
+    $html = (string) ob_get_clean();
+    return (string) preg_replace('/<img(?![^>]*\\bloading=)/i', '<img loading="lazy" decoding="async"', $html);
 }
 
 function mh_control_replace_front_content(string $content): string {
@@ -401,7 +402,8 @@ function mh_control_portfolio_markup(): string {
         </section>
     </main>
     <?php
-    return (string) ob_get_clean();
+    $html = (string) ob_get_clean();
+    return (string) preg_replace('/<img(?![^>]*\\bloading=)/i', '<img loading="lazy" decoding="async"', $html);
 }
 
 function mh_control_replace_portfolio_content(string $content): string {
@@ -2056,7 +2058,8 @@ function mh_control_trust_page_markup(): string {
         </section>
     </main>
     <?php
-    return (string) ob_get_clean();
+    $html = (string) ob_get_clean();
+    return (string) preg_replace('/<img(?![^>]*\\bloading=)/i', '<img loading="lazy" decoding="async"', $html);
 }
 
 function mh_control_render_trust_page(): void {
@@ -2098,3 +2101,137 @@ function mh_control_trust_styles(): void {
     <?php
 }
 add_action('wp_head', 'mh_control_trust_styles', 207);
+
+/**
+ * Speed and technical SEO layer for Marco's Home custom pages.
+ */
+function mh_control_is_lightweight_page(): bool {
+    return is_front_page()
+        || mh_control_is_portfolio_page()
+        || mh_control_is_coffee_page()
+        || mh_control_is_tv_console_page()
+        || mh_control_is_fire_diffuser_page()
+        || mh_control_is_wpc_divider_page()
+        || mh_control_is_parquet_page()
+        || mh_control_is_tv_wall_archive()
+        || mh_control_is_about_page()
+        || mh_control_is_trust_page();
+}
+
+function mh_control_trim_unused_assets(): void {
+    if (!mh_control_is_lightweight_page()) {
+        return;
+    }
+
+    $styles = [
+        'wp-block-library',
+        'wp-block-library-theme',
+        'wc-blocks-style',
+        'wc-blocks-vendors-style',
+        'wc-blocks-packages-style',
+        'woocommerce-general',
+        'woocommerce-layout',
+        'woocommerce-smallscreen',
+        'global-styles',
+        'classic-theme-styles',
+    ];
+    foreach ($styles as $handle) {
+        wp_dequeue_style($handle);
+        wp_deregister_style($handle);
+    }
+
+    $scripts = [
+        'wc-cart-fragments',
+        'woocommerce',
+        'wc-add-to-cart',
+        'jquery-blockui',
+        'js-cookie',
+        'wp-embed',
+    ];
+    foreach ($scripts as $handle) {
+        wp_dequeue_script($handle);
+        wp_deregister_script($handle);
+    }
+}
+add_action('wp_enqueue_scripts', 'mh_control_trim_unused_assets', 999);
+
+function mh_control_remove_emoji_assets(): void {
+    remove_action('wp_head', 'print_emoji_detection_script', 7);
+    remove_action('wp_print_styles', 'print_emoji_styles');
+    remove_filter('the_content_feed', 'wp_staticize_emoji');
+    remove_filter('comment_text_rss', 'wp_staticize_emoji');
+    remove_filter('wp_mail', 'wp_staticize_emoji_for_email');
+}
+add_action('init', 'mh_control_remove_emoji_assets');
+
+function mh_control_preload_hero_image(): void {
+    $image = '';
+    if (is_front_page()) {
+        $image = 'https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.19-PM.jpeg';
+    } elseif (mh_control_is_about_page()) {
+        $image = 'https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM-2.jpeg';
+    } elseif (mh_control_is_trust_page()) {
+        $image = 'https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0011.jpg';
+    }
+    if ($image !== '') {
+        printf(
+            '<link rel="preload" as="image" href="%s" fetchpriority="high">' . "\n",
+            esc_url($image)
+        );
+    }
+}
+add_action('wp_head', 'mh_control_preload_hero_image', 2);
+
+/**
+ * SureRank and AIOSEO were both outputting overlapping WebSite/WebPage schema.
+ * Keep AIOSEO as the primary SEO source, remove only the duplicate SureRank graph,
+ * and add one accurate local-business entity for Marco's Home.
+ */
+function mh_control_capture_head_for_schema_cleanup(): void {
+    ob_start();
+}
+add_action('wp_head', 'mh_control_capture_head_for_schema_cleanup', -999999);
+
+function mh_control_local_business_schema(): string {
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@type' => 'HomeAndConstructionBusiness',
+        '@id' => home_url('/#marcos-home'),
+        'name' => "Marco's Home",
+        'alternateName' => 'ماركوز هوم',
+        'url' => home_url('/'),
+        'logo' => 'https://marcohom.com/wp-content/uploads/2025/03/صورة-واتساب-بتاريخ-2025-03-14-في-04.03.49_157c93e1-480x360.jpg',
+        'image' => 'https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.19-PM.jpeg',
+        'telephone' => '+96550204320',
+        'address' => [
+            '@type' => 'PostalAddress',
+            'streetAddress' => 'شارع نادي القادسية',
+            'addressLocality' => 'حولي',
+            'addressCountry' => 'KW',
+        ],
+        'areaServed' => [
+            '@type' => 'Country',
+            'name' => 'Kuwait',
+        ],
+        'sameAs' => [
+            'https://www.instagram.com/marcoshomekw/',
+        ],
+    ];
+
+    return '<script type="application/ld+json" id="mh-local-business-schema">'
+        . wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        . '</script>' . "\n";
+}
+
+function mh_control_finish_head_schema_cleanup(): void {
+    $head = (string) ob_get_clean();
+    $head = (string) preg_replace(
+        '#<script[^>]*id=(["\\\'])surerank-schema\\1[^>]*>.*?</script>#is',
+        '',
+        $head
+    );
+    echo $head; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    echo mh_control_local_business_schema(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+}
+add_action('wp_head', 'mh_control_finish_head_schema_cleanup', 999999);
+
