@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.3.1
+ * Version: 0.3.2
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.3.1');
+define('MH_CONTROL_VERSION', '0.3.2');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -98,7 +98,7 @@ function mh_control_homepage_markup(): string {
                 <h1>حوّل بيتك لمساحة<br>تعبر عن ذوقك</h1>
                 <p>خلفيات شاشة، أركان قهوة، باركيه، فواصل بديل الخشب وتصميمات مخصصة بخامات مختارة وتنفيذ احترافي.</p>
                 <div class="mh-actions">
-                    <a class="mh-btn mh-btn--primary" href="https://wa.me/96550576266?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D9%85%D8%A7%D8%B1%D9%83%D9%88%D8%B2%20%D9%87%D9%88%D9%85%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AA%D8%B5%D9%85%D9%8A%D9%85" target="_blank" rel="noopener">اطلب استشارة على واتساب</a>
+                    <a class="mh-btn mh-btn--primary" href="https://wa.me/96550204320?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D9%85%D8%A7%D8%B1%D9%83%D9%88%D8%B2%20%D9%87%D9%88%D9%85%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AA%D8%B5%D9%85%D9%8A%D9%85" target="_blank" rel="noopener">اطلب استشارة على واتساب</a>
                     <a class="mh-btn mh-btn--ghost" href="#mh-services">شاهد خدماتنا</a>
                 </div>
             </div>
@@ -161,7 +161,7 @@ function mh_control_homepage_markup(): string {
         <section class="mh-cta">
             <div class="mh-shell mh-cta__box">
                 <div><span class="mh-kicker mh-kicker--dark">جاهز تبدأ؟</span><h2>ابعث صورة المكان وخد اقتراح مناسب</h2><p>رد سريع عبر واتساب لمعرفة التصميم والمقاس والتكلفة.</p></div>
-                <a class="mh-btn mh-btn--dark" href="https://wa.me/96550576266?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D9%85%D8%A7%D8%B1%D9%83%D9%88%D8%B2%20%D9%87%D9%88%D9%85%D8%8C%20%D9%87%D8%B0%D9%87%20%D8%B5%D9%88%D8%B1%D8%A9%20%D8%A7%D9%84%D9%85%D9%83%D8%A7%D9%86%20%D9%88%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%82%D8%AA%D8%B1%D8%A7%D8%AD%20%D8%AA%D8%B5%D9%85%D9%8A%D9%85" target="_blank" rel="noopener">تواصل معنا الآن</a>
+                <a class="mh-btn mh-btn--dark" href="https://wa.me/96550204320?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D9%85%D8%A7%D8%B1%D9%83%D9%88%D8%B2%20%D9%87%D9%88%D9%85%D8%8C%20%D9%87%D8%B0%D9%87%20%D8%B5%D9%88%D8%B1%D8%A9%20%D8%A7%D9%84%D9%85%D9%83%D8%A7%D9%86%20%D9%88%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%82%D8%AA%D8%B1%D8%A7%D8%AD%20%D8%AA%D8%B5%D9%85%D9%8A%D9%85" target="_blank" rel="noopener">تواصل معنا الآن</a>
             </div>
         </section>
     </main>
