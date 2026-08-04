@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.2.1
+ * Version: 0.2.2
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.2.1');
+define('MH_CONTROL_VERSION', '0.2.2');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -236,3 +236,26 @@ function mh_control_arabic_menu_labels(array $items): array {
     return $items;
 }
 add_filter('wp_nav_menu_objects', 'mh_control_arabic_menu_labels', 20);
+
+
+function mh_control_seo_title(string $title): string {
+    if (is_front_page()) {
+        return 'ماركوز هوم | تصميمات وديكور في الكويت';
+    }
+    return $title;
+}
+
+function mh_control_seo_description(string $description): string {
+    if (is_front_page()) {
+        return 'ماركوز هوم لخلفيات الشاشة وأركان القهوة والباركيه وفواصل بديل الخشب وطاولات التلفزيون والديكورات الداخلية في الكويت.';
+    }
+    return $description;
+}
+
+add_filter('aioseo_title', 'mh_control_seo_title', 999);
+add_filter('aioseo_description', 'mh_control_seo_description', 999);
+add_filter('wpseo_title', 'mh_control_seo_title', 999);
+add_filter('wpseo_metadesc', 'mh_control_seo_description', 999);
+add_filter('rank_math/frontend/title', 'mh_control_seo_title', 999);
+add_filter('rank_math/frontend/description', 'mh_control_seo_description', 999);
+add_filter('wp_title', 'mh_control_seo_title', 999);
