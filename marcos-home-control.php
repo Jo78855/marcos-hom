@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.8.0
+ * Version: 0.9.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.8.0');
+define('MH_CONTROL_VERSION', '0.9.0');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -122,7 +122,7 @@ function mh_control_homepage_markup(): string {
                 <div class="mh-cards">
                     <a class="mh-card mh-card--wide" href="https://marcohom.com/product-category/%d9%86%d9%85%d8%a7%d8%b0%d8%ac-%d9%88%d8%aa%d8%b5%d9%85%d9%8a%d9%85%d8%a7%d8%aa/">
                         <img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM-2.jpeg" alt="خلفيات شاشة وتصميمات ديكور من ماركوز هوم">
-                        <span class="mh-card__shade"></span><span class="mh-card__text"><b>خلفيات الشاشة والديكور</b><small>تصميمات متكاملة بمقاسات وألوان متعددة</small></span>
+                        <span class="mh-card__shade"></span><span class="mh-card__text"><b>خلفيات الشاشة والديكور</b><small>تبدأ من 98 د.ك شامل التوريد والتركيب</small></span>
                     </a>
                     <a class="mh-card" href="https://marcohom.com/coffee-corner/">
                         <img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة من ماركوز هوم">
@@ -1488,3 +1488,199 @@ function mh_control_parquet_script(): void {
     <?php
 }
 add_action('wp_footer', 'mh_control_parquet_script', 103);
+
+
+/**
+ * TV wall backgrounds and integrated decor — roadmap step 2, product 6 of 6.
+ */
+function mh_control_is_tv_wall_archive(): bool {
+    return function_exists('is_product_category') && is_product_category() && get_queried_object_id() === 50;
+}
+
+function mh_control_tv_wall_markup(): string {
+    $whatsapp = 'https://wa.me/96550204320?text=';
+    $initial = rawurlencode('مرحباً ماركوز هوم، أريد تصميم خلفية شاشة. عرض الحائط 4 م وارتفاعه 2.90 م. أفضّل تصميم 130، طاولة 2 م، لون خشبي، ولوح بدون فواصل. أريد تأكيد التصميم والسعر والمعاينة.');
+    ob_start();
+    ?>
+    <main class="mh-tvwall" dir="rtl">
+        <section class="mhtw-hero">
+            <div class="mhtw-hero__shade"></div>
+            <div class="mhtw-shell mhtw-hero__content">
+                <span class="mhtw-eyebrow">تصميم وتوريد وتركيب داخل الكويت</span>
+                <h1>خلفية شاشة تخفي الأسلاك<br>وتغيّر شكل الصالة</h1>
+                <p>تصميم متكامل بلوح شاشة، طاولة معلقة وتشطيبات دافئة تناسب مساحة الحائط وذوق البيت.</p>
+                <div class="mhtw-hero__price"><small>العرض يبدأ من</small><strong>98 <em>د.ك</em></strong><span>شامل التوريد والتركيب</span></div>
+                <a class="mhtw-btn mhtw-btn--green" href="#mhtw-order">كوّن تصميمك الآن</a>
+            </div>
+        </section>
+
+        <section class="mhtw-trust"><div class="mhtw-shell mhtw-trust__grid">
+            <div><b>إخفاء الأسلاك</b><span>تمديد مرتب خلف لوح الشاشة</span></div>
+            <div><b>مقاس مخصص</b><span>التصميم يتظبط على مساحة الحائط</span></div>
+            <div><b>توريد وتركيب</b><span>تنفيذ احترافي وتسليم جاهز</span></div>
+        </div></section>
+
+        <section class="mhtw-builder" id="mhtw-order">
+            <div class="mhtw-shell mhtw-builder__grid">
+                <div class="mhtw-builder__form">
+                    <span class="mhtw-eyebrow mhtw-eyebrow--blue">طلب مبدئي في دقيقة</span>
+                    <h2>اختار تفاصيل الخلفية</h2>
+                    <div class="mhtw-measures">
+                        <label><span>عرض الحائط بالمتر</span><input id="mhtw-width" type="number" min="1.5" max="12" step="0.1" value="4" inputmode="decimal"></label>
+                        <label><span>ارتفاع الحائط بالمتر</span><input id="mhtw-height" type="number" min="2" max="5" step="0.1" value="2.9" inputmode="decimal"></label>
+                    </div>
+
+                    <fieldset><legend>شكل التصميم</legend><div class="mhtw-options">
+                        <button type="button" class="mhtw-option is-active" data-mhtw-design="تصميم 130" aria-pressed="true"><b>تصميم 130</b><small>لوح شاشة + طاولة + لوح رأسي</small></button>
+                        <button type="button" class="mhtw-option" data-mhtw-design="تصميم حائط متكامل" aria-pressed="false"><b>حائط متكامل</b><small>تكوين ممتد يناسب الحوائط الكبيرة</small></button>
+                        <button type="button" class="mhtw-option" data-mhtw-design="تصميم مع أرفف" aria-pressed="false"><b>مع أرفف</b><small>أرفف جانبية وإضاءة دافئة</small></button>
+                    </div></fieldset>
+
+                    <fieldset><legend>عرض الطاولة المعلقة</legend><div class="mhtw-chips">
+                        <button type="button" data-mhtw-console="1.5 متر" aria-pressed="false">1.5 متر</button>
+                        <button type="button" class="is-active" data-mhtw-console="2 متر" aria-pressed="true">2 متر</button>
+                        <button type="button" data-mhtw-console="3 متر" aria-pressed="false">3 متر</button>
+                    </div></fieldset>
+
+                    <fieldset><legend>تفاصيل لوح الشاشة</legend><div class="mhtw-chips">
+                        <button type="button" class="is-active" data-mhtw-panel="بدون فواصل" aria-pressed="true">بدون فواصل</button>
+                        <button type="button" data-mhtw-panel="فاصلان رأسيان" aria-pressed="false">فاصلان رأسيان</button>
+                    </div></fieldset>
+
+                    <fieldset><legend>لون الطاولة</legend><div class="mhtw-colors">
+                        <button type="button" class="is-active" data-mhtw-color="خشبي" aria-pressed="true"><i style="--sw:#9a6c45"></i>خشبي</button>
+                        <button type="button" data-mhtw-color="أبيض" aria-pressed="false"><i style="--sw:#f2f2ed"></i>أبيض</button>
+                        <button type="button" data-mhtw-color="رمادي" aria-pressed="false"><i style="--sw:#8e9399"></i>رمادي</button>
+                        <button type="button" data-mhtw-color="فحمي" aria-pressed="false"><i style="--sw:#34383d"></i>فحمي</button>
+                    </div></fieldset>
+                </div>
+
+                <aside class="mhtw-summary">
+                    <span>العرض المبدئي يبدأ من</span>
+                    <strong>98 <small>د.ك</small></strong>
+                    <em>شامل التوريد والتركيب</em>
+                    <ul>
+                        <li><span>الحائط</span><b id="mhtw-wall-summary">4 × 2.9 م</b></li>
+                        <li><span>التصميم</span><b id="mhtw-design-summary">تصميم 130</b></li>
+                        <li><span>الطاولة</span><b id="mhtw-console-summary">2 متر</b></li>
+                        <li><span>اللوح</span><b id="mhtw-panel-summary">بدون فواصل</b></li>
+                        <li><span>اللون</span><b id="mhtw-color-summary">خشبي</b></li>
+                    </ul>
+                    <a id="mhtw-whatsapp" class="mhtw-btn mhtw-btn--green mhtw-btn--full" href="<?php echo esc_url($whatsapp . $initial); ?>" target="_blank" rel="noopener">أرسل التفاصيل على واتساب</a>
+                    <p>السعر النهائي يُؤكد بعد مراجعة صورة الحائط والمقاس واختيار الخامات.</p>
+                </aside>
+            </div>
+        </section>
+
+        <section class="mhtw-model">
+            <div class="mhtw-shell mhtw-model__grid">
+                <div><span class="mhtw-eyebrow mhtw-eyebrow--blue">النموذج الأساسي 130</span><h2>تكوين متوازن للصالة</h2><p>لوح شاشة بإضاءة خلفية خفيفة مع طاولة معلقة وعُنصر رأسي من السقف إلى الأرض، بتفاصيل قابلة للتخصيص.</p>
+                    <ul><li><b>لوح الشاشة:</b> 2 × 1.20 م</li><li><b>الطاولة:</b> عرض 2 م، أربعة أبواب متساوية</li><li><b>اللوح الرأسي:</b> 2.90 × 1.22 م</li><li><b>التخصيص:</b> بدون فواصل أو بفاصلين رأسيين</li></ul>
+                </div>
+                <figure><img src="https://marcohom.com/wp-content/uploads/2025/11/Generated-Image-November-04-2025-9_02PM-580x387.png" alt="تصميم خلفية شاشة متكامل من ماركوز هوم" loading="lazy"></figure>
+            </div>
+        </section>
+
+        <section class="mhtw-gallery-section">
+            <div class="mhtw-shell">
+                <div class="mhtw-heading"><span class="mhtw-eyebrow mhtw-eyebrow--blue">تصميمات وأفكار</span><h2>اختار الشكل الأقرب لمساحتك</h2><p>أرسل لنا صورة الحائط وسنرشح لك التكوين والمقاسات الأنسب.</p></div>
+                <div class="mhtw-gallery">
+                    <figure class="mhtw-gallery__tall"><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0012-580x879.jpg" alt="خلفية شاشة خشبية مع طاولة معلقة" loading="lazy"></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/11/Generated-Image-November-04-2025-9_02PM-580x387.png" alt="تصميم خلفية شاشة مودرن" loading="lazy"></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0011-580x866.jpg" alt="خلفية شاشة بألوان محايدة" loading="lazy"></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0014-1-580x869.jpg" alt="تصميم حائط تلفزيون من ماركوز هوم" loading="lazy"></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/11/Generated-Image-November-02-2025-4_58PM-580x657.png" alt="خلفية شاشة مع ديكور متكامل" loading="lazy"></figure>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhtw-steps"><div class="mhtw-shell"><div class="mhtw-heading mhtw-heading--light"><span class="mhtw-eyebrow">من الصورة إلى التنفيذ</span><h2>ثلاث خطوات واضحة</h2></div><div class="mhtw-steps__grid">
+            <div><b>01</b><h3>أرسل صورة الحائط</h3><p>مع العرض والارتفاع ومكان الشاشة.</p></div>
+            <div><b>02</b><h3>اعتمد التصميم</h3><p>نراجع المقاس واللون وتفاصيل الطاولة.</p></div>
+            <div><b>03</b><h3>التوريد والتركيب</h3><p>تنفيذ مرتب مع إخفاء الأسلاك والتشطيب.</p></div>
+        </div></div></section>
+
+        <section class="mhtw-cta"><div class="mhtw-shell mhtw-cta__box"><div><span class="mhtw-eyebrow mhtw-eyebrow--blue">جاهز تغيّر شكل الصالة؟</span><h2>أرسل صورة الحائط وخد اقتراح مناسب</h2><p>ابدأ من 98 د.ك شامل التوريد والتركيب.</p></div><a class="mhtw-btn mhtw-btn--dark" href="#mhtw-order">ابدأ الاختيار</a></div></section>
+        <a class="mhtw-mobile-order" href="#mhtw-order">كوّن خلفية الشاشة — تبدأ من 98 د.ك</a>
+    </main>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function mh_control_render_tv_wall_archive(): void {
+    if (!mh_control_is_tv_wall_archive()) return;
+    status_header(200); get_header();
+    echo mh_control_tv_wall_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    get_footer(); exit;
+}
+add_action('template_redirect', 'mh_control_render_tv_wall_archive', 34);
+
+function mh_control_tv_wall_title(string $title): string {
+    return mh_control_is_tv_wall_archive() ? 'خلفيات شاشة وديكور متكامل في الكويت | ماركوز هوم' : $title;
+}
+add_filter('pre_get_document_title', 'mh_control_tv_wall_title', 124);
+
+function mh_control_tv_wall_description(string $description): string {
+    return mh_control_is_tv_wall_archive() ? 'خلفيات شاشة مخصصة مع طاولة معلقة وإخفاء أسلاك. العرض يبدأ من 98 د.ك شامل التوريد والتركيب داخل الكويت.' : $description;
+}
+add_filter('aioseo_title', 'mh_control_tv_wall_title', 1240);
+add_filter('aioseo_description', 'mh_control_tv_wall_description', 1240);
+add_filter('wpseo_title', 'mh_control_tv_wall_title', 1240);
+add_filter('wpseo_metadesc', 'mh_control_tv_wall_description', 1240);
+add_filter('rank_math/frontend/title', 'mh_control_tv_wall_title', 1240);
+add_filter('rank_math/frontend/description', 'mh_control_tv_wall_description', 1240);
+
+function mh_control_tv_wall_head(): void {
+    if (!mh_control_is_tv_wall_archive()) return;
+    ?>
+    <meta name="description" content="خلفيات شاشة مخصصة مع طاولة معلقة وإخفاء أسلاك. يبدأ من 98 د.ك شامل التوريد والتركيب في الكويت.">
+    <style id="mh-tv-wall-styles">
+    :root{--mhtw-blue:#1266d6;--mhtw-navy:#071a33;--mhtw-ink:#15263a;--mhtw-soft:#f2f6fa;--mhtw-gold:#d6aa62;--mhtw-green:#20b95a}
+    html:has(.mh-tvwall),body:has(.mh-tvwall){overflow-x:clip}.mh-tvwall{font-family:Tahoma,Arial,sans-serif;color:var(--mhtw-ink);background:#fff;width:100vw;margin-inline:calc(50% - 50vw);overflow:hidden}.mh-tvwall *{box-sizing:border-box}.mhtw-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}
+    .mhtw-hero{min-height:670px;display:flex;align-items:center;position:relative;background:url('https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0109-580x387.jpg') center/cover no-repeat}.mhtw-hero__shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,17,34,.24),rgba(5,17,34,.91))}.mhtw-hero__content{position:relative;z-index:1;color:#fff;padding-block:90px}.mhtw-eyebrow{display:inline-flex;align-items:center;gap:10px;color:#d9e8fa;font-size:14px;font-weight:800;margin-bottom:15px}.mhtw-eyebrow:before{content:"";width:32px;height:2px;background:var(--mhtw-gold)}.mhtw-eyebrow--blue{color:var(--mhtw-blue)}.mhtw-hero h1{font-size:clamp(43px,6vw,73px);line-height:1.12;color:#fff;margin:0 0 20px;font-weight:900}.mhtw-hero p{max-width:680px;font-size:18px;line-height:1.9;color:#e7eff8;margin:0 0 22px}.mhtw-hero__price{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 28px}.mhtw-hero__price small,.mhtw-hero__price span{font-size:13px;color:#dce8f5}.mhtw-hero__price strong{font-size:48px;line-height:1;color:#fff}.mhtw-hero__price em{font-style:normal;font-size:16px}
+    .mhtw-btn{display:inline-flex;justify-content:center;align-items:center;min-height:52px;padding:12px 23px;border-radius:8px;text-decoration:none!important;font-weight:900;transition:.2s}.mhtw-btn:hover{transform:translateY(-2px)}.mhtw-btn--green{background:var(--mhtw-green);color:#fff!important}.mhtw-btn--dark{background:var(--mhtw-navy);color:#fff!important}.mhtw-btn--full{width:100%}
+    .mhtw-trust{background:var(--mhtw-navy);color:#fff}.mhtw-trust__grid{display:grid;grid-template-columns:repeat(3,1fr)}.mhtw-trust__grid>div{padding:25px 32px;border-inline-start:1px solid rgba(255,255,255,.13)}.mhtw-trust b,.mhtw-trust span{display:block}.mhtw-trust span{font-size:12px;color:#aebed0;margin-top:5px}
+    .mhtw-builder{padding:88px 0}.mhtw-builder__grid{display:grid;grid-template-columns:1.22fr .78fr;gap:38px;align-items:start}.mhtw-builder h2,.mhtw-heading h2,.mhtw-model h2{font-size:clamp(34px,5vw,52px);color:var(--mhtw-navy);margin:0 0 30px}.mhtw-measures{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:27px}.mhtw-measures label span{display:block;font-size:13px;font-weight:800;margin-bottom:8px}.mhtw-measures input{width:100%;height:57px;border:1px solid #dbe3eb;border-radius:11px;padding:0 15px;font:900 18px Tahoma,Arial;color:var(--mhtw-navy)}.mhtw-builder fieldset{border:0;padding:0;margin:0 0 27px}.mhtw-builder legend{font-size:16px;font-weight:900;color:var(--mhtw-navy);margin-bottom:12px}.mhtw-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.mhtw-option,.mhtw-chips button,.mhtw-colors button{font:inherit;border:1px solid #dce4ec;background:#fff;border-radius:11px;cursor:pointer;color:#43566a}.mhtw-option{padding:17px 13px;text-align:right}.mhtw-option b,.mhtw-option small{display:block}.mhtw-option small{font-size:11px;line-height:1.6;color:#718195;margin-top:5px}.mhtw-chips,.mhtw-colors{display:flex;gap:9px;flex-wrap:wrap}.mhtw-chips button{padding:11px 17px;font-weight:800}.mhtw-colors button{padding:9px 14px;display:flex;align-items:center;gap:7px;font-weight:800}.mhtw-colors i{width:23px;height:23px;border-radius:50%;background:var(--sw);border:1px solid rgba(0,0,0,.15)}.mhtw-option.is-active,.mhtw-chips button.is-active,.mhtw-colors button.is-active{outline:2px solid var(--mhtw-blue);outline-offset:1px;background:#f5f9ff}
+    .mhtw-summary{position:sticky;top:25px;border-radius:18px;padding:31px;background:var(--mhtw-navy);color:#fff;box-shadow:0 20px 45px rgba(7,26,51,.18)}.mhtw-summary>span{color:#acbdcf;font-size:13px}.mhtw-summary>strong{display:block;font-size:61px;line-height:1;margin:12px 0 7px}.mhtw-summary>strong small{font-size:17px}.mhtw-summary>em{display:block;font-style:normal;color:#d6e2ef;font-size:12px;margin-bottom:22px}.mhtw-summary ul{list-style:none;padding:0;margin:0 0 23px;border-block:1px solid rgba(255,255,255,.13)}.mhtw-summary li{display:flex;justify-content:space-between;gap:14px;padding:11px 0;color:#aebed0;font-size:12px}.mhtw-summary li+li{border-top:1px solid rgba(255,255,255,.09)}.mhtw-summary li b{color:#fff}.mhtw-summary>p{text-align:center;color:#98aabd;font-size:11px;line-height:1.6;margin:13px 0 0}
+    .mhtw-model{padding:88px 0;background:var(--mhtw-soft)}.mhtw-model__grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:45px;align-items:center}.mhtw-model p{color:#687a8d;line-height:1.9}.mhtw-model ul{list-style:none;padding:0;margin:25px 0 0}.mhtw-model li{padding:11px 0;border-bottom:1px solid #d9e2ea;color:#526478}.mhtw-model figure{margin:0;border-radius:18px;overflow:hidden;box-shadow:0 20px 55px rgba(7,26,51,.13)}.mhtw-model img{width:100%;height:440px;object-fit:cover;display:block}
+    .mhtw-gallery-section{padding:90px 0}.mhtw-heading{text-align:center;max-width:760px;margin:0 auto 42px}.mhtw-heading p{color:#68798e;line-height:1.8}.mhtw-gallery{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:285px;gap:15px}.mhtw-gallery figure{margin:0;border-radius:15px;overflow:hidden;background:#eee}.mhtw-gallery__tall{grid-row:span 2}.mhtw-gallery img{width:100%;height:100%;object-fit:cover;display:block;transition:.4s}.mhtw-gallery figure:hover img{transform:scale(1.03)}
+    .mhtw-steps{padding:88px 0;background:var(--mhtw-navy);color:#fff}.mhtw-heading--light h2{color:#fff}.mhtw-steps__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.mhtw-steps__grid>div{padding:28px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(255,255,255,.04)}.mhtw-steps__grid b{color:var(--mhtw-gold)}.mhtw-steps__grid h3{color:#fff;font-size:20px;margin:13px 0 8px}.mhtw-steps__grid p{margin:0;color:#aebed0}.mhtw-cta{padding:70px 0;background:#eaf1f7}.mhtw-cta__box{display:flex;align-items:center;justify-content:space-between;gap:28px;background:#fff;padding:44px 50px;border-radius:18px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mhtw-cta h2{font-size:clamp(29px,4vw,43px);margin:0 0 10px;color:var(--mhtw-navy)}.mhtw-cta p{margin:0;color:#68798e}.mhtw-mobile-order{display:none}
+    @media(max-width:900px){.mhtw-builder__grid,.mhtw-model__grid{grid-template-columns:1fr}.mhtw-summary{position:static}.mhtw-options{grid-template-columns:1fr}.mhtw-steps__grid{grid-template-columns:1fr}.mhtw-cta__box{align-items:flex-start;flex-direction:column}}
+    @media(max-width:600px){.mhtw-shell{width:min(100% - 28px,1180px)}.mhtw-hero{min-height:610px;background-position:35% center}.mhtw-hero__content{padding-block:60px}.mhtw-hero h1{font-size:41px}.mhtw-builder,.mhtw-model,.mhtw-gallery-section,.mhtw-steps{padding:64px 0}.mhtw-measures{grid-template-columns:1fr}.mhtw-gallery{grid-template-columns:1fr;grid-auto-rows:290px}.mhtw-gallery__tall{grid-row:auto}.mhtw-model img{height:330px}.mhtw-trust__grid{grid-template-columns:1fr}.mhtw-trust__grid>div{border-inline-start:0;border-bottom:1px solid rgba(255,255,255,.11);padding:18px}.mhtw-cta{padding:48px 0 90px}.mhtw-cta__box{padding:30px 24px}.mhtw-mobile-order{display:flex;position:fixed;z-index:9999;left:14px;right:14px;bottom:12px;min-height:52px;align-items:center;justify-content:center;border-radius:10px;background:var(--mhtw-green);color:#fff!important;font-weight:900;text-decoration:none!important;box-shadow:0 12px 32px rgba(0,0,0,.25)}}
+    </style>
+    <?php
+}
+add_action('wp_head', 'mh_control_tv_wall_head', 105);
+
+function mh_control_tv_wall_script(): void {
+    if (!mh_control_is_tv_wall_archive()) return;
+    ?>
+    <script id="mh-tv-wall-builder">
+    document.addEventListener('DOMContentLoaded',function(){
+        var state={design:'تصميم 130',console:'2 متر',panel:'بدون فواصل',color:'خشبي'};
+        var width=document.getElementById('mhtw-width'),height=document.getElementById('mhtw-height');
+        function clean(v,fallback){v=parseFloat(v);return isFinite(v)&&v>0?v:fallback;}
+        function fmt(v){return Number.isInteger(v)?String(v):v.toFixed(1);}
+        function choose(selector,key){
+            document.querySelectorAll(selector).forEach(function(button){button.addEventListener('click',function(){
+                document.querySelectorAll(selector).forEach(function(b){b.classList.remove('is-active');b.setAttribute('aria-pressed','false');});
+                button.classList.add('is-active');button.setAttribute('aria-pressed','true');state[key]=button.dataset['mhtw'+key.charAt(0).toUpperCase()+key.slice(1)];update();
+            });});
+        }
+        function update(){
+            var w=clean(width.value,4),h=clean(height.value,2.9);
+            document.getElementById('mhtw-wall-summary').textContent=fmt(w)+' × '+fmt(h)+' م';
+            document.getElementById('mhtw-design-summary').textContent=state.design;
+            document.getElementById('mhtw-console-summary').textContent=state.console;
+            document.getElementById('mhtw-panel-summary').textContent=state.panel;
+            document.getElementById('mhtw-color-summary').textContent=state.color;
+            var msg='مرحباً ماركوز هوم، أريد تصميم خلفية شاشة. عرض الحائط '+fmt(w)+' م وارتفاعه '+fmt(h)+' م. أفضّل '+state.design+'، طاولة '+state.console+'، لون '+state.color+'، ولوح '+state.panel+'. أريد تأكيد التصميم والسعر والمعاينة.';
+            document.getElementById('mhtw-whatsapp').href='https://wa.me/96550204320?text='+encodeURIComponent(msg);
+        }
+        width.addEventListener('input',update);height.addEventListener('input',update);
+        choose('[data-mhtw-design]','design');choose('[data-mhtw-console]','console');choose('[data-mhtw-panel]','panel');choose('[data-mhtw-color]','color');update();
+    });
+    </script>
+    <?php
+}
+add_action('wp_footer', 'mh_control_tv_wall_script', 104);
