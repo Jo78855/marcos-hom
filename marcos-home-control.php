@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.0.2');
+define('MH_CONTROL_VERSION', '1.0.3');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -1753,7 +1753,7 @@ function mh_control_about_markup(): string {
             </div>
         </section>
 
-        <section class="mhab-philosophy">
+        <section class="mhab-philosophy" id="mhab-philosophy">
             <div class="mhab-shell mhab-philosophy__grid">
                 <div class="mhab-philosophy__image"><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0109-580x387.jpg" alt="خلفية شاشة وطاولة معلقة من ماركوز هوم"></div>
                 <div>
@@ -1777,7 +1777,7 @@ function mh_control_about_markup(): string {
             </div>
         </section>
 
-        <section class="mhab-work">
+        <section class="mhab-work" id="mhab-work">
             <div class="mhab-shell">
                 <div class="mhab-heading mhab-heading--light"><span class="mhab-eyebrow">نماذج من أعمالنا</span><h2>تفاصيل دافئة لمساحات عصرية</h2></div>
                 <div class="mhab-work__grid">
