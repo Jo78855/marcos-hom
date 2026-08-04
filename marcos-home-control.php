@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.1.5
+ * Version: 1.2.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.1.5');
+define('MH_CONTROL_VERSION', '1.2.0');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -1948,3 +1948,153 @@ function mh_control_refresh_site_cache_once(): void {
     update_option('mh_global_cache_version', '1.1.1', false);
 }
 add_action('init', 'mh_control_refresh_site_cache_once', 999);
+
+
+/**
+ * Verified trust elements and customer-feedback collection — roadmap step 5.
+ */
+function mh_control_home_trust_markup(): string {
+    ob_start();
+    ?>
+    <section class="mhtrust-home" id="mh-trust">
+        <div class="mhtrust-shell">
+            <div class="mhtrust-heading">
+                <span class="mhtrust-eyebrow">الثقة تبدأ من التفاصيل</span>
+                <h2>تشوف الخطوات قبل ما نبدأ</h2>
+                <p>صورة المكان والمقاس والتصميم والخامة والسعر ومتطلبات التركيب تُراجع قبل التنفيذ.</p>
+            </div>
+            <div class="mhtrust-proof">
+                <div class="mhtrust-proof__steps">
+                    <article><b>01</b><h3>صورة ومقاس واضح</h3><p>نراجع عرض وارتفاع المساحة ومكان الكهرباء قبل اعتماد الحل.</p></article>
+                    <article><b>02</b><h3>تفاصيل متفق عليها</h3><p>نحدد المقاس واللون والخامة وما يشمله التوريد والتركيب.</p></article>
+                    <article><b>03</b><h3>تنفيذ وتشطيب</h3><p>تركيب مرتب ثم مراجعة الشكل النهائي وتسليم المساحة جاهزة.</p></article>
+                    <article><b>04</b><h3>تواصل مباشر</h3><p>كل تفاصيل الطلب تُرسل على واتساب لتظل واضحة وسهلة الرجوع.</p></article>
+                </div>
+                <div class="mhtrust-proof__gallery">
+                    <figure class="mhtrust-proof__main"><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0011.jpg" alt="طاولة تلفزيون وخلفية شاشة من أعمال ماركوز هوم"><figcaption>خلفية شاشة وطاولة معلقة</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.21-PM-1.jpeg" alt="خلفية سرير من أعمال ماركوز هوم"><figcaption>خلفية سرير بتفاصيل هادئة</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM.jpeg" alt="تنفيذ غرفة بدرجات خشبية من ماركوز هوم"><figcaption>تنفيذ بدرجات خشبية دافئة</figcaption></figure>
+                </div>
+            </div>
+            <div class="mhtrust-actions">
+                <a class="mhtrust-link" href="https://marcohom.com/portfolio/?site=mh">شاهد كل الأعمال</a>
+                <a class="mhtrust-link mhtrust-link--soft" href="https://marcohom.com/testimonials/?trust=verified">كيف نتحقق من آراء العملاء؟</a>
+            </div>
+        </div>
+    </section>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function mh_control_add_home_trust_section(string $content): string {
+    if (is_admin() || !is_front_page() || !in_the_loop() || !is_main_query() || strpos($content, 'mhtrust-home') !== false) return $content;
+    return str_replace('<section class="mh-process">', mh_control_home_trust_markup() . '<section class="mh-process">', $content);
+}
+add_filter('the_content', 'mh_control_add_home_trust_section', 1001);
+
+function mh_control_is_trust_page(): bool {
+    return is_page(16) || is_page('testimonials');
+}
+
+function mh_control_trust_page_markup(): string {
+    $review_message = rawurlencode('مرحباً ماركوز هوم، نفذتم لي مشروعاً وأريد إرسال تقييمي. نوع المشروع: _____. التقييم: _____. الاسم الذي أسمح بنشره: _____. أوافق على نشر هذا التقييم في موقع ماركوز هوم: نعم / لا.');
+    ob_start();
+    ?>
+    <main class="mhtrust-page" dir="rtl">
+        <section class="mhtrust-hero">
+            <div class="mhtrust-hero__shade"></div>
+            <div class="mhtrust-shell mhtrust-hero__content">
+                <span class="mhtrust-eyebrow mhtrust-eyebrow--light">ثقة مبنية على الوضوح</span>
+                <h1>من أول مقاس<br>لآخر تفصيلة</h1>
+                <p>نعرض الأعمال المنشورة ونشرح خطوات التنفيذ بوضوح، وننشر آراء العملاء فقط بعد استلامها منهم والموافقة على عرضها.</p>
+                <a class="mhtrust-btn mhtrust-btn--green" href="https://wa.me/96550204320?text=<?php echo esc_attr($review_message); ?>" target="_blank" rel="noopener">أرسل تقييم تجربتك</a>
+            </div>
+        </section>
+
+        <section class="mhtrust-commitments">
+            <div class="mhtrust-shell">
+                <div class="mhtrust-heading"><span class="mhtrust-eyebrow">ما الذي يتم تأكيده؟</span><h2>تفاصيل واضحة قبل التنفيذ</h2></div>
+                <div class="mhtrust-commitments__grid">
+                    <article><span>المقاس</span><h3>أبعاد المكان والمنتج</h3><p>مراجعة العرض والارتفاع والعمق قبل اعتماد الطلب.</p></article>
+                    <article><span>التصميم</span><h3>الشكل واللون والخامة</h3><p>تحديد الاختيارات الأساسية في رسالة يمكن الرجوع إليها.</p></article>
+                    <article><span>الخدمة</span><h3>ما يشمله السعر</h3><p>توضيح التوريد والتركيب وأي متطلبات إضافية قبل البدء.</p></article>
+                    <article><span>التسليم</span><h3>مراجعة النتيجة</h3><p>التأكد من التفاصيل والتشطيب بعد انتهاء التنفيذ.</p></article>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhtrust-real-work" id="mhtrust-real-work">
+            <div class="mhtrust-shell">
+                <div class="mhtrust-heading mhtrust-heading--light"><span class="mhtrust-eyebrow mhtrust-eyebrow--light">صور منشورة من أعمالنا</span><h2>نماذج تساعدك تختار</h2><p>شاهد التفاصيل والألوان والمقاسات، ثم أرسل صورة مساحتك للحصول على اقتراح مناسب.</p></div>
+                <div class="mhtrust-real-work__grid">
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0011.jpg" alt="خلفية شاشة وطاولة معلقة من ماركوز هوم"><figcaption>خلفية شاشة وطاولة TV</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.21-PM-1.jpeg" alt="خلفية سرير من ماركوز هوم"><figcaption>خلفية سرير</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.19-PM.jpeg" alt="تشطيب رمادي من ماركوز هوم"><figcaption>تشطيب رمادي هادئ</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM-2.jpeg" alt="تصميم غرفة بإضاءة دافئة من ماركوز هوم"><figcaption>إضاءة دافئة ودرجات محايدة</figcaption></figure>
+                </div>
+                <a class="mhtrust-text-link" href="https://marcohom.com/portfolio/?site=mh">افتح معرض أعمالنا بالكامل ←</a>
+            </div>
+        </section>
+
+        <section class="mhtrust-flow">
+            <div class="mhtrust-shell">
+                <div class="mhtrust-heading"><span class="mhtrust-eyebrow">رحلة التنفيذ</span><h2>أربع نقاط يمكنك متابعتها</h2></div>
+                <div class="mhtrust-flow__grid">
+                    <article><b>01</b><h3>القياس</h3><p>صورة واضحة ومقاسات مبدئية للمكان.</p></article>
+                    <article><b>02</b><h3>الاعتماد</h3><p>اختيار التصميم والخامة واللون.</p></article>
+                    <article><b>03</b><h3>التنفيذ</h3><p>تجهيز وتوريد وتركيب حسب الاتفاق.</p></article>
+                    <article><b>04</b><h3>التسليم</h3><p>مراجعة التشطيب والتفاصيل النهائية.</p></article>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhtrust-review">
+            <div class="mhtrust-shell mhtrust-review__box">
+                <div><span class="mhtrust-eyebrow">نفذنا لك مشروعاً؟</span><h2>شاركنا رأيك بصراحة</h2><p>أرسل نوع المشروع وتقييمك والاسم الذي تسمح لنا بنشره. لن ننشر اسمًا أو رأيًا بدون موافقة واضحة.</p></div>
+                <a class="mhtrust-btn mhtrust-btn--green" href="https://wa.me/96550204320?text=<?php echo esc_attr($review_message); ?>" target="_blank" rel="noopener">أرسل التقييم على واتساب</a>
+            </div>
+        </section>
+    </main>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function mh_control_render_trust_page(): void {
+    if (!mh_control_is_trust_page()) return;
+    status_header(200); get_header();
+    echo mh_control_trust_page_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    get_footer(); exit;
+}
+add_action('template_redirect', 'mh_control_render_trust_page', 36);
+
+function mh_control_trust_title(string $title): string {
+    return mh_control_is_trust_page() ? 'ثقة العملاء وطريقة تنفيذ ماركوز هوم | الكويت' : $title;
+}
+add_filter('pre_get_document_title', 'mh_control_trust_title', 126);
+
+function mh_control_trust_description(string $description): string {
+    return mh_control_is_trust_page() ? 'تعرف على خطوات القياس والتصميم والتوريد والتركيب في ماركوز هوم، وشاهد صور أعمال منشورة وأرسل تقييم تجربتك بموافقة واضحة.' : $description;
+}
+add_filter('aioseo_title', 'mh_control_trust_title', 1260);
+add_filter('aioseo_description', 'mh_control_trust_description', 1260);
+add_filter('wpseo_title', 'mh_control_trust_title', 1260);
+add_filter('wpseo_metadesc', 'mh_control_trust_description', 1260);
+add_filter('rank_math/frontend/title', 'mh_control_trust_title', 1260);
+add_filter('rank_math/frontend/description', 'mh_control_trust_description', 1260);
+
+function mh_control_trust_styles(): void {
+    if (!is_front_page() && !mh_control_is_trust_page()) return;
+    ?>
+    <style id="mh-trust-styles">
+    :root{--mht-blue:#1266d6;--mht-navy:#071a33;--mht-ink:#15263a;--mht-soft:#f2f6fa;--mht-gold:#d6aa62;--mht-green:#20b95a}.mhtrust-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}.mhtrust-heading{text-align:center;max-width:760px;margin:0 auto 42px}.mhtrust-heading h2{font-size:clamp(33px,5vw,51px);line-height:1.2;color:var(--mht-navy);margin:0 0 14px}.mhtrust-heading p{color:#68798d;line-height:1.8;margin:0}.mhtrust-eyebrow{display:inline-flex;align-items:center;gap:10px;color:var(--mht-blue);font-size:14px;font-weight:900;margin-bottom:14px}.mhtrust-eyebrow:before{content:"";width:32px;height:2px;background:var(--mht-gold)}.mhtrust-eyebrow--light{color:#dce9f7}
+    .mhtrust-home{font-family:Tahoma,Arial,sans-serif;padding:92px 0;background:#fff}.mhtrust-proof{display:grid;grid-template-columns:.88fr 1.12fr;gap:28px;align-items:stretch}.mhtrust-proof__steps{display:grid;grid-template-columns:1fr 1fr;gap:12px}.mhtrust-proof__steps article{padding:23px;border:1px solid #dfe7ef;border-radius:14px;background:#f8fafc}.mhtrust-proof__steps b{font-size:12px;color:var(--mht-blue)}.mhtrust-proof__steps h3{font-size:18px;color:var(--mht-navy);margin:11px 0 8px}.mhtrust-proof__steps p{font-size:12px;line-height:1.7;color:#697a8c;margin:0}.mhtrust-proof__gallery{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px}.mhtrust-proof__gallery figure{position:relative;margin:0;border-radius:14px;overflow:hidden;min-height:185px;background:#e8edf2}.mhtrust-proof__main{grid-row:span 2}.mhtrust-proof__gallery img{width:100%;height:100%;object-fit:cover;display:block}.mhtrust-proof__gallery figcaption{position:absolute;inset-inline:12px;bottom:10px;padding:7px 9px;border-radius:7px;background:rgba(7,26,51,.78);color:#fff;font-size:11px}.mhtrust-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:28px}.mhtrust-link{display:inline-flex;padding:12px 18px;border-radius:8px;background:var(--mht-navy);color:#fff!important;text-decoration:none!important;font-weight:900}.mhtrust-link--soft{background:#eaf2fb;color:var(--mht-blue)!important}
+    .mhtrust-page{font-family:Tahoma,Arial,sans-serif;color:var(--mht-ink);background:#fff;width:100vw;margin-inline:calc(50% - 50vw);overflow:hidden}.mhtrust-page *{box-sizing:border-box}.mhtrust-hero{min-height:620px;display:flex;align-items:center;position:relative;background:url('https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0011.jpg') center/cover no-repeat}.mhtrust-hero__shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,16,32,.26),rgba(4,16,32,.92))}.mhtrust-hero__content{position:relative;z-index:1;color:#fff;padding-block:80px}.mhtrust-hero h1{font-size:clamp(46px,7vw,76px);line-height:1.08;color:#fff;margin:0 0 20px}.mhtrust-hero p{max-width:690px;font-size:18px;line-height:1.9;color:#e6eef7;margin:0 0 28px}.mhtrust-btn{display:inline-flex;justify-content:center;align-items:center;min-height:52px;padding:12px 22px;border-radius:8px;text-decoration:none!important;font-weight:900}.mhtrust-btn--green{background:var(--mht-green);color:#fff!important}
+    .mhtrust-commitments{padding:90px 0}.mhtrust-commitments__grid,.mhtrust-flow__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.mhtrust-commitments article,.mhtrust-flow article{padding:27px;border:1px solid #dfe7ef;border-radius:14px;background:#fff}.mhtrust-commitments span,.mhtrust-flow b{font-size:12px;color:var(--mht-blue);font-weight:900}.mhtrust-commitments h3,.mhtrust-flow h3{font-size:19px;color:var(--mht-navy);margin:12px 0 8px}.mhtrust-commitments p,.mhtrust-flow p{font-size:13px;line-height:1.7;color:#68798c;margin:0}
+    .mhtrust-real-work{padding:90px 0;background:var(--mht-navy);text-align:center}.mhtrust-heading--light h2{color:#fff}.mhtrust-heading--light p{color:#b4c3d3}.mhtrust-real-work__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}.mhtrust-real-work figure{position:relative;margin:0;border-radius:15px;overflow:hidden;background:#1a2f47}.mhtrust-real-work img{width:100%;height:390px;object-fit:cover;display:block}.mhtrust-real-work figcaption{position:absolute;inset-inline:12px;bottom:12px;padding:8px 10px;border-radius:7px;background:rgba(7,26,51,.78);color:#fff;font-size:12px}.mhtrust-text-link{display:inline-flex;color:#fff!important;text-decoration:none!important;font-weight:900;border-bottom:1px solid var(--mht-gold);padding-bottom:6px}
+    .mhtrust-flow{padding:90px 0;background:var(--mht-soft)}.mhtrust-review{padding:74px 0;background:#e8f0f8}.mhtrust-review__box{display:flex;align-items:center;justify-content:space-between;gap:35px;background:#fff;padding:45px 50px;border-radius:18px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mhtrust-review h2{font-size:clamp(30px,4vw,45px);color:var(--mht-navy);margin:0 0 11px}.mhtrust-review p{color:#68798c;line-height:1.8;margin:0;max-width:690px}
+    @media(max-width:900px){.mhtrust-proof{grid-template-columns:1fr}.mhtrust-commitments__grid,.mhtrust-flow__grid,.mhtrust-real-work__grid{grid-template-columns:1fr 1fr}.mhtrust-review__box{align-items:flex-start;flex-direction:column}}
+    @media(max-width:600px){.mhtrust-shell{width:min(100% - 28px,1180px)}.mhtrust-home,.mhtrust-commitments,.mhtrust-real-work,.mhtrust-flow{padding:64px 0}.mhtrust-proof__steps,.mhtrust-proof__gallery,.mhtrust-commitments__grid,.mhtrust-flow__grid,.mhtrust-real-work__grid{grid-template-columns:1fr}.mhtrust-proof__gallery{grid-template-rows:auto}.mhtrust-proof__main{grid-row:auto}.mhtrust-proof__gallery figure{height:280px}.mhtrust-hero{min-height:590px;background-position:40% center}.mhtrust-hero h1{font-size:43px}.mhtrust-real-work img{height:320px}.mhtrust-review{padding:48px 0}.mhtrust-review__box{padding:30px 24px}}
+    </style>
+    <?php
+}
+add_action('wp_head', 'mh_control_trust_styles', 207);
