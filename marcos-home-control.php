@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.4.0
+ * Version: 0.5.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.4.0');
+define('MH_CONTROL_VERSION', '0.5.0');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -128,7 +128,7 @@ function mh_control_homepage_markup(): string {
                         <img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة من ماركوز هوم">
                         <span class="mh-card__shade"></span><span class="mh-card__text"><b>ركن القهوة</b><small>7 تصميمات — يبدأ من 35 د.ك</small></span>
                     </a>
-                    <a class="mh-card" href="https://marcohom.com/product-category/%d9%88%d8%a7%d8%ad%d8%af%d8%a7%d8%aa-%d8%a7%d9%84%d8%aa%d8%ae%d8%b2%d9%8a%d9%86-tv/">
+                    <a class="mh-card" href="https://marcohom.com/product/%d8%b7%d8%a7%d9%88%d9%84%d8%a7%d8%aa-tv/">
                         <img src="https://marcohom.com/wp-content/uploads/2025/11/Generated-Image-November-03-2025-7_43PM-270x270.png" alt="طاولات تلفزيون معلقة">
                         <span class="mh-card__shade"></span><span class="mh-card__text"><b>طاولات TV</b><small>مقاسات وألوان تناسب تصميمك</small></span>
                     </a>
@@ -341,7 +341,7 @@ function mh_control_portfolio_markup(): string {
                         <div class="mhp-project__image">
                             <img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0011.jpg" alt="طاولة تلفزيون معلقة من ماركوز هوم" loading="lazy">
                         </div>
-                        <div class="mhp-project__info"><span>04</span><h2>طاولات TV</h2><p>وحدات معلقة بخامات وألوان متعددة، وتصميم نظيف يسهل استخدامه.</p></div>
+                        <div class="mhp-project__info"><span>04</span><h2>طاولات TV</h2><p>وحدات معلقة بخامات وألوان متعددة، وتصميم نظيف يسهل استخدامه.</p><a href="https://marcohom.com/product/%d8%b7%d8%a7%d9%88%d9%84%d8%a7%d8%aa-tv/">شاهد المقاسات والأسعار</a></div>
                     </article>
                     <article class="mhp-project" id="parquet">
                         <div class="mhp-project__image">
@@ -679,3 +679,240 @@ function mh_control_coffee_head(): void {
     <?php
 }
 add_action('wp_head', 'mh_control_coffee_head', 100);
+
+
+/**
+ * TV console product page — product roadmap item 2.
+ * Keeps WooCommerce product 6455 and its public URL unchanged.
+ */
+function mh_control_is_tv_console_page(): bool {
+    return is_singular('product') && get_queried_object_id() === 6455;
+}
+
+function mh_control_tv_console_markup(): string {
+    $order_text = rawurlencode('مرحباً ماركوز هوم، أريد طلب طاولة TV مقاس 1.5 متر، اللون أبيض، بدون تركيب، السعر 40 د.ك.');
+    ob_start();
+    ?>
+    <main class="mh-tv" dir="rtl">
+        <section class="mht-hero">
+            <div class="mht-shell mht-hero__grid">
+                <div class="mht-hero__copy">
+                    <span class="mht-eyebrow">طاولات TV معلقة</span>
+                    <h1>شكل أنيق.<br>تخزين عملي.</h1>
+                    <p>طاولة تلفزيون معلقة بأربعة أبواب متساوية، بتصميم بسيط وألوان تناسب ديكور بيتك.</p>
+                    <div class="mht-badges"><span>ارتفاع 25 سم</span><span>عمق 32 سم</span><span>7 ألوان</span></div>
+                </div>
+                <figure class="mht-hero__visual">
+                    <img src="https://marcohom.com/wp-content/uploads/2025/11/Generated-Image-November-03-2025-7_43PM.png" alt="طاولة تلفزيون معلقة من ماركوز هوم">
+                </figure>
+            </div>
+        </section>
+
+        <section class="mht-builder" id="order">
+            <div class="mht-shell mht-builder__grid">
+                <div class="mht-builder__choices">
+                    <span class="mht-eyebrow mht-eyebrow--blue">كوّن طلبك</span>
+                    <h2>اختار المقاس واللون</h2>
+
+                    <fieldset>
+                        <legend>1. المقاس</legend>
+                        <div class="mht-choice-row">
+                            <button class="mht-choice is-active" type="button" data-mht-size="1.5 متر" data-mht-base="40" data-mht-install="50" aria-pressed="true"><b>1.5 متر</b><small>4 أبواب — 40 د.ك</small></button>
+                            <button class="mht-choice" type="button" data-mht-size="2 متر" data-mht-base="50" data-mht-install="60" aria-pressed="false"><b>2 متر</b><small>4 أبواب — 50 د.ك</small></button>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>2. اللون</legend>
+                        <div class="mht-colors">
+                            <button class="mht-color is-active" type="button" data-mht-color="أبيض" aria-pressed="true"><i style="--swatch:#f1f1ed"></i><span>أبيض</span></button>
+                            <button class="mht-color" type="button" data-mht-color="أسود" aria-pressed="false"><i style="--swatch:#202124"></i><span>أسود</span></button>
+                            <button class="mht-color" type="button" data-mht-color="رمادي فاتح" aria-pressed="false"><i style="--swatch:#c9cbca"></i><span>رمادي فاتح</span></button>
+                            <button class="mht-color" type="button" data-mht-color="رمادي غامق" aria-pressed="false"><i style="--swatch:#55585b"></i><span>رمادي غامق</span></button>
+                            <button class="mht-color" type="button" data-mht-color="بيج خشبي" aria-pressed="false"><i style="--swatch:#cbb89b"></i><span>بيج خشبي</span></button>
+                            <button class="mht-color" type="button" data-mht-color="عسلي خشبي" aria-pressed="false"><i style="--swatch:#ad6f31"></i><span>عسلي</span></button>
+                            <button class="mht-color" type="button" data-mht-color="جوزي" aria-pressed="false"><i style="--swatch:#6f4329"></i><span>جوزي</span></button>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>3. التركيب</legend>
+                        <div class="mht-install">
+                            <button class="mht-install-choice is-active" type="button" data-mht-installation="بدون تركيب" data-mht-installed="0" aria-pressed="true"><b>بدون تركيب</b><small>استلام الطاولة جاهزة</small></button>
+                            <button class="mht-install-choice" type="button" data-mht-installation="شامل التركيب" data-mht-installed="1" aria-pressed="false"><b>مع التركيب</b><small>إضافة 10 د.ك</small></button>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <aside class="mht-summary">
+                    <span>السعر الحالي</span>
+                    <strong><em id="mht-price">40</em> <small>د.ك</small></strong>
+                    <ul>
+                        <li><span>المقاس</span><b id="mht-size-summary">1.5 متر</b></li>
+                        <li><span>اللون</span><b id="mht-color-summary">أبيض</b></li>
+                        <li><span>الخدمة</span><b id="mht-install-summary">بدون تركيب</b></li>
+                    </ul>
+                    <a id="mht-whatsapp" class="mht-btn mht-btn--green" href="https://wa.me/96550204320?text=<?php echo esc_attr($order_text); ?>" target="_blank" rel="noopener">اطلب على واتساب</a>
+                    <p>سنراجع اللون والمقاس معك قبل تأكيد الطلب.</p>
+                </aside>
+            </div>
+        </section>
+
+        <section class="mht-specs">
+            <div class="mht-shell">
+                <div class="mht-heading">
+                    <span class="mht-eyebrow mht-eyebrow--blue">تفاصيل ثابتة</span>
+                    <h2>تصميم نحيف ومساحة تخزين أكبر</h2>
+                </div>
+                <div class="mht-specs__grid">
+                    <div><b>25 سم</b><h3>الارتفاع</h3><p>ارتفاع نحيف يحافظ على مظهر خفيف وأنيق.</p></div>
+                    <div><b>32 سم</b><h3>العمق</h3><p>عمق عملي للتخزين بدون بروز زائد عن الحائط.</p></div>
+                    <div><b>4 أبواب</b><h3>تقسيم متساوٍ</h3><p>واجهة نظيفة ومساحات منظمة للاستخدام اليومي.</p></div>
+                    <div><b>معلّقة</b><h3>سهولة التنظيف</h3><p>شكل عصري مع فراغ واضح أسفل الطاولة.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mht-colors-gallery">
+            <div class="mht-shell">
+                <div class="mht-heading">
+                    <span class="mht-eyebrow mht-eyebrow--blue">اختار درجتك</span>
+                    <h2>سبعة ألوان تناسب ديكورك</h2>
+                    <p>الألوان المعروضة مرجع للاختيار، ونؤكد الدرجة النهائية معك قبل التنفيذ.</p>
+                </div>
+                <div class="mht-gallery">
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/11/IMG-20251031-WA0109.jpg" alt="طاولة تلفزيون بيضاء معلقة" loading="lazy"><figcaption>أبيض</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/11/IMG-20251031-WA0108.jpg" alt="طاولة تلفزيون سوداء معلقة" loading="lazy"><figcaption>أسود</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/11/IMG-20251031-WA0106.jpg" alt="طاولة تلفزيون رمادي فاتح" loading="lazy"><figcaption>رمادي فاتح</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/11/IMG-20251031-WA0111.jpg" alt="طاولة تلفزيون رمادي غامق" loading="lazy"><figcaption>رمادي غامق</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/11/IMG-20251031-WA0114-1.jpg" alt="طاولة تلفزيون بيج خشبي" loading="lazy"><figcaption>بيج خشبي</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/11/IMG-20251031-WA0115.jpg" alt="طاولة تلفزيون عسلي خشبي" loading="lazy"><figcaption>عسلي خشبي</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0011.jpg" alt="طاولة تلفزيون جوزي" loading="lazy"><figcaption>جوزي</figcaption></figure>
+                </div>
+            </div>
+        </section>
+
+        <section class="mht-prices">
+            <div class="mht-shell">
+                <div class="mht-heading mht-heading--light">
+                    <span class="mht-eyebrow">أسعار واضحة</span>
+                    <h2>اختار المقاس المناسب</h2>
+                </div>
+                <div class="mht-prices__grid">
+                    <div><span>1.5 متر</span><strong>40 <small>د.ك</small></strong><p>بدون تركيب</p><b>50 د.ك شامل التركيب</b></div>
+                    <div class="is-featured"><i>مساحة أكبر</i><span>2 متر</span><strong>50 <small>د.ك</small></strong><p>بدون تركيب</p><b>60 د.ك شامل التركيب</b></div>
+                </div>
+                <p class="mht-install-note">خدمة التركيب داخل الكويت: 10 د.ك فقط.</p>
+            </div>
+        </section>
+
+        <section class="mht-cta">
+            <div class="mht-shell mht-cta__box">
+                <div><span class="mht-eyebrow mht-eyebrow--blue">جاهز تطلب؟</span><h2>اختار المقاس واللون وأرسل الطلب</h2><p>رسالة واتساب جاهزة بكل اختياراتك والسعر النهائي.</p></div>
+                <a class="mht-btn mht-btn--dark" href="#order">كوّن طلبك الآن</a>
+            </div>
+        </section>
+        <a class="mht-mobile-order" href="#order">اختار طاولة TV — تبدأ من 40 د.ك</a>
+    </main>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function mh_control_render_tv_console_page(): void {
+    if (!mh_control_is_tv_console_page()) {
+        return;
+    }
+    status_header(200);
+    get_header();
+    echo mh_control_tv_console_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    get_footer();
+    exit;
+}
+add_action('template_redirect', 'mh_control_render_tv_console_page', 30);
+
+function mh_control_tv_console_title(string $title): string {
+    return mh_control_is_tv_console_page() ? 'طاولات TV معلقة من ماركوز هوم | تبدأ من 40 د.ك' : $title;
+}
+add_filter('pre_get_document_title', 'mh_control_tv_console_title', 120);
+
+function mh_control_tv_console_description(string $description): string {
+    return mh_control_is_tv_console_page()
+        ? 'طاولات تلفزيون معلقة بمقاس 1.5 أو 2 متر، ارتفاع 25 سم وعمق 32 سم وسبعة ألوان. تبدأ من 40 د.ك، والتركيب داخل الكويت 10 د.ك.'
+        : $description;
+}
+add_filter('aioseo_title', 'mh_control_tv_console_title', 1200);
+add_filter('aioseo_description', 'mh_control_tv_console_description', 1200);
+add_filter('wpseo_title', 'mh_control_tv_console_title', 1200);
+add_filter('wpseo_metadesc', 'mh_control_tv_console_description', 1200);
+add_filter('rank_math/frontend/title', 'mh_control_tv_console_title', 1200);
+add_filter('rank_math/frontend/description', 'mh_control_tv_console_description', 1200);
+
+function mh_control_tv_console_head(): void {
+    if (!mh_control_is_tv_console_page()) {
+        return;
+    }
+    ?>
+    <meta name="description" content="طاولات تلفزيون معلقة بمقاس 1.5 أو 2 متر وسبعة ألوان. تبدأ من 40 د.ك، وخدمة التركيب داخل الكويت 10 د.ك.">
+    <style id="mh-tv-styles">
+    :root{--mht-blue:#1266d6;--mht-navy:#071a33;--mht-ink:#15263a;--mht-soft:#f2f6fa;--mht-gold:#d6aa62;--mht-green:#20b95a}
+    html:has(.mh-tv),body:has(.mh-tv){overflow-x:clip}.mh-tv{font-family:Tahoma,Arial,sans-serif;color:var(--mht-ink);background:#fff;width:100vw;margin-inline:calc(50% - 50vw);overflow:hidden}.mh-tv *{box-sizing:border-box}.mht-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}
+    .mht-hero{padding:72px 0;background:linear-gradient(135deg,#f8fafc,#e8eff6)}.mht-hero__grid{display:grid;grid-template-columns:.75fr 1.25fr;gap:60px;align-items:center}.mht-eyebrow{display:inline-flex;align-items:center;gap:10px;color:#61738a;font-size:14px;font-weight:800;margin-bottom:15px}.mht-eyebrow:before{content:"";width:32px;height:2px;background:var(--mht-gold)}.mht-eyebrow--blue{color:var(--mht-blue)}.mht-hero h1{font-size:clamp(44px,6vw,72px);line-height:1.12;color:var(--mht-navy);margin:0 0 20px;font-weight:900}.mht-hero__copy>p{font-size:18px;line-height:1.9;color:#607187;margin:0 0 26px}.mht-badges{display:flex;gap:8px;flex-wrap:wrap}.mht-badges span{padding:8px 13px;border:1px solid #cad5df;border-radius:999px;color:#4d6075;font-size:12px;font-weight:700}.mht-hero__visual{margin:0;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 24px 60px rgba(7,26,51,.14)}.mht-hero__visual img{display:block;width:100%;height:520px;object-fit:cover}
+    .mht-builder{padding:88px 0}.mht-builder__grid{display:grid;grid-template-columns:1.3fr .7fr;gap:36px;align-items:start}.mht-builder__choices h2,.mht-heading h2{font-size:clamp(34px,5vw,52px);color:var(--mht-navy);margin:0 0 32px}.mht-builder fieldset{border:0;padding:0;margin:0 0 29px}.mht-builder legend{font-size:17px;color:var(--mht-navy);font-weight:900;margin-bottom:13px}.mht-choice-row,.mht-install{display:grid;grid-template-columns:1fr 1fr;gap:12px}.mht-choice,.mht-install-choice{font:inherit;text-align:right;border:1px solid #d9e2eb;border-radius:12px;background:#fff;padding:18px 20px;cursor:pointer;color:var(--mht-ink)}.mht-choice b,.mht-choice small,.mht-install-choice b,.mht-install-choice small{display:block}.mht-choice small,.mht-install-choice small{color:#718096;margin-top:6px;font-size:12px}.mht-choice.is-active,.mht-install-choice.is-active{border:2px solid var(--mht-blue);background:#f5f9ff}.mht-colors{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.mht-color{font:inherit;border:1px solid #dde5ed;border-radius:11px;background:#fff;padding:12px 8px;cursor:pointer;color:#44576c}.mht-color i{display:block;width:30px;height:30px;border-radius:50%;margin:0 auto 7px;background:var(--swatch);border:1px solid rgba(0,0,0,.1)}.mht-color span{font-size:11px;font-weight:800}.mht-color.is-active{outline:2px solid var(--mht-blue);outline-offset:1px}
+    .mht-summary{position:sticky;top:25px;border-radius:18px;padding:32px;background:var(--mht-navy);color:#fff;box-shadow:0 20px 45px rgba(7,26,51,.18)}.mht-summary>span{color:#aebed0;font-size:14px}.mht-summary>strong{display:block;font-size:60px;line-height:1;margin:14px 0 25px}.mht-summary>strong em{font-style:normal}.mht-summary>strong small{font-size:18px}.mht-summary ul{list-style:none;padding:0;margin:0 0 24px;border-block:1px solid rgba(255,255,255,.13)}.mht-summary li{display:flex;justify-content:space-between;gap:16px;padding:12px 0;color:#b8c6d6;font-size:13px}.mht-summary li+li{border-top:1px solid rgba(255,255,255,.09)}.mht-summary li b{color:#fff}.mht-btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:12px 23px;border-radius:8px;font-weight:900;text-decoration:none!important;transition:.2s ease}.mht-btn:hover{transform:translateY(-2px)}.mht-btn--green{background:var(--mht-green);color:#fff!important;width:100%}.mht-btn--dark{background:var(--mht-navy);color:#fff!important}.mht-summary>p{text-align:center;color:#9eafc2;font-size:11px;margin:13px 0 0}
+    .mht-specs{padding:88px 0;background:var(--mht-soft)}.mht-heading{text-align:center;max-width:760px;margin:0 auto 42px}.mht-heading p{color:#68798d;line-height:1.8;margin:0}.mht-specs__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.mht-specs__grid>div{background:#fff;border:1px solid #e1e8ef;border-radius:15px;padding:27px}.mht-specs__grid b{font-size:27px;color:var(--mht-blue)}.mht-specs__grid h3{font-size:18px;color:var(--mht-navy);margin:10px 0}.mht-specs__grid p{font-size:13px;line-height:1.75;color:#6b7b8e;margin:0}
+    .mht-colors-gallery{padding:90px 0}.mht-gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:17px}.mht-gallery figure{margin:0;border:1px solid #e1e8ef;border-radius:15px;overflow:hidden;background:#fff}.mht-gallery figure:first-child{grid-column:span 2}.mht-gallery img{width:100%;height:310px;object-fit:contain;background:#f7f8f9;display:block;transition:transform .4s ease}.mht-gallery figure:hover img{transform:scale(1.025)}.mht-gallery figcaption{padding:16px 18px;color:var(--mht-navy);font-weight:900}
+    .mht-prices{padding:88px 0;background:var(--mht-navy);color:#fff}.mht-heading--light h2{color:#fff}.mht-prices__grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:760px;margin:0 auto}.mht-prices__grid>div{position:relative;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);border-radius:16px;padding:31px}.mht-prices__grid>div.is-featured{border:2px solid #4f9cff}.mht-prices__grid i{position:absolute;top:-13px;right:20px;background:var(--mht-blue);padding:5px 11px;border-radius:999px;font-size:11px;font-style:normal}.mht-prices__grid span{display:block;color:#b9c6d5;font-weight:800}.mht-prices__grid strong{display:block;font-size:52px;margin:13px 0 8px}.mht-prices__grid strong small{font-size:17px}.mht-prices__grid p{margin:0 0 12px;color:#aebdce}.mht-prices__grid b{color:#fff}.mht-install-note{text-align:center;color:#b9c6d5;margin:24px 0 0}
+    .mht-cta{padding:70px 0;background:#eaf1f7}.mht-cta__box{display:flex;align-items:center;justify-content:space-between;gap:30px;background:#fff;padding:44px 50px;border-radius:18px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mht-cta h2{font-size:clamp(29px,4vw,43px);color:var(--mht-navy);margin:0 0 10px}.mht-cta p{margin:0;color:#68798e}.mht-mobile-order{display:none}
+    @media(max-width:900px){.mht-hero__grid,.mht-builder__grid{grid-template-columns:1fr}.mht-hero__visual img{height:440px}.mht-summary{position:static}.mht-specs__grid{grid-template-columns:1fr 1fr}.mht-gallery{grid-template-columns:1fr 1fr}.mht-gallery figure:first-child{grid-column:span 2}.mht-cta__box{align-items:flex-start;flex-direction:column}}
+    @media(max-width:600px){.mht-shell{width:min(100% - 28px,1180px)}.mht-hero{padding:52px 0}.mht-hero h1{font-size:43px}.mht-hero__visual img{height:330px}.mht-builder,.mht-specs,.mht-colors-gallery,.mht-prices{padding:64px 0}.mht-choice-row,.mht-install,.mht-specs__grid,.mht-gallery{grid-template-columns:1fr}.mht-colors{grid-template-columns:repeat(3,1fr)}.mht-gallery figure:first-child{grid-column:auto}.mht-gallery img{height:270px}.mht-prices__grid{grid-template-columns:1fr}.mht-cta{padding:48px 0 90px}.mht-cta__box{padding:30px 24px}.mht-mobile-order{display:flex;position:fixed;z-index:9999;left:14px;right:14px;bottom:12px;min-height:52px;align-items:center;justify-content:center;border-radius:10px;background:var(--mht-green);color:#fff!important;font-weight:900;text-decoration:none!important;box-shadow:0 12px 32px rgba(0,0,0,.25)}}
+    </style>
+    <?php
+}
+add_action('wp_head', 'mh_control_tv_console_head', 101);
+
+function mh_control_tv_console_script(): void {
+    if (!mh_control_is_tv_console_page()) {
+        return;
+    }
+    ?>
+    <script id="mh-tv-builder">
+    document.addEventListener('DOMContentLoaded',function(){
+        var state={size:'1.5 متر',color:'أبيض',base:40,installed:0,installation:'بدون تركيب'};
+        var price=document.getElementById('mht-price');
+        var link=document.getElementById('mht-whatsapp');
+        function update(){
+            var finalPrice=state.installed?state.install:state.base;
+            price.textContent=String(finalPrice);
+            document.getElementById('mht-size-summary').textContent=state.size;
+            document.getElementById('mht-color-summary').textContent=state.color;
+            document.getElementById('mht-install-summary').textContent=state.installation;
+            var msg='مرحباً ماركوز هوم، أريد طلب طاولة TV مقاس '+state.size+'، اللون '+state.color+'، '+state.installation+'، السعر '+finalPrice+' د.ك.';
+            link.href='https://wa.me/96550204320?text='+encodeURIComponent(msg);
+        }
+        document.querySelectorAll('[data-mht-size]').forEach(function(button){
+            button.addEventListener('click',function(){
+                document.querySelectorAll('[data-mht-size]').forEach(function(b){b.classList.remove('is-active');b.setAttribute('aria-pressed','false');});
+                button.classList.add('is-active');button.setAttribute('aria-pressed','true');
+                state.size=button.dataset.mhtSize;state.base=Number(button.dataset.mhtBase);state.install=Number(button.dataset.mhtInstall);update();
+            });
+        });
+        document.querySelectorAll('[data-mht-color]').forEach(function(button){
+            button.addEventListener('click',function(){
+                document.querySelectorAll('[data-mht-color]').forEach(function(b){b.classList.remove('is-active');b.setAttribute('aria-pressed','false');});
+                button.classList.add('is-active');button.setAttribute('aria-pressed','true');
+                state.color=button.dataset.mhtColor;update();
+            });
+        });
+        document.querySelectorAll('[data-mht-installed]').forEach(function(button){
+            button.addEventListener('click',function(){
+                document.querySelectorAll('[data-mht-installed]').forEach(function(b){b.classList.remove('is-active');b.setAttribute('aria-pressed','false');});
+                button.classList.add('is-active');button.setAttribute('aria-pressed','true');
+                state.installed=Number(button.dataset.mhtInstalled);state.installation=button.dataset.mhtInstallation;update();
+            });
+        });
+        update();
+    });
+    </script>
+    <?php
+}
+add_action('wp_footer', 'mh_control_tv_console_script', 100);
