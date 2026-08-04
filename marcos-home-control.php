@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.2.0
+ * Version: 0.2.1
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.2.0');
+define('MH_CONTROL_VERSION', '0.2.1');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -194,7 +194,7 @@ function mh_control_front_styles(): void {
     :root{--mh-blue:#1266d6;--mh-navy:#071a33;--mh-ink:#132238;--mh-soft:#f3f6f9;--mh-gold:#d6aa62}
     .mh-home{font-family:Tahoma,Arial,sans-serif;color:var(--mh-ink);background:#fff;width:100vw;margin-inline:calc(50% - 50vw);overflow:hidden}
     .mh-home *{box-sizing:border-box}.mh-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}
-    .mh-hero{min-height:650px;display:flex;align-items:center;position:relative;background:url('https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.19-PM.jpeg') center/cover no-repeat}
+    .mh-hero{min-height:650px;display:flex;align-items:center;position:relative;background:url('https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.19-PM.jpeg') center 63%/cover no-repeat}
     .mh-hero__overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,18,37,.2),rgba(5,18,37,.88))}
     .mh-hero__content{position:relative;z-index:1;color:#fff;padding-block:100px}.mh-kicker{display:inline-flex;align-items:center;gap:10px;font-size:15px;font-weight:700;letter-spacing:.1px;margin-bottom:18px;color:#d8e8ff}.mh-kicker:before{content:"";width:34px;height:2px;background:var(--mh-gold)}
     .mh-kicker--dark{color:var(--mh-blue)}.mh-hero h1{font-size:clamp(42px,6vw,76px);line-height:1.12;margin:0 0 22px;max-width:760px;color:#fff;font-weight:800}.mh-hero p{font-size:19px;line-height:1.9;max-width:680px;margin:0 0 34px;color:#eef5ff}
@@ -211,3 +211,28 @@ function mh_control_front_styles(): void {
     <?php
 }
 add_action('wp_head', 'mh_control_front_styles', 99);
+
+
+function mh_control_final_front_title(string $title): string {
+    if (is_front_page()) {
+        return 'ماركوز هوم | تصميمات وديكور في الكويت';
+    }
+    return $title;
+}
+add_filter('pre_get_document_title', 'mh_control_final_front_title', 99);
+
+function mh_control_arabic_menu_labels(array $items): array {
+    if (is_admin()) {
+        return $items;
+    }
+    foreach ($items as $item) {
+        $label = trim(wp_strip_all_tags((string) $item->title));
+        if (strcasecmp($label, 'Portfolio') === 0) {
+            $item->title = 'أعمالنا';
+        } elseif ($label === 'نماذج') {
+            $item->title = 'التصميمات';
+        }
+    }
+    return $items;
+}
+add_filter('wp_nav_menu_objects', 'mh_control_arabic_menu_labels', 20);
