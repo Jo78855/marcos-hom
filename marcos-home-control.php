@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.0.3
+ * Version: 1.1.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.0.3');
+define('MH_CONTROL_VERSION', '1.1.0');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -1856,3 +1856,80 @@ function mh_control_about_head(): void {
     <?php
 }
 add_action('wp_head', 'mh_control_about_head', 106);
+
+
+/**
+ * Simplified site-wide header and mobile navigation — roadmap step 4.
+ */
+function mh_control_render_global_header(): void {
+    if (is_admin()) return;
+    $whatsapp = 'https://wa.me/96550204320?text=' . rawurlencode('مرحباً ماركوز هوم، أريد الاستفسار عن تصميم مناسب لمساحتي. هذه صورة المكان:');
+    ?>
+    <header class="mh-global-header" dir="rtl" aria-label="رأس الموقع">
+        <div class="mh-global-header__shell">
+            <a class="mh-global-logo" href="https://marcohom.com/" aria-label="ماركوز هوم — الرئيسية">
+                <img src="https://marcohom.com/wp-content/uploads/2025/03/صورة-واتساب-بتاريخ-2025-03-14-في-04.03.49_157c93e1-480x360.jpg" alt="ماركوز هوم">
+            </a>
+
+            <nav class="mh-global-nav" id="mh-global-nav" aria-label="القائمة الرئيسية">
+                <a href="https://marcohom.com/">الرئيسية</a>
+                <a href="https://marcohom/#mh-services">خدماتنا</a>
+                <a href="https://marcohom/portfolio/">أعمالنا</a>
+                <a href="https://marcohom/about/?company=marcos-home">عن ماركوز هوم</a>
+                <a class="mh-global-nav__instagram" href="https://www.instagram.com/marcoshomekw?igsh=MWk0bXh1a2duYnVoMA%3D%3D&utm_source=qr" target="_blank" rel="noopener">Instagram</a>
+            </nav>
+
+            <div class="mh-global-header__actions">
+                <a class="mh-global-whatsapp" href="<?php echo esc_url($whatsapp); ?>" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a9.8 9.8 0 0 0-8.46 14.73L2 22l5.42-1.42A10 10 0 1 0 12 2Zm0 17.9a7.8 7.8 0 0 1-3.98-1.09l-.29-.17-3.22.84.86-3.14-.19-.31A7.8 7.8 0 1 1 12 19.9Zm4.28-5.84c-.23-.12-1.39-.69-1.61-.76-.21-.08-.37-.12-.53.12-.15.23-.6.76-.74.92-.13.15-.27.17-.5.05-.24-.12-.99-.36-1.88-1.16a7.1 7.1 0 0 1-1.3-1.62c-.13-.24-.01-.36.1-.48.1-.1.23-.27.35-.41.11-.14.15-.24.23-.39.08-.16.04-.29-.02-.41-.06-.12-.53-1.27-.72-1.74-.19-.46-.38-.4-.53-.41h-.45c-.16 0-.41.06-.63.29-.21.23-.82.8-.82 1.96 0 1.15.84 2.27.96 2.43.12.15 1.65 2.52 4 3.54.56.24.99.38 1.33.49.56.17 1.07.15 1.47.09.45-.07 1.39-.57 1.58-1.12.2-.55.2-1.02.14-1.12-.05-.1-.21-.16-.45-.28Z"/></svg>
+                    <span>واتساب</span>
+                </a>
+                <button class="mh-global-toggle" type="button" aria-controls="mh-global-nav" aria-expanded="false" aria-label="فتح القائمة">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <?php
+}
+add_action('wp_body_open', 'mh_control_render_global_header', 1);
+
+function mh_control_global_header_styles(): void {
+    if (is_admin()) return;
+    ?>
+    <style id="mh-global-header-styles">
+    #masthead{display:none!important}
+    .mh-global-header{position:sticky;top:0;z-index:9998;background:rgba(255,255,255,.97);border-bottom:1px solid #e5ebf1;box-shadow:0 5px 24px rgba(7,26,51,.06);backdrop-filter:blur(12px);font-family:Tahoma,Arial,sans-serif;direction:rtl}
+    body.admin-bar .mh-global-header{top:32px}
+    .mh-global-header *{box-sizing:border-box}.mh-global-header__shell{width:min(1220px,calc(100% - 36px));height:88px;margin-inline:auto;display:flex;align-items:center;gap:26px}
+    .mh-global-logo{width:118px;height:76px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;text-decoration:none!important;overflow:hidden}
+    .mh-global-logo img{width:112px!important;height:76px!important;display:block;object-fit:contain;mix-blend-mode:multiply}
+    .mh-global-nav{display:flex;align-items:center;gap:5px;margin-inline-start:auto}.mh-global-nav>a{display:inline-flex;align-items:center;min-height:42px;padding:9px 13px;border-radius:8px;color:#14263a!important;text-decoration:none!important;font-size:14px;font-weight:800;white-space:nowrap;transition:.2s}.mh-global-nav>a:hover,.mh-global-nav>a:focus{color:#1266d6!important;background:#eef5fd}
+    .mh-global-nav__instagram{color:#1266d6!important}.mh-global-header__actions{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+    .mh-global-whatsapp{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 17px;border-radius:9px;background:#20b95a;color:#fff!important;text-decoration:none!important;font-size:14px;font-weight:900;box-shadow:0 9px 22px rgba(32,185,90,.2);transition:.2s}.mh-global-whatsapp:hover{background:#159a48;color:#fff!important;transform:translateY(-1px)}.mh-global-whatsapp svg{width:20px;height:20px;fill:currentColor}
+    .mh-global-toggle{display:none;width:46px;height:46px;border:1px solid #d9e2eb;border-radius:9px;background:#fff;padding:11px;cursor:pointer}.mh-global-toggle span{display:block;height:2px;background:#0b213a;border-radius:2px;transition:.2s}.mh-global-toggle span+span{margin-top:5px}
+    @media(max-width:980px){.mh-global-header__shell{height:76px;gap:12px}.mh-global-logo{width:91px;height:65px}.mh-global-logo img{width:91px!important;height:65px!important}.mh-global-toggle{display:block}.mh-global-whatsapp{padding:9px 12px}.mh-global-nav{position:absolute;top:100%;inset-inline:0;display:grid;gap:4px;margin:0;padding:12px 18px 18px;background:#fff;border-bottom:1px solid #dce5ee;box-shadow:0 16px 30px rgba(7,26,51,.12);opacity:0;visibility:hidden;transform:translateY(-8px);pointer-events:none;transition:.2s}.mh-global-nav.is-open{opacity:1;visibility:visible;transform:none;pointer-events:auto}.mh-global-nav>a{width:100%;min-height:46px;padding:11px 14px}.mh-global-nav__instagram{border-top:1px solid #e5ebf1;margin-top:5px;padding-top:15px!important}}
+    @media(max-width:782px){body.admin-bar .mh-global-header{top:46px}}
+    @media(max-width:520px){.mh-global-header__shell{width:calc(100% - 24px);height:70px}.mh-global-logo{width:78px;height:58px}.mh-global-logo img{width:78px!important;height:58px!important}.mh-global-whatsapp{min-height:43px;padding:8px 10px;font-size:12px}.mh-global-whatsapp svg{width:18px;height:18px}.mh-global-toggle{width:43px;height:43px}.mh-global-header__actions{gap:7px}}
+    </style>
+    <?php
+}
+add_action('wp_head', 'mh_control_global_header_styles', 200);
+
+function mh_control_global_header_script(): void {
+    if (is_admin()) return;
+    ?>
+    <script id="mh-global-header-script">
+    document.addEventListener('DOMContentLoaded',function(){
+        var button=document.querySelector('.mh-global-toggle'),nav=document.getElementById('mh-global-nav');
+        if(!button||!nav)return;
+        function closeMenu(){nav.classList.remove('is-open');button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','فتح القائمة');}
+        button.addEventListener('click',function(){var open=!nav.classList.contains('is-open');nav.classList.toggle('is-open',open);button.setAttribute('aria-expanded',open?'true':'false');button.setAttribute('aria-label',open?'إغلاق القائمة':'فتح القائمة');});
+        nav.querySelectorAll('a').forEach(function(link){link.addEventListener('click',closeMenu);});
+        document.addEventListener('keydown',function(event){if(event.key==='Escape')closeMenu();});
+        window.addEventListener('resize',function(){if(window.innerWidth>980)closeMenu();});
+    });
+    </script>
+    <?php
+}
+add_action('wp_footer', 'mh_control_global_header_script', 220);
