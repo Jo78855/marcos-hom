@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.3.0
+ * Version: 0.3.1
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.3.0');
+define('MH_CONTROL_VERSION', '0.3.1');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -323,7 +323,7 @@ function mh_control_portfolio_markup(): string {
                 <div class="mhp-projects">
                     <article class="mhp-project" id="coffee">
                         <div class="mhp-project__image">
-                            <img src="https://marcohom.com/wp-content/uploads/2025/11/Generated-Image-November-02-2025-5_59PM.png" alt="ركن قهوة بتصميم عصري" loading="lazy">
+                            <img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة بتصميم عصري" loading="lazy">
                         </div>
                         <div class="mhp-project__info"><span>02</span><h2>أركان قهوة</h2><p>ركن عملي ومميز يناسب المساحة ويجمع التخزين مع جمال التفاصيل.</p></div>
                     </article>
@@ -439,7 +439,7 @@ function mh_control_portfolio_styles(): void {
     ?>
     <style id="mh-portfolio-styles">
     :root{--mhp-blue:#1266d6;--mhp-navy:#071a33;--mhp-ink:#14253b;--mhp-soft:#f2f6fa;--mhp-gold:#d6aa62}
-    .mh-portfolio{font-family:Tahoma,Arial,sans-serif;color:var(--mhp-ink);background:#fff;width:100vw;margin-inline:calc(50% - 50vw);overflow:hidden}
+    html:has(.mh-portfolio),body:has(.mh-portfolio){overflow-x:clip}.mh-portfolio{font-family:Tahoma,Arial,sans-serif;color:var(--mhp-ink);background:#fff;width:100vw;margin-inline:calc(50% - 50vw);overflow:hidden}
     .mh-portfolio *{box-sizing:border-box}.mhp-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}
     .mhp-hero{min-height:520px;display:flex;align-items:center;position:relative;background:url('https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM-2.jpeg') center 52%/cover no-repeat}
     .mhp-hero__shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,26,51,.22),rgba(7,26,51,.9))}
