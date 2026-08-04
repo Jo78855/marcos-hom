@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.3.3
+ * Version: 1.3.4
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.3.3');
+define('MH_CONTROL_VERSION', '1.3.4');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -2250,4 +2250,4 @@ function mh_control_purge_cache_after_deploy(): void {
 
     update_option('mh_control_deployed_version', MH_CONTROL_VERSION, false);
 }
-add_action('init', 'mh_control_purge_cache_after_deploy', 99);
+add_action('wp_loaded', 'mh_control_purge_cache_after_deploy', 999);
