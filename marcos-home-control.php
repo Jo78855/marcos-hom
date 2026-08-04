@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.3.2
+ * Version: 0.3.3
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.3.2');
+define('MH_CONTROL_VERSION', '0.3.3');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -460,3 +460,22 @@ function mh_control_portfolio_styles(): void {
     <?php
 }
 add_action('wp_head', 'mh_control_portfolio_styles', 99);
+
+
+function mh_control_unify_visible_phone(): void {
+    if (is_admin()) {
+        return;
+    }
+    ?>
+    <script id="mh-unified-phone">
+    document.addEventListener('DOMContentLoaded',function(){
+        document.querySelectorAll('.elementor-icon-box-title span').forEach(function(node){
+            if(node.textContent.indexOf('0096550576266')!==-1){
+                node.textContent=node.textContent.replace('0096550576266','0096550204320');
+            }
+        });
+    });
+    </script>
+    <?php
+}
+add_action('wp_footer', 'mh_control_unify_visible_phone', 99);
