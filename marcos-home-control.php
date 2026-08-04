@@ -359,7 +359,7 @@ function mh_control_portfolio_markup(): string {
                         <div class="mhp-project__image">
                             <img src="https://marcohom.com/wp-content/uploads/2025/11/Art-Fireplace-AFW230-3D-Water-Vapor-Fireplace-product-1.webp" alt="جهاز الفير المعطر ببخار الماء" loading="lazy">
                         </div>
-                        <div class="mhp-project__info"><span>07</span><h2>جهاز الفير المعطر</h2><p>تأثير لهب مائي مميز يضيف أجواء دافئة وتصميمًا لافتًا للمكان.</p></div>
+                        <div class="mhp-project__info"><span>07</span><h2>جهاز الفير المعطر</h2><p>تأثير لهب مائي مميز يضيف أجواء دافئة وتصميمًا لافتًا للمكان.</p><a class="mhp-project__link" href="https://marcohom.com/product/%d8%a7%d9%84%d9%81%d9%8a%d8%b1-%d8%a7%d9%84%d9%85%d8%b9%d8%b7%d8%b1/">شاهد المقاسات والأسعار</a></div>
                     </article>
                 </div>
             </div>
