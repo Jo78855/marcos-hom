@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.9.1
+ * Version: 0.9.2
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.9.1');
+define('MH_CONTROL_VERSION', '0.9.2');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -120,7 +120,7 @@ function mh_control_homepage_markup(): string {
                     <p>تصميمات عصرية قابلة للتخصيص بالألوان والمقاسات التي تناسب بيتك.</p>
                 </div>
                 <div class="mh-cards">
-                    <a class="mh-card mh-card--wide" href="https://marcohom.com/product-category/%d9%86%d9%85%d8%a7%d8%b0%d8%ac-%d9%88%d8%aa%d8%b5%d9%85%d9%8a%d9%85%d8%a7%d8%aa/">
+                    <a class="mh-card mh-card--wide" href="https://marcohom.com/product-category/%d9%86%d9%85%d8%a7%d8%b0%d8%ac-%d9%88%d8%aa%d8%b5%d9%85%d9%8a%d9%85%d8%a7%d8%aa/?service=tv-wall">
                         <img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM-2.jpeg" alt="خلفيات شاشة وتصميمات ديكور من ماركوز هوم">
                         <span class="mh-card__shade"></span><span class="mh-card__text"><b>خلفيات الشاشة والديكور</b><small>تبدأ من 98 د.ك شامل التوريد والتركيب</small></span>
                     </a>
