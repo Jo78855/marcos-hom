@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.0.1');
+define('MH_CONTROL_VERSION', '1.0.2');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -1755,7 +1755,7 @@ function mh_control_about_markup(): string {
 
         <section class="mhab-philosophy">
             <div class="mhab-shell mhab-philosophy__grid">
-                <div class="mhab-philosophy__image"><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0109-580x387.jpg" alt="خلفية شاشة وطاولة معلقة من ماركوز هوم" loading="lazy"></div>
+                <div class="mhab-philosophy__image"><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0109-580x387.jpg" alt="خلفية شاشة وطاولة معلقة من ماركوز هوم"></div>
                 <div>
                     <span class="mhab-eyebrow">طريقتنا</span>
                     <h2>التصميم الجميل يبدأ من فهم المكان</h2>
@@ -1781,9 +1781,9 @@ function mh_control_about_markup(): string {
             <div class="mhab-shell">
                 <div class="mhab-heading mhab-heading--light"><span class="mhab-eyebrow">نماذج من أعمالنا</span><h2>تفاصيل دافئة لمساحات عصرية</h2></div>
                 <div class="mhab-work__grid">
-                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0012-580x879.jpg" alt="خلفية شاشة خشبية من ماركوز هوم" loading="lazy"></figure>
-                    <figure><img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة من ماركوز هوم" loading="lazy"></figure>
-                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_4g3pw4g3pw4g3pw4-Copy.jpg" alt="أرضية باركيه من ماركوز هوم" loading="lazy"></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0012-580x879.jpg" alt="خلفية شاشة خشبية من ماركوز هوم"></figure>
+                    <figure><img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة من ماركوز هوم"></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_4g3pw4g3pw4g3pw4-Copy.jpg" alt="أرضية باركيه من ماركوز هوم"></figure>
                 </div>
                 <a class="mhab-text-link" href="https://marcohom.com/portfolio/">شاهد معرض الأعمال بالكامل ←</a>
             </div>
