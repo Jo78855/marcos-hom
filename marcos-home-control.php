@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.9.2
+ * Version: 1.0.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.9.2');
+define('MH_CONTROL_VERSION', '1.0.0');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -1698,3 +1698,161 @@ function mh_control_purge_tv_wall_cache_once(): void {
     update_option('mh_tv_wall_cache_version', '0.9.1', false);
 }
 add_action('init', 'mh_control_purge_tv_wall_cache_once', 99);
+
+
+/**
+ * Arabic About page — roadmap step 3.
+ * Replaces the imported demo content without modifying the original Elementor document.
+ */
+function mh_control_is_about_page(): bool {
+    return is_page(6142) || is_page('about');
+}
+
+function mh_control_about_markup(): string {
+    $whatsapp = 'https://wa.me/96550204320?text=' . rawurlencode('مرحباً ماركوز هوم، شاهدت صفحة عن الشركة وأريد مناقشة تصميم مناسب لمساحتي. هذه صورة المكان:');
+    ob_start();
+    ?>
+    <main class="mh-about" dir="rtl">
+        <section class="mhab-hero">
+            <div class="mhab-hero__shade"></div>
+            <div class="mhab-shell mhab-hero__content">
+                <span class="mhab-eyebrow">ماركوز هوم — الكويت</span>
+                <h1>نصمم الحائط<br>حول حياتك</h1>
+                <p>حلول ديكور داخلية عملية ومخصصة تجمع بين الشكل الهادئ، المقاس المناسب والتنفيذ المرتب.</p>
+                <div class="mhab-actions">
+                    <a class="mhab-btn mhab-btn--green" href="<?php echo esc_url($whatsapp); ?>" target="_blank" rel="noopener">أرسل صورة المكان</a>
+                    <a class="mhab-btn mhab-btn--ghost" href="https://marcohom.com/portfolio/">شاهد أعمالنا</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhab-intro">
+            <div class="mhab-shell mhab-intro__grid">
+                <div>
+                    <span class="mhab-eyebrow mhab-eyebrow--blue">من نحن</span>
+                    <h2>ماركوز هوم للديكور الداخلي وحلول الحوائط</h2>
+                    <p>نعمل في الكويت على تصميم وتنفيذ تفاصيل البيت التي تغيّر شكل المساحة وتسهّل استخدامها: من خلفيات الشاشة والطاولات المعلقة إلى أركان القهوة والباركيه والفواصل والديكور المخصص.</p>
+                    <p>نبدأ بصورة المكان والمقاس، نراجع احتياج العميل، ثم نرشح الشكل والخامة واللون المناسبين قبل التوريد والتركيب.</p>
+                    <div class="mhab-intro__points"><span>تصميم حسب المقاس</span><span>خامات وألوان متعددة</span><span>توريد وتركيب</span></div>
+                </div>
+                <figure><img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.19-PM.jpeg" alt="تصميم داخلي من أعمال ماركوز هوم في الكويت"></figure>
+            </div>
+        </section>
+
+        <section class="mhab-services">
+            <div class="mhab-shell">
+                <div class="mhab-heading"><span class="mhab-eyebrow mhab-eyebrow--blue">ما الذي نقدمه؟</span><h2>حلول متكاملة لمساحات البيت</h2><p>كل خدمة قابلة للتخصيص حسب المقاس واللون وطبيعة المكان.</p></div>
+                <div class="mhab-services__grid">
+                    <a href="https://marcohom.com/product-category/%d9%86%d9%85%d8%a7%d8%b0%d8%ac-%d9%88%d8%aa%d8%b5%d9%85%d9%8a%d9%85%d8%a7%d8%aa/?service=tv-wall"><span>01</span><h3>خلفيات الشاشة</h3><p>تصميمات متكاملة مع طاولة معلقة وإخفاء الأسلاك.</p></a>
+                    <a href="https://marcohom.com/coffee-corner/"><span>02</span><h3>أركان القهوة</h3><p>حلول جاهزة ومخصصة لتنظيم ركن القهوة.</p></a>
+                    <a href="https://marcohom.com/product/%d8%b7%d8%a7%d9%88%d9%84%d8%a7%d8%aa-tv/"><span>03</span><h3>طاولات TV</h3><p>مقاسات وألوان متعددة مع تركيب اختياري.</p></a>
+                    <a href="https://marcohom.com/product/%d8%a8%d8%a7%d8%b1%d9%83%d9%8a%d8%a9-%d8%ae%d8%b4%d8%a8-k9188/"><span>04</span><h3>أرضيات الباركيه</h3><p>درجات خشبية دافئة وقياس للكمية المطلوبة.</p></a>
+                    <a href="https://marcohom.com/product/%d9%82%d8%a7%d8%b7%d8%b9-%d8%a7%d9%84%d8%a7%d8%b9%d9%85%d8%af%d8%a9/"><span>05</span><h3>فواصل بديل الخشب</h3><p>فصل أنيق للمساحات بأعمدة WPC.</p></a>
+                    <a href="https://marcohom.com/product/%d8%a7%d9%84%d9%81%d9%8a%d8%b1-%d8%a7%d9%84%d9%85%d8%b9%d8%b7%d8%b1/"><span>06</span><h3>جهاز الفير المعطر</h3><p>ديكور بخار مائي بمقاسات متعددة.</p></a>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhab-philosophy">
+            <div class="mhab-shell mhab-philosophy__grid">
+                <div class="mhab-philosophy__image"><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0109-580x387.jpg" alt="خلفية شاشة وطاولة معلقة من ماركوز هوم" loading="lazy"></div>
+                <div>
+                    <span class="mhab-eyebrow">طريقتنا</span>
+                    <h2>التصميم الجميل يبدأ من فهم المكان</h2>
+                    <p>لا نبدأ باختيار شكل فقط. نراجع أبعاد الحائط، استخدام المساحة، أماكن الكهرباء والألوان الموجودة، ثم نرتب التفاصيل لتخرج النتيجة متناسقة وعملية.</p>
+                    <ul><li><b>وضوح قبل التنفيذ</b><span>المقاس والخامة والتفاصيل تُراجع مع العميل.</span></li><li><b>اختيارات مناسبة</b><span>ألوان وتكوينات تناسب الأثاث والمساحة.</span></li><li><b>تنفيذ مرتب</b><span>توريد وتركيب وتشطيب نهائي جاهز للاستخدام.</span></li></ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhab-process">
+            <div class="mhab-shell">
+                <div class="mhab-heading"><span class="mhab-eyebrow mhab-eyebrow--blue">كيف نبدأ؟</span><h2>من صورة المكان إلى التسليم</h2></div>
+                <div class="mhab-process__grid">
+                    <div><b>01</b><h3>صورة ومقاس</h3><p>أرسل صورة واضحة وعرض وارتفاع المساحة عبر واتساب.</p></div>
+                    <div><b>02</b><h3>اختيار الحل</h3><p>نحدد الخدمة والتصميم والخامة واللون الأنسب.</p></div>
+                    <div><b>03</b><h3>تأكيد التفاصيل</h3><p>نراجع المقاس والسعر ومتطلبات التركيب.</p></div>
+                    <div><b>04</b><h3>التوريد والتركيب</h3><p>تنفيذ وتشطيب وتسليم المساحة جاهزة.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhab-work">
+            <div class="mhab-shell">
+                <div class="mhab-heading mhab-heading--light"><span class="mhab-eyebrow">نماذج من أعمالنا</span><h2>تفاصيل دافئة لمساحات عصرية</h2></div>
+                <div class="mhab-work__grid">
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0012-580x879.jpg" alt="خلفية شاشة خشبية من ماركوز هوم" loading="lazy"></figure>
+                    <figure><img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة من ماركوز هوم" loading="lazy"></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_4g3pw4g3pw4g3pw4-Copy.jpg" alt="أرضية باركيه من ماركوز هوم" loading="lazy"></figure>
+                </div>
+                <a class="mhab-text-link" href="https://marcohom.com/portfolio/">شاهد معرض الأعمال بالكامل ←</a>
+            </div>
+        </section>
+
+        <section class="mhab-contact">
+            <div class="mhab-shell mhab-contact__box">
+                <div><span class="mhab-eyebrow mhab-eyebrow--blue">ابدأ معنا</span><h2>أرسل صورة المساحة وفكرتك</h2><p>نتواصل معك لمراجعة المقاس والتصميم والخامة المناسبة.</p></div>
+                <div class="mhab-contact__info">
+                    <span><small>واتساب</small><b dir="ltr">+965 5020 4320</b></span>
+                    <span><small>الموقع</small><b>حولي — شارع نادي القادسية</b></span>
+                    <a class="mhab-btn mhab-btn--green" href="<?php echo esc_url($whatsapp); ?>" target="_blank" rel="noopener">تواصل على واتساب</a>
+                </div>
+            </div>
+        </section>
+        <a class="mhab-mobile-wa" href="<?php echo esc_url($whatsapp); ?>" target="_blank" rel="noopener">تواصل مع ماركوز هوم</a>
+    </main>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function mh_control_render_about_page(): void {
+    if (!mh_control_is_about_page()) return;
+    status_header(200); get_header();
+    echo mh_control_about_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    get_footer(); exit;
+}
+add_action('template_redirect', 'mh_control_render_about_page', 35);
+
+function mh_control_about_title(string $title): string {
+    return mh_control_is_about_page() ? 'عن ماركوز هوم | ديكور داخلي وحلول حوائط في الكويت' : $title;
+}
+add_filter('pre_get_document_title', 'mh_control_about_title', 125);
+
+function mh_control_about_description(string $description): string {
+    return mh_control_is_about_page() ? 'تعرف على ماركوز هوم لخلفيات الشاشة وأركان القهوة والباركيه وطاولات التلفزيون وفواصل بديل الخشب والديكور الداخلي في الكويت.' : $description;
+}
+add_filter('aioseo_title', 'mh_control_about_title', 1250);
+add_filter('aioseo_description', 'mh_control_about_description', 1250);
+add_filter('wpseo_title', 'mh_control_about_title', 1250);
+add_filter('wpseo_metadesc', 'mh_control_about_description', 1250);
+add_filter('rank_math/frontend/title', 'mh_control_about_title', 1250);
+add_filter('rank_math/frontend/description', 'mh_control_about_description', 1250);
+
+function mh_control_add_about_menu_link(string $items, $args): string {
+    if (is_admin() || strpos($items, 'company=marcos-home') !== false) return $items;
+    $items .= '<li class="menu-item mh-about-menu-item"><a href="' . esc_url(home_url('/about/?company=marcos-home')) . '">عن ماركوز هوم</a></li>';
+    return $items;
+}
+add_filter('wp_nav_menu_items', 'mh_control_add_about_menu_link', 40, 2);
+
+function mh_control_about_head(): void {
+    if (!mh_control_is_about_page()) return;
+    ?>
+    <meta name="description" content="ماركوز هوم للديكور الداخلي وحلول الحوائط وخلفيات الشاشة والباركيه وأركان القهوة في الكويت.">
+    <style id="mh-about-styles">
+    :root{--mhab-blue:#1266d6;--mhab-navy:#071a33;--mhab-ink:#15263a;--mhab-soft:#f2f6fa;--mhab-gold:#d6aa62;--mhab-green:#20b95a}
+    html:has(.mh-about),body:has(.mh-about){overflow-x:clip}.mh-about{font-family:Tahoma,Arial,sans-serif;color:var(--mhab-ink);background:#fff;width:100vw;margin-inline:calc(50% - 50vw);overflow:hidden}.mh-about *{box-sizing:border-box}.mhab-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}
+    .mhab-hero{min-height:650px;display:flex;align-items:center;position:relative;background:url('https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM-2.jpeg') center/cover no-repeat}.mhab-hero__shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,17,34,.2),rgba(5,17,34,.9))}.mhab-hero__content{position:relative;z-index:1;color:#fff;padding-block:90px}.mhab-eyebrow{display:inline-flex;align-items:center;gap:10px;color:#d8e7f8;font-size:14px;font-weight:800;margin-bottom:15px}.mhab-eyebrow:before{content:"";width:32px;height:2px;background:var(--mhab-gold)}.mhab-eyebrow--blue{color:var(--mhab-blue)}.mhab-hero h1{font-size:clamp(46px,7vw,78px);line-height:1.08;color:#fff;margin:0 0 22px;font-weight:900}.mhab-hero p{font-size:19px;line-height:1.9;color:#e7eff8;max-width:670px;margin:0 0 30px}.mhab-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .mhab-btn{display:inline-flex;justify-content:center;align-items:center;min-height:52px;padding:12px 23px;border-radius:8px;text-decoration:none!important;font-weight:900;transition:.2s}.mhab-btn:hover{transform:translateY(-2px)}.mhab-btn--green{background:var(--mhab-green);color:#fff!important}.mhab-btn--ghost{border:1px solid rgba(255,255,255,.65);background:rgba(255,255,255,.08);color:#fff!important}
+    .mhab-intro{padding:92px 0}.mhab-intro__grid{display:grid;grid-template-columns:.88fr 1.12fr;gap:55px;align-items:center}.mhab-intro h2,.mhab-heading h2,.mhab-philosophy h2,.mhab-contact h2{font-size:clamp(34px,5vw,52px);line-height:1.2;color:var(--mhab-navy);margin:0 0 24px}.mhab-intro p,.mhab-philosophy p{color:#617286;line-height:1.9;font-size:16px}.mhab-intro figure{margin:0;border-radius:19px;overflow:hidden;box-shadow:0 22px 58px rgba(7,26,51,.14)}.mhab-intro figure img{width:100%;height:530px;object-fit:cover;display:block}.mhab-intro__points{display:flex;gap:8px;flex-wrap:wrap;margin-top:25px}.mhab-intro__points span{padding:9px 13px;border-radius:999px;background:#edf4fb;color:var(--mhab-blue);font-size:12px;font-weight:800}
+    .mhab-services{padding:90px 0;background:var(--mhab-soft)}.mhab-heading{text-align:center;max-width:760px;margin:0 auto 42px}.mhab-heading p{color:#68798e;line-height:1.8;margin:0}.mhab-services__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.mhab-services__grid a{display:block;padding:28px;border:1px solid #dfe7ef;border-radius:15px;background:#fff;text-decoration:none!important;color:inherit;transition:.2s}.mhab-services__grid a:hover{transform:translateY(-4px);box-shadow:0 16px 35px rgba(7,26,51,.08)}.mhab-services__grid span{font-size:12px;color:var(--mhab-blue);font-weight:900}.mhab-services__grid h3{font-size:20px;color:var(--mhab-navy);margin:12px 0 9px}.mhab-services__grid p{font-size:13px;line-height:1.7;color:#6a7b8e;margin:0}
+    .mhab-philosophy{padding:92px 0;background:var(--mhab-navy);color:#fff}.mhab-philosophy__grid{display:grid;grid-template-columns:1.05fr .95fr;gap:50px;align-items:center}.mhab-philosophy h2{color:#fff}.mhab-philosophy p{color:#b5c4d4}.mhab-philosophy__image{border-radius:17px;overflow:hidden}.mhab-philosophy__image img{width:100%;height:470px;object-fit:cover;display:block}.mhab-philosophy ul{list-style:none;padding:0;margin:25px 0 0}.mhab-philosophy li{display:grid;gap:5px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.12)}.mhab-philosophy li b{color:#fff}.mhab-philosophy li span{color:#9fb1c4;font-size:13px}
+    .mhab-process{padding:90px 0}.mhab-process__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.mhab-process__grid>div{padding:27px;border:1px solid #dfe7ef;border-radius:14px;background:#fff}.mhab-process__grid b{color:var(--mhab-blue);font-size:13px}.mhab-process__grid h3{font-size:19px;color:var(--mhab-navy);margin:13px 0 9px}.mhab-process__grid p{font-size:13px;line-height:1.7;color:#68798c;margin:0}
+    .mhab-work{padding:90px 0;background:var(--mhab-navy);text-align:center}.mhab-heading--light h2{color:#fff}.mhab-work__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:30px}.mhab-work figure{margin:0;border-radius:16px;overflow:hidden}.mhab-work img{width:100%;height:420px;object-fit:cover;display:block;transition:.4s}.mhab-work figure:hover img{transform:scale(1.03)}.mhab-text-link{display:inline-flex;color:#fff!important;text-decoration:none!important;font-weight:900;border-bottom:1px solid var(--mhab-gold);padding-bottom:7px}
+    .mhab-contact{padding:75px 0;background:#eaf1f7}.mhab-contact__box{display:grid;grid-template-columns:1.15fr .85fr;gap:35px;align-items:center;background:#fff;border-radius:18px;padding:46px 52px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mhab-contact h2{margin-bottom:12px}.mhab-contact p{margin:0;color:#68798c}.mhab-contact__info{display:grid;gap:12px}.mhab-contact__info span{display:grid;gap:3px;padding:12px 0;border-bottom:1px solid #e4eaf0}.mhab-contact__info small{color:#7d8b9a}.mhab-contact__info b{color:var(--mhab-navy)}.mhab-mobile-wa{display:none}
+    @media(max-width:900px){.mhab-intro__grid,.mhab-philosophy__grid,.mhab-contact__box{grid-template-columns:1fr}.mhab-services__grid{grid-template-columns:repeat(2,1fr)}.mhab-process__grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:600px){.mhab-shell{width:min(100% - 28px,1180px)}.mhab-hero{min-height:600px;background-position:42% center}.mhab-hero__content{padding-block:60px}.mhab-hero h1{font-size:43px}.mhab-actions{display:grid}.mhab-btn{width:100%}.mhab-intro,.mhab-services,.mhab-philosophy,.mhab-process,.mhab-work{padding:64px 0}.mhab-intro figure img,.mhab-philosophy__image img{height:330px}.mhab-services__grid,.mhab-process__grid,.mhab-work__grid{grid-template-columns:1fr}.mhab-work img{height:330px}.mhab-contact{padding:48px 0 90px}.mhab-contact__box{padding:30px 24px}.mhab-mobile-wa{display:flex;position:fixed;z-index:9999;left:14px;right:14px;bottom:12px;min-height:52px;align-items:center;justify-content:center;border-radius:10px;background:var(--mhab-green);color:#fff!important;font-weight:900;text-decoration:none!important;box-shadow:0 12px 32px rgba(0,0,0,.25)}}
+    </style>
+    <?php
+}
+add_action('wp_head', 'mh_control_about_head', 106);
