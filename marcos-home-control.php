@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.3.3
+ * Version: 0.4.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.3.3');
+define('MH_CONTROL_VERSION', '0.4.0');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -123,6 +123,10 @@ function mh_control_homepage_markup(): string {
                     <a class="mh-card mh-card--wide" href="https://marcohom.com/product-category/%d9%86%d9%85%d8%a7%d8%b0%d8%ac-%d9%88%d8%aa%d8%b5%d9%85%d9%8a%d9%85%d8%a7%d8%aa/">
                         <img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM-2.jpeg" alt="خلفيات شاشة وتصميمات ديكور من ماركوز هوم">
                         <span class="mh-card__shade"></span><span class="mh-card__text"><b>خلفيات الشاشة والديكور</b><small>تصميمات متكاملة بمقاسات وألوان متعددة</small></span>
+                    </a>
+                    <a class="mh-card" href="https://marcohom.com/coffee-corner/">
+                        <img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة من ماركوز هوم">
+                        <span class="mh-card__shade"></span><span class="mh-card__text"><b>ركن القهوة</b><small>7 تصميمات — يبدأ من 35 د.ك</small></span>
                     </a>
                     <a class="mh-card" href="https://marcohom.com/product-category/%d9%88%d8%a7%d8%ad%d8%af%d8%a7%d8%aa-%d8%a7%d9%84%d8%aa%d8%ae%d8%b2%d9%8a%d9%86-tv/">
                         <img src="https://marcohom.com/wp-content/uploads/2025/11/Generated-Image-November-03-2025-7_43PM-270x270.png" alt="طاولات تلفزيون معلقة">
@@ -325,7 +329,7 @@ function mh_control_portfolio_markup(): string {
                         <div class="mhp-project__image">
                             <img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة بتصميم عصري" loading="lazy">
                         </div>
-                        <div class="mhp-project__info"><span>02</span><h2>أركان قهوة</h2><p>ركن عملي ومميز يناسب المساحة ويجمع التخزين مع جمال التفاصيل.</p></div>
+                        <div class="mhp-project__info"><span>02</span><h2>أركان قهوة</h2><p>ركن عملي ومميز يناسب المساحة ويجمع التخزين مع جمال التفاصيل.</p><a href="https://marcohom.com/coffee-corner/">شاهد التصميمات والأسعار</a></div>
                     </article>
                     <article class="mhp-project" id="beds">
                         <div class="mhp-project__image">
@@ -479,3 +483,199 @@ function mh_control_unify_visible_phone(): void {
     <?php
 }
 add_action('wp_footer', 'mh_control_unify_visible_phone', 99);
+
+
+/**
+ * Coffee Corner sales page — product roadmap item 1.
+ * Virtual route keeps the existing WordPress database and coffee app untouched.
+ */
+function mh_control_is_coffee_page(): bool {
+    $path = wp_parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+    return untrailingslashit((string) $path) === '/coffee-corner';
+}
+
+function mh_control_coffee_page_markup(): string {
+    $whatsapp = 'https://wa.me/96550204320?text=' . rawurlencode('مرحباً ماركوز هوم، أريد طلب ركن القهوة. اللون المطلوب:');
+    ob_start();
+    ?>
+    <main class="mh-coffee" dir="rtl">
+        <section class="mhc-hero">
+            <div class="mhc-shell mhc-hero__grid">
+                <div class="mhc-hero__copy">
+                    <span class="mhc-eyebrow">ركن قهوة جاهز لمساحتك</span>
+                    <h1>ركنك المفضل<br>بتصميم مرتب</h1>
+                    <p>لوح ديكوري كامل الارتفاع مع طاولة معلقة ببابين، بألوان عصرية ومقاسات مدروسة تناسب البيت.</p>
+                    <div class="mhc-actions">
+                        <a class="mhc-btn mhc-btn--green" href="<?php echo esc_url($whatsapp); ?>" target="_blank" rel="noopener">اطلب على واتساب</a>
+                        <a class="mhc-btn mhc-btn--outline" href="https://coffee.marcohom.com/" target="_blank" rel="noopener">اختار التصميم واللون</a>
+                    </div>
+                    <div class="mhc-hero__trust">
+                        <span>✓ 7 تصميمات</span><span>✓ تركيب داخل الكويت</span><span>✓ اختيار اللون قبل الطلب</span>
+                    </div>
+                </div>
+                <figure class="mhc-hero__visual">
+                    <img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة ترافنتينو مع طاولة معلقة من ماركوز هوم">
+                    <figcaption>ترافنتينو بني × خشب جوزي</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="mhc-pricing" aria-label="أسعار ركن القهوة">
+            <div class="mhc-shell mhc-pricing__grid">
+                <div class="mhc-price">
+                    <span>بدون تركيب</span>
+                    <strong>35 <small>د.ك</small></strong>
+                    <p>اللوح والطاولة جاهزان للاستلام</p>
+                </div>
+                <div class="mhc-price mhc-price--featured">
+                    <i>الأكثر طلبًا</i>
+                    <span>شامل التركيب</span>
+                    <strong>50 <small>د.ك</small></strong>
+                    <p>توريد وتركيب مرتب داخل الكويت</p>
+                </div>
+                <div class="mhc-pricing__note">
+                    <b>محتاج مقاس مختلف؟</b>
+                    <p>أرسل صورة المكان والمقاس، ونقترح عليك الحل الأنسب.</p>
+                    <a href="<?php echo esc_url($whatsapp); ?>" target="_blank" rel="noopener">أرسل صورة المكان ←</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhc-specs">
+            <div class="mhc-shell">
+                <div class="mhc-heading">
+                    <span class="mhc-eyebrow mhc-eyebrow--blue">المقاسات المعتمدة</span>
+                    <h2>كل تفصيلة محسوبة</h2>
+                    <p>توزيع متوازن يترك النعلة ظاهرة ويحافظ على شكل نظيف وعملي.</p>
+                </div>
+                <div class="mhc-specs__grid">
+                    <div><b>122 سم</b><h3>عرض اللوح</h3><p>أعرض من الطاولة بـ 22 سم ليظهر التصميم متوازنًا.</p></div>
+                    <div><b>290 سم</b><h3>ارتفاع اللوح</h3><p>يبدأ فوق النعلة الظاهرة ويصل إلى السقف.</p></div>
+                    <div><b>100 سم</b><h3>عرض الطاولة</h3><p>طاولة معلقة ببابين متساويين، بدون أدراج.</p></div>
+                    <div><b>10 سم</b><h3>النعلة ظاهرة</h3><p>اللوح يبدأ فوق النعلة لتشطيب مرتب وسهل التنظيف.</p></div>
+                </div>
+                <div class="mhc-specs__banner">
+                    <span>لوح ديكوري كامل الارتفاع</span>
+                    <span>طاولة معلقة ببابين</span>
+                    <span>بدون إضاءة سفلية</span>
+                    <span>اتجاه الخشب طولي</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhc-designs" id="designs">
+            <div class="mhc-shell">
+                <div class="mhc-heading">
+                    <span class="mhc-eyebrow mhc-eyebrow--blue">اختار اللون</span>
+                    <h2>سبعة تصميمات جاهزة</h2>
+                    <p>اضغط على التصميم داخل التطبيق لاختياره وإرسال الطلب.</p>
+                </div>
+                <div class="mhc-designs__grid">
+                    <figure><img src="https://coffee.marcohom.com/coffee/white-lightwood.webp" alt="ركن قهوة أبيض وخشب فاتح" loading="lazy"><figcaption><b>أبيض × خشب فاتح</b><span>هادئ ومشرق</span></figcaption></figure>
+                    <figure><img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة ترافنتينو بني" loading="lazy"><figcaption><b>ترافنتينو × جوزي</b><span>دافئ وفاخر</span></figcaption></figure>
+                    <figure><img src="https://coffee.marcohom.com/coffee/black-lightwood.webp" alt="ركن قهوة أسود وخشب فاتح" loading="lazy"><figcaption><b>أسود × خشب فاتح</b><span>تباين عصري</span></figcaption></figure>
+                    <figure><img src="https://coffee.marcohom.com/coffee/darkgray-chevron.webp" alt="ركن قهوة رمادي غامق شيفرون" loading="lazy"><figcaption><b>رمادي غامق</b><span>شيفرون مميز</span></figcaption></figure>
+                    <figure><img src="https://coffee.marcohom.com/coffee/lightgray-chevron.webp" alt="ركن قهوة رمادي فاتح شيفرون" loading="lazy"><figcaption><b>رمادي فاتح</b><span>خفيف وأنيق</span></figcaption></figure>
+                    <figure><img src="https://coffee.marcohom.com/coffee/lightwood-chevron.webp" alt="ركن قهوة بيج خشبي شيفرون" loading="lazy"><figcaption><b>بيج خشبي</b><span>طبيعي وعملي</span></figcaption></figure>
+                    <figure><img src="https://coffee.marcohom.com/coffee/honey-wood.webp" alt="ركن قهوة لون عسلي خشبي" loading="lazy"><figcaption><b>عسلي خشبي</b><span>درجة ماركوز هوم الدافئة</span></figcaption></figure>
+                </div>
+                <div class="mhc-designs__action">
+                    <a class="mhc-btn mhc-btn--dark" href="https://coffee.marcohom.com/" target="_blank" rel="noopener">افتح أداة اختيار التصميم</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhc-how">
+            <div class="mhc-shell">
+                <div class="mhc-heading mhc-heading--light">
+                    <span class="mhc-eyebrow">الطلب في ثلاث خطوات</span>
+                    <h2>اختار، أرسل، واستلم</h2>
+                </div>
+                <div class="mhc-how__grid">
+                    <div><b>01</b><h3>اختار التصميم</h3><p>شاهد الألوان السبعة وحدد الشكل المناسب.</p></div>
+                    <div><b>02</b><h3>أرسل بياناتك</h3><p>أدخل الاسم والمنطقة ورقم التواصل بسهولة.</p></div>
+                    <div><b>03</b><h3>نؤكد الطلب</h3><p>نتواصل معك لتأكيد المقاس وموعد التركيب.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhc-cta">
+            <div class="mhc-shell mhc-cta__box">
+                <div><span class="mhc-eyebrow mhc-eyebrow--blue">جاهز تبدأ؟</span><h2>ركن قهوة كامل يبدأ من 35 د.ك</h2><p>اختار اللون المناسب أو أرسل صورة مكانك على واتساب.</p></div>
+                <div class="mhc-actions">
+                    <a class="mhc-btn mhc-btn--green" href="<?php echo esc_url($whatsapp); ?>" target="_blank" rel="noopener">اطلب الآن</a>
+                    <a class="mhc-btn mhc-btn--dark" href="https://coffee.marcohom.com/" target="_blank" rel="noopener">صمّم ركنك</a>
+                </div>
+            </div>
+        </section>
+        <a class="mhc-mobile-order" href="<?php echo esc_url($whatsapp); ?>" target="_blank" rel="noopener">اطلب ركن القهوة — 35 د.ك</a>
+    </main>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function mh_control_render_coffee_page(): void {
+    if (!mh_control_is_coffee_page()) {
+        return;
+    }
+    global $wp_query;
+    if ($wp_query instanceof WP_Query) {
+        $wp_query->is_404 = false;
+    }
+    status_header(200);
+    get_header();
+    echo mh_control_coffee_page_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    get_footer();
+    exit;
+}
+add_action('template_redirect', 'mh_control_render_coffee_page', 20);
+
+function mh_control_coffee_title(string $title): string {
+    return mh_control_is_coffee_page() ? 'ركن القهوة من ماركوز هوم | 35 د.ك' : $title;
+}
+add_filter('pre_get_document_title', 'mh_control_coffee_title', 110);
+
+function mh_control_coffee_seo_description(string $description): string {
+    return mh_control_is_coffee_page()
+        ? 'ركن قهوة من ماركوز هوم: لوح ديكوري 122×290 سم وطاولة معلقة 100 سم بسبعة ألوان. 35 د.ك بدون تركيب أو 50 د.ك شامل التركيب داخل الكويت.'
+        : $description;
+}
+add_filter('aioseo_title', 'mh_control_coffee_title', 1100);
+add_filter('aioseo_description', 'mh_control_coffee_seo_description', 1100);
+add_filter('wpseo_title', 'mh_control_coffee_title', 1100);
+add_filter('wpseo_metadesc', 'mh_control_coffee_seo_description', 1100);
+add_filter('rank_math/frontend/title', 'mh_control_coffee_title', 1100);
+add_filter('rank_math/frontend/description', 'mh_control_coffee_seo_description', 1100);
+
+function mh_control_coffee_body_class(array $classes): array {
+    if (mh_control_is_coffee_page()) {
+        $classes[] = 'mh-coffee-page';
+    }
+    return $classes;
+}
+add_filter('body_class', 'mh_control_coffee_body_class');
+
+function mh_control_coffee_head(): void {
+    if (!mh_control_is_coffee_page()) {
+        return;
+    }
+    ?>
+    <link rel="canonical" href="https://marcohom.com/coffee-corner/">
+    <meta name="description" content="ركن قهوة من ماركوز هوم: لوح ديكوري 122×290 سم وطاولة معلقة 100 سم. 35 د.ك بدون تركيب أو 50 د.ك شامل التركيب داخل الكويت.">
+    <style id="mh-coffee-styles">
+    :root{--mhc-blue:#1266d6;--mhc-navy:#071a33;--mhc-ink:#15263a;--mhc-soft:#f2f6fa;--mhc-gold:#d6aa62;--mhc-green:#20b95a}
+    html:has(.mh-coffee),body:has(.mh-coffee){overflow-x:clip}.mh-coffee{font-family:Tahoma,Arial,sans-serif;color:var(--mhc-ink);background:#fff;width:100vw;margin-inline:calc(50% - 50vw);overflow:hidden}.mh-coffee *{box-sizing:border-box}.mhc-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}
+    .mhc-hero{padding:72px 0;background:linear-gradient(135deg,#f8fafc,#e9f0f7)}.mhc-hero__grid{display:grid;grid-template-columns:.95fr 1.05fr;gap:72px;align-items:center}.mhc-eyebrow{display:inline-flex;align-items:center;gap:10px;color:#61738a;font-size:14px;font-weight:800;margin-bottom:15px}.mhc-eyebrow:before{content:"";width:32px;height:2px;background:var(--mhc-gold)}.mhc-eyebrow--blue{color:var(--mhc-blue)}
+    .mhc-hero h1{font-size:clamp(44px,6vw,72px);line-height:1.12;color:var(--mhc-navy);margin:0 0 20px;font-weight:900}.mhc-hero__copy>p{font-size:18px;line-height:1.9;color:#607187;margin:0 0 28px;max-width:610px}.mhc-actions{display:flex;gap:12px;flex-wrap:wrap}.mhc-btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:12px 23px;border-radius:8px;font-weight:900;text-decoration:none!important;transition:.2s ease}.mhc-btn:hover{transform:translateY(-2px)}.mhc-btn--green{background:var(--mhc-green);color:#fff!important}.mhc-btn--outline{border:1px solid #b8c5d3;color:var(--mhc-navy)!important;background:#fff}.mhc-btn--dark{background:var(--mhc-navy);color:#fff!important}
+    .mhc-hero__trust{display:flex;gap:18px;flex-wrap:wrap;margin-top:25px;color:#52657b;font-size:13px;font-weight:700}.mhc-hero__visual{margin:0;position:relative;border-radius:22px;overflow:hidden;background:#ddd;box-shadow:0 24px 60px rgba(7,26,51,.15)}.mhc-hero__visual img{display:block;width:100%;height:600px;object-fit:cover}.mhc-hero__visual figcaption{position:absolute;bottom:18px;right:18px;background:rgba(7,26,51,.88);color:#fff;padding:10px 15px;border-radius:8px;font-size:13px}
+    .mhc-pricing{padding:64px 0;background:#fff}.mhc-pricing__grid{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:18px;align-items:stretch}.mhc-price,.mhc-pricing__note{position:relative;border:1px solid #e0e8f0;border-radius:16px;padding:28px;background:#fff}.mhc-price--featured{border:2px solid var(--mhc-blue);background:#f8fbff}.mhc-price i{position:absolute;top:-13px;right:20px;background:var(--mhc-blue);color:#fff;border-radius:999px;padding:5px 12px;font-size:11px;font-style:normal;font-weight:800}.mhc-price>span{display:block;color:#5f7084;font-weight:800;font-size:14px}.mhc-price strong{display:block;color:var(--mhc-navy);font-size:52px;line-height:1;margin:16px 0 12px}.mhc-price strong small{font-size:18px}.mhc-price p,.mhc-pricing__note p{margin:0;color:#6c7b8e;line-height:1.7;font-size:13px}.mhc-pricing__note{background:var(--mhc-navy);display:flex;flex-direction:column;justify-content:center}.mhc-pricing__note b{color:#fff;font-size:20px}.mhc-pricing__note p{color:#b9c7d7;margin:10px 0}.mhc-pricing__note a{color:#8dbdff;text-decoration:none!important;font-weight:800}
+    .mhc-specs{padding:88px 0;background:var(--mhc-soft)}.mhc-heading{text-align:center;max-width:720px;margin:0 auto 44px}.mhc-heading h2{font-size:clamp(34px,5vw,52px);color:var(--mhc-navy);margin:0 0 13px}.mhc-heading p{color:#64758a;line-height:1.8;margin:0}.mhc-specs__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.mhc-specs__grid>div{background:#fff;border-radius:15px;padding:27px;border:1px solid #e1e8ef}.mhc-specs__grid b{color:var(--mhc-blue);font-size:28px}.mhc-specs__grid h3{color:var(--mhc-navy);font-size:18px;margin:10px 0}.mhc-specs__grid p{color:#6b7b8e;font-size:13px;line-height:1.75;margin:0}.mhc-specs__banner{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:24px}.mhc-specs__banner span{background:#e5edf6;color:#3f536b;border-radius:999px;padding:9px 15px;font-size:12px;font-weight:700}
+    .mhc-designs{padding:90px 0}.mhc-designs__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.mhc-designs figure{margin:0;border:1px solid #e1e8ef;border-radius:17px;overflow:hidden;background:#fff;box-shadow:0 14px 35px rgba(7,26,51,.06)}.mhc-designs figure:first-child{grid-column:span 2}.mhc-designs img{width:100%;height:390px;object-fit:cover;display:block;transition:transform .5s ease}.mhc-designs figure:hover img{transform:scale(1.025)}.mhc-designs figcaption{display:flex;justify-content:space-between;gap:12px;padding:18px 20px}.mhc-designs figcaption b{color:var(--mhc-navy)}.mhc-designs figcaption span{color:#748398;font-size:12px}.mhc-designs__action{text-align:center;margin-top:34px}
+    .mhc-how{padding:88px 0;background:var(--mhc-navy);color:#fff}.mhc-heading--light h2{color:#fff}.mhc-heading--light p{color:#b8c6d6}.mhc-how__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.mhc-how__grid>div{border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:30px;background:rgba(255,255,255,.04)}.mhc-how__grid b{color:var(--mhc-gold);font-size:13px}.mhc-how__grid h3{color:#fff;margin:13px 0 9px;font-size:21px}.mhc-how__grid p{color:#aebed0;line-height:1.8;margin:0;font-size:14px}
+    .mhc-cta{padding:70px 0;background:#eaf1f7}.mhc-cta__box{display:flex;align-items:center;justify-content:space-between;gap:30px;background:#fff;padding:44px 50px;border-radius:18px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mhc-cta h2{font-size:clamp(29px,4vw,43px);color:var(--mhc-navy);margin:0 0 10px}.mhc-cta p{margin:0;color:#68798e}.mhc-mobile-order{display:none}
+    @media(max-width:900px){.mhc-hero__grid{grid-template-columns:1fr;gap:35px}.mhc-hero__visual img{height:520px}.mhc-pricing__grid{grid-template-columns:1fr 1fr}.mhc-pricing__note{grid-column:span 2}.mhc-specs__grid{grid-template-columns:1fr 1fr}.mhc-designs__grid{grid-template-columns:1fr 1fr}.mhc-designs figure:first-child{grid-column:span 2}.mhc-how__grid{grid-template-columns:1fr}.mhc-cta__box{align-items:flex-start;flex-direction:column}}
+    @media(max-width:600px){.mhc-shell{width:min(100% - 28px,1180px)}.mhc-hero{padding:52px 0}.mhc-hero h1{font-size:43px}.mhc-hero__copy>p{font-size:16px}.mhc-actions{display:grid;width:100%}.mhc-btn{width:100%}.mhc-hero__visual img{height:450px}.mhc-pricing{padding:48px 0}.mhc-pricing__grid{grid-template-columns:1fr}.mhc-pricing__note{grid-column:auto}.mhc-specs,.mhc-designs,.mhc-how{padding:64px 0}.mhc-specs__grid,.mhc-designs__grid{grid-template-columns:1fr}.mhc-designs figure:first-child{grid-column:auto}.mhc-designs img{height:430px}.mhc-cta{padding:48px 0 90px}.mhc-cta__box{padding:30px 24px}.mhc-mobile-order{display:flex;position:fixed;z-index:9999;left:14px;right:14px;bottom:12px;min-height:52px;align-items:center;justify-content:center;border-radius:10px;background:var(--mhc-green);color:#fff!important;font-weight:900;text-decoration:none!important;box-shadow:0 12px 32px rgba(0,0,0,.25)}}
+    </style>
+    <?php
+}
+add_action('wp_head', 'mh_control_coffee_head', 100);
