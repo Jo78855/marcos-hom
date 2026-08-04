@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.6.0
+ * Version: 0.7.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.6.0');
+define('MH_CONTROL_VERSION', '0.7.0');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -136,7 +136,7 @@ function mh_control_homepage_markup(): string {
                         <img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_9a98879a98879a98.jpeg" alt="أرضيات باركيه">
                         <span class="mh-card__shade"></span><span class="mh-card__text"><b>أرضيات باركيه</b><small>دفء وأناقة وسهولة في التنظيف</small></span>
                     </a>
-                    <a class="mh-card" href="https://marcohom.com/product-category/%d9%82%d9%88%d8%a7%d8%b7%d8%b9-%d8%a7%d9%84%d8%a7%d8%b9%d9%85%d8%af%d8%a9/">
+                    <a class="mh-card" href="https://marcohom.com/product/%d9%82%d8%a7%d8%b7%d8%b9-%d8%a7%d9%84%d8%a7%d8%b9%d9%85%d8%af%d8%a9/">
                         <img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_125uc4125uc4125u-Copy.jpg" alt="فواصل أعمدة بديل الخشب">
                         <span class="mh-card__shade"></span><span class="mh-card__text"><b>فواصل بديل الخشب</b><small>فصل أنيق للمساحات بدون إغلاقها</small></span>
                     </a>
@@ -353,7 +353,7 @@ function mh_control_portfolio_markup(): string {
                         <div class="mhp-project__image">
                             <img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_125uc4125uc4125u-Copy.jpg" alt="فواصل بديل الخشب للمساحات" loading="lazy">
                         </div>
-                        <div class="mhp-project__info"><span>06</span><h2>فواصل بديل الخشب</h2><p>تقسيم أنيق للمساحات يحافظ على الضوء والاتساع بدون جدران مغلقة.</p></div>
+                        <div class="mhp-project__info"><span>06</span><h2>فواصل بديل الخشب</h2><p>تقسيم أنيق للمساحات يحافظ على الضوء والاتساع بدون جدران مغلقة.</p><a class="mhp-project__link" href="https://marcohom.com/product/%d9%82%d8%a7%d8%b7%d8%b9-%d8%a7%d9%84%d8%a7%d8%b9%d9%85%d8%af%d8%a9/">احسب العدد والسعر</a></div>
                     </article>
                     <article class="mhp-project" id="fire">
                         <div class="mhp-project__image">
@@ -1124,3 +1124,195 @@ function mh_control_fire_diffuser_script(): void {
     <?php
 }
 add_action('wp_footer', 'mh_control_fire_diffuser_script', 101);
+
+
+/**
+ * WPC divider columns — roadmap step 2, product 4 of 6.
+ */
+function mh_control_is_wpc_divider_page(): bool {
+    return function_exists('is_product') && is_singular('product') && get_queried_object_id() === 6643;
+}
+
+function mh_control_wpc_divider_markup(): string {
+    $whatsapp = 'https://wa.me/96550204320?text=';
+    $initial_message = rawurlencode('مرحباً ماركوز هوم، أريد طلب 8 أعمدة WPC درجة WPC3-1 بدون تركيب، الإجمالي 40 د.ك.');
+    ob_start();
+    ?>
+    <main class="mh-wpc" dir="rtl">
+        <section class="mhw-hero">
+            <div class="mhw-shell mhw-hero__grid">
+                <div class="mhw-hero__copy">
+                    <span class="mhw-eyebrow">فواصل أعمدة WPC بديل الخشب</span>
+                    <h1>قسّم المساحة.<br>وحافظ على اتساعها.</h1>
+                    <p>أعمدة ديكورية أنيقة تساعدك في فصل الصالة أو المدخل بدون بناء جدار مغلق، وبدرجات تناسب الأثاث والديكور.</p>
+                    <div class="mhw-badges"><span>6 درجات</span><span>سعر بالعمود</span><span>تركيب اختياري</span></div>
+                    <a class="mhw-btn mhw-btn--green" href="#mhw-order">احسب العدد والسعر</a>
+                </div>
+                <figure class="mhw-hero__visual"><img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_125uc4125uc4125u-Copy.jpg" alt="فواصل أعمدة WPC بديل الخشب من ماركوز هوم"></figure>
+            </div>
+        </section>
+
+        <section class="mhw-builder" id="mhw-order">
+            <div class="mhw-shell mhw-builder__grid">
+                <div>
+                    <span class="mhw-eyebrow mhw-eyebrow--blue">كوّن طلبك</span>
+                    <h2>حدد العدد والدرجة</h2>
+                    <fieldset><legend>1. عدد الأعمدة</legend>
+                        <div class="mhw-quantity">
+                            <button type="button" id="mhw-minus" aria-label="تقليل العدد">−</button>
+                            <input id="mhw-quantity" type="number" min="1" max="100" value="8" inputmode="numeric" aria-label="عدد الأعمدة">
+                            <button type="button" id="mhw-plus" aria-label="زيادة العدد">+</button>
+                        </div>
+                    </fieldset>
+                    <fieldset><legend>2. درجة WPC</legend>
+                        <div class="mhw-colors" role="group" aria-label="درجة لون WPC">
+                            <button type="button" class="mhw-color is-active" data-mhw-color="WPC3-1" aria-pressed="true"><i style="--swatch:#d8c6a6"></i><span>WPC3-1</span></button>
+                            <button type="button" class="mhw-color" data-mhw-color="WPC3-10" aria-pressed="false"><i style="--swatch:#463326"></i><span>WPC3-10</span></button>
+                            <button type="button" class="mhw-color" data-mhw-color="WPC3-3" aria-pressed="false"><i style="--swatch:#9f7a50"></i><span>WPC3-3</span></button>
+                            <button type="button" class="mhw-color" data-mhw-color="WPC3-7" aria-pressed="false"><i style="--swatch:#e4e3de"></i><span>WPC3-7</span></button>
+                            <button type="button" class="mhw-color" data-mhw-color="WPC3-8" aria-pressed="false"><i style="--swatch:#6d7074"></i><span>WPC3-8</span></button>
+                            <button type="button" class="mhw-color" data-mhw-color="WPC3-9" aria-pressed="false"><i style="--swatch:#222427"></i><span>WPC3-9</span></button>
+                        </div>
+                    </fieldset>
+                    <fieldset><legend>3. التركيب</legend>
+                        <div class="mhw-install" role="group" aria-label="خدمة التركيب">
+                            <button type="button" class="mhw-install-choice is-active" data-mhw-unit="5" data-mhw-service="بدون تركيب" aria-pressed="true"><b>بدون تركيب</b><small>5 د.ك للعمود</small></button>
+                            <button type="button" class="mhw-install-choice" data-mhw-unit="7" data-mhw-service="مع التركيب" aria-pressed="false"><b>مع التركيب</b><small>7 د.ك للعمود</small></button>
+                        </div>
+                    </fieldset>
+                    <div class="mhw-note"><b>العدد المناسب للمكان</b><p>أرسل عرض الفتحة وصورة المكان، وسنراجع معك العدد والتوزيع قبل تأكيد الطلب.</p></div>
+                </div>
+                <aside class="mhw-summary">
+                    <span>الإجمالي التقريبي</span>
+                    <strong><em id="mhw-total">40</em> <small>د.ك</small></strong>
+                    <ul>
+                        <li><span>العدد</span><b id="mhw-count-summary">8 أعمدة</b></li>
+                        <li><span>الدرجة</span><b id="mhw-color-summary">WPC3-1</b></li>
+                        <li><span>الخدمة</span><b id="mhw-service-summary">بدون تركيب</b></li>
+                        <li><span>سعر العمود</span><b id="mhw-unit-summary">5 د.ك</b></li>
+                    </ul>
+                    <a id="mhw-whatsapp" class="mhw-btn mhw-btn--green mhw-btn--full" href="<?php echo esc_url($whatsapp . $initial_message); ?>" target="_blank" rel="noopener">أرسل الطلب على واتساب</a>
+                    <p>السعر النهائي بعد مراجعة العدد ومكان التنفيذ.</p>
+                </aside>
+            </div>
+        </section>
+
+        <section class="mhw-features">
+            <div class="mhw-shell">
+                <div class="mhw-heading"><span class="mhw-eyebrow mhw-eyebrow--blue">حل ديكوري عملي</span><h2>فصل بصري بدون جدار</h2><p>يحافظ على مرور الضوء ويحدد المساحات بطريقة مرتبة وعصرية.</p></div>
+                <div class="mhw-features__grid">
+                    <div><b>01</b><h3>تصميم مفتوح</h3><p>يفصل بين المساحات بدون إغلاق الرؤية بالكامل.</p></div>
+                    <div><b>02</b><h3>درجات متعددة</h3><p>ست درجات WPC للاختيار بما يناسب لون الأثاث.</p></div>
+                    <div><b>03</b><h3>عدد مرن</h3><p>يُحدد عدد الأعمدة حسب عرض الفتحة والتوزيع المطلوب.</p></div>
+                    <div><b>04</b><h3>تركيب اختياري</h3><p>اطلب الأعمدة فقط أو مع خدمة التركيب.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhw-gallery-section">
+            <div class="mhw-shell">
+                <div class="mhw-heading"><span class="mhw-eyebrow mhw-eyebrow--blue">أفكار للمساحة</span><h2>نماذج فواصل بديل الخشب</h2></div>
+                <div class="mhw-gallery">
+                    <figure class="mhw-gallery__wide"><img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_ek5mvcek5mvcek5m-Copy.jpg" alt="فاصل أعمدة WPC داخل الصالة" loading="lazy"></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/12/walnut-wood-slat-room-divider_1080x_44056404-55a1-4657-a48b-57b3980c2e1a.webp" alt="فاصل أعمدة WPC خشبي" loading="lazy"></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/12/ChatGPT-Image-21-ديسمبر-2025،-12_54_00-م.png" alt="قاطع أعمدة بديل الخشب" loading="lazy"></figure>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhw-pricing">
+            <div class="mhw-shell">
+                <div class="mhw-heading mhw-heading--light"><span class="mhw-eyebrow">تسعير واضح</span><h2>اختار الخدمة المناسبة</h2></div>
+                <div class="mhw-pricing__grid">
+                    <div><span>بدون تركيب</span><strong>5 <small>د.ك</small></strong><p>للعمود الواحد</p></div>
+                    <div class="is-featured"><i>خدمة كاملة</i><span>مع التركيب</span><strong>7 <small>د.ك</small></strong><p>للعمود الواحد</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhw-cta"><div class="mhw-shell mhw-cta__box"><div><span class="mhw-eyebrow mhw-eyebrow--blue">جاهز تقسم المساحة؟</span><h2>أرسل صورة المكان وعرض الفتحة</h2><p>نساعدك في تحديد العدد والدرجة المناسبة قبل التنفيذ.</p></div><a class="mhw-btn mhw-btn--dark" href="#mhw-order">احسب طلبك الآن</a></div></section>
+        <a class="mhw-mobile-order" href="#mhw-order">احسب أعمدة WPC — من 5 د.ك</a>
+    </main>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function mh_control_render_wpc_divider_page(): void {
+    if (!mh_control_is_wpc_divider_page()) return;
+    status_header(200);
+    get_header();
+    echo mh_control_wpc_divider_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    get_footer();
+    exit;
+}
+add_action('template_redirect', 'mh_control_render_wpc_divider_page', 32);
+
+function mh_control_wpc_divider_title(string $title): string {
+    return mh_control_is_wpc_divider_page() ? 'فواصل أعمدة WPC بديل الخشب | تبدأ من 5 د.ك' : $title;
+}
+add_filter('pre_get_document_title', 'mh_control_wpc_divider_title', 122);
+
+function mh_control_wpc_divider_description(string $description): string {
+    return mh_control_is_wpc_divider_page() ? 'فواصل أعمدة WPC بديل الخشب بست درجات، تبدأ من 5 د.ك للعمود بدون تركيب و7 د.ك مع التركيب. احسب العدد والسعر وأرسل الطلب عبر واتساب.' : $description;
+}
+add_filter('aioseo_title', 'mh_control_wpc_divider_title', 1220);
+add_filter('aioseo_description', 'mh_control_wpc_divider_description', 1220);
+add_filter('wpseo_title', 'mh_control_wpc_divider_title', 1220);
+add_filter('wpseo_metadesc', 'mh_control_wpc_divider_description', 1220);
+add_filter('rank_math/frontend/title', 'mh_control_wpc_divider_title', 1220);
+add_filter('rank_math/frontend/description', 'mh_control_wpc_divider_description', 1220);
+
+function mh_control_wpc_divider_head(): void {
+    if (!mh_control_is_wpc_divider_page()) return;
+    ?>
+    <meta name="description" content="فواصل أعمدة WPC بديل الخشب بست درجات، من 5 د.ك للعمود بدون تركيب و7 د.ك مع التركيب.">
+    <style id="mh-wpc-styles">
+    :root{--mhw-blue:#1266d6;--mhw-navy:#071a33;--mhw-ink:#15263a;--mhw-soft:#f2f6fa;--mhw-gold:#d6aa62;--mhw-green:#20b95a}
+    html:has(.mh-wpc),body:has(.mh-wpc){overflow-x:clip}.mh-wpc{font-family:Tahoma,Arial,sans-serif;color:var(--mhw-ink);background:#fff;width:100vw;margin-inline:calc(50% - 50vw);overflow:hidden}.mh-wpc *{box-sizing:border-box}.mhw-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}
+    .mhw-hero{padding:72px 0;background:linear-gradient(135deg,#f7f4ef,#e8dfd1)}.mhw-hero__grid{display:grid;grid-template-columns:.78fr 1.22fr;gap:58px;align-items:center}.mhw-eyebrow{display:inline-flex;align-items:center;gap:10px;color:#635749;font-size:14px;font-weight:800;margin-bottom:15px}.mhw-eyebrow:before{content:"";width:32px;height:2px;background:var(--mhw-gold)}.mhw-eyebrow--blue{color:var(--mhw-blue)}.mhw-hero h1{font-size:clamp(44px,6vw,72px);line-height:1.12;color:var(--mhw-navy);margin:0 0 20px;font-weight:900}.mhw-hero p{font-size:18px;line-height:1.9;color:#655d54;margin:0 0 24px}.mhw-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}.mhw-badges span{padding:8px 13px;border:1px solid #cfc2b0;border-radius:999px;font-size:12px;font-weight:700}.mhw-hero__visual{margin:0;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 28px 70px rgba(68,50,31,.18)}.mhw-hero__visual img{display:block;width:100%;height:520px;object-fit:cover}
+    .mhw-btn{display:inline-flex;justify-content:center;align-items:center;min-height:52px;padding:12px 23px;border-radius:8px;text-decoration:none!important;font-weight:900;transition:.2s}.mhw-btn:hover{transform:translateY(-2px)}.mhw-btn--green{background:var(--mhw-green);color:#fff!important}.mhw-btn--dark{background:var(--mhw-navy);color:#fff!important}.mhw-btn--full{width:100%}
+    .mhw-builder{padding:88px 0}.mhw-builder__grid{display:grid;grid-template-columns:1.25fr .75fr;gap:38px;align-items:start}.mhw-builder h2,.mhw-heading h2{font-size:clamp(34px,5vw,52px);color:var(--mhw-navy);margin:0 0 30px}.mhw-builder fieldset{border:0;padding:0;margin:0 0 27px}.mhw-builder legend{font-size:17px;color:var(--mhw-navy);font-weight:900;margin-bottom:13px}.mhw-quantity{display:flex;align-items:center;max-width:330px;border:1px solid #d9e2eb;border-radius:13px;overflow:hidden}.mhw-quantity button{width:64px;height:58px;border:0;background:#eef4fa;color:var(--mhw-navy);font-size:26px;cursor:pointer}.mhw-quantity input{flex:1;width:100px;height:58px;border:0;text-align:center;font:900 20px Tahoma,Arial;color:var(--mhw-navy);-moz-appearance:textfield}.mhw-quantity input::-webkit-outer-spin-button,.mhw-quantity input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    .mhw-colors{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.mhw-color{font:inherit;border:1px solid #dde5ed;border-radius:11px;background:#fff;padding:12px 8px;cursor:pointer;color:#44576c}.mhw-color i{display:block;width:34px;height:34px;border-radius:50%;margin:0 auto 7px;background:var(--swatch);border:1px solid rgba(0,0,0,.12)}.mhw-color span{font-size:11px;font-weight:800}.mhw-color.is-active{outline:2px solid var(--mhw-blue);outline-offset:1px}.mhw-install{display:grid;grid-template-columns:1fr 1fr;gap:12px}.mhw-install-choice{font:inherit;text-align:right;border:1px solid #d9e2eb;border-radius:12px;background:#fff;padding:18px 20px;cursor:pointer;color:var(--mhw-ink)}.mhw-install-choice b,.mhw-install-choice small{display:block}.mhw-install-choice small{color:#718096;margin-top:6px}.mhw-install-choice.is-active{border:2px solid var(--mhw-blue);background:#f5f9ff}.mhw-note{padding:20px 22px;border-radius:13px;background:#f2f6fa}.mhw-note p{margin:7px 0 0;color:#6a7a8d;line-height:1.7;font-size:13px}
+    .mhw-summary{position:sticky;top:25px;border-radius:18px;padding:32px;background:var(--mhw-navy);color:#fff;box-shadow:0 20px 45px rgba(7,26,51,.18)}.mhw-summary>span{color:#aebed0;font-size:14px}.mhw-summary>strong{display:block;font-size:60px;line-height:1;margin:14px 0 25px}.mhw-summary>strong em{font-style:normal}.mhw-summary>strong small{font-size:18px}.mhw-summary ul{list-style:none;padding:0;margin:0 0 24px;border-block:1px solid rgba(255,255,255,.13)}.mhw-summary li{display:flex;justify-content:space-between;gap:16px;padding:12px 0;color:#b8c6d6;font-size:13px}.mhw-summary li+li{border-top:1px solid rgba(255,255,255,.09)}.mhw-summary li b{color:#fff}.mhw-summary>p{text-align:center;color:#9eafc2;font-size:11px;margin:13px 0 0}
+    .mhw-features{padding:88px 0;background:var(--mhw-soft)}.mhw-heading{text-align:center;max-width:760px;margin:0 auto 42px}.mhw-heading p{color:#68798d;line-height:1.8;margin:0}.mhw-features__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.mhw-features__grid>div{background:#fff;border:1px solid #e1e8ef;border-radius:15px;padding:27px}.mhw-features__grid b{font-size:27px;color:var(--mhw-blue)}.mhw-features__grid h3{font-size:18px;color:var(--mhw-navy);margin:10px 0}.mhw-features__grid p{font-size:13px;line-height:1.75;color:#6b7b8e;margin:0}
+    .mhw-gallery-section{padding:90px 0}.mhw-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:17px}.mhw-gallery figure{margin:0;border-radius:16px;overflow:hidden;background:#eee}.mhw-gallery__wide{grid-column:span 2}.mhw-gallery img{width:100%;height:350px;object-fit:cover;display:block;transition:transform .4s}.mhw-gallery__wide img{height:480px}.mhw-gallery figure:hover img{transform:scale(1.02)}
+    .mhw-pricing{padding:88px 0;background:var(--mhw-navy);color:#fff}.mhw-heading--light h2{color:#fff}.mhw-pricing__grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:760px;margin:auto}.mhw-pricing__grid>div{position:relative;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);border-radius:16px;padding:31px}.mhw-pricing__grid>div.is-featured{border:2px solid #4f9cff}.mhw-pricing__grid i{position:absolute;top:-13px;right:20px;background:var(--mhw-blue);padding:5px 11px;border-radius:999px;font-size:11px;font-style:normal}.mhw-pricing__grid span{display:block;color:#b9c6d5;font-weight:800}.mhw-pricing__grid strong{display:block;font-size:52px;margin:13px 0 8px}.mhw-pricing__grid strong small{font-size:17px}.mhw-pricing__grid p{margin:0;color:#aebdce}
+    .mhw-cta{padding:70px 0;background:#eaf1f7}.mhw-cta__box{display:flex;align-items:center;justify-content:space-between;gap:30px;background:#fff;padding:44px 50px;border-radius:18px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mhw-cta h2{font-size:clamp(29px,4vw,43px);color:var(--mhw-navy);margin:0 0 10px}.mhw-cta p{margin:0;color:#68798e}.mhw-mobile-order{display:none}
+    @media(max-width:900px){.mhw-hero__grid,.mhw-builder__grid{grid-template-columns:1fr}.mhw-summary{position:static}.mhw-features__grid{grid-template-columns:1fr 1fr}.mhw-cta__box{align-items:flex-start;flex-direction:column}}
+    @media(max-width:600px){.mhw-shell{width:min(100% - 28px,1180px)}.mhw-hero{padding:52px 0}.mhw-hero h1{font-size:42px}.mhw-hero__visual img{height:330px}.mhw-builder,.mhw-features,.mhw-gallery-section,.mhw-pricing{padding:64px 0}.mhw-colors,.mhw-features__grid,.mhw-gallery,.mhw-pricing__grid{grid-template-columns:1fr}.mhw-gallery__wide{grid-column:auto}.mhw-gallery img,.mhw-gallery__wide img{height:290px}.mhw-install{grid-template-columns:1fr}.mhw-cta{padding:48px 0 90px}.mhw-cta__box{padding:30px 24px}.mhw-mobile-order{display:flex;position:fixed;z-index:9999;left:14px;right:14px;bottom:12px;min-height:52px;align-items:center;justify-content:center;border-radius:10px;background:var(--mhw-green);color:#fff!important;font-weight:900;text-decoration:none!important;box-shadow:0 12px 32px rgba(0,0,0,.25)}}
+    </style>
+    <?php
+}
+add_action('wp_head', 'mh_control_wpc_divider_head', 103);
+
+function mh_control_wpc_divider_script(): void {
+    if (!mh_control_is_wpc_divider_page()) return;
+    ?>
+    <script id="mh-wpc-builder">
+    document.addEventListener('DOMContentLoaded',function(){
+        var state={count:8,color:'WPC3-1',unit:5,service:'بدون تركيب'};
+        var input=document.getElementById('mhw-quantity');
+        function clamp(value){value=parseInt(value,10)||1;return Math.min(100,Math.max(1,value));}
+        function update(){
+            state.count=clamp(input.value);input.value=state.count;
+            var total=state.count*state.unit;
+            document.getElementById('mhw-total').textContent=String(total);
+            document.getElementById('mhw-count-summary').textContent=state.count+' أعمدة';
+            document.getElementById('mhw-color-summary').textContent=state.color;
+            document.getElementById('mhw-service-summary').textContent=state.service;
+            document.getElementById('mhw-unit-summary').textContent=state.unit+' د.ك';
+            var msg='مرحباً ماركوز هوم، أريد طلب '+state.count+' أعمدة WPC درجة '+state.color+' '+state.service+'، الإجمالي التقريبي '+total+' د.ك.';
+            document.getElementById('mhw-whatsapp').href='https://wa.me/96550204320?text='+encodeURIComponent(msg);
+        }
+        document.getElementById('mhw-minus').addEventListener('click',function(){input.value=clamp(input.value)-1;update();});
+        document.getElementById('mhw-plus').addEventListener('click',function(){input.value=clamp(input.value)+1;update();});
+        input.addEventListener('input',update);
+        input.addEventListener('change',update);
+        document.querySelectorAll('[data-mhw-color]').forEach(function(button){button.addEventListener('click',function(){document.querySelectorAll('[data-mhw-color]').forEach(function(b){b.classList.remove('is-active');b.setAttribute('aria-pressed','false');});button.classList.add('is-active');button.setAttribute('aria-pressed','true');state.color=button.dataset.mhwColor;update();});});
+        document.querySelectorAll('[data-mhw-unit]').forEach(function(button){button.addEventListener('click',function(){document.querySelectorAll('[data-mhw-unit]').forEach(function(b){b.classList.remove('is-active');b.setAttribute('aria-pressed','false');});button.classList.add('is-active');button.setAttribute('aria-pressed','true');state.unit=Number(button.dataset.mhwUnit);state.service=button.dataset.mhwService;update();});});
+        update();
+    });
+    </script>
+    <?php
+}
+add_action('wp_footer', 'mh_control_wpc_divider_script', 102);
