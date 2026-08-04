@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.2.2
+ * Version: 0.3.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.2.2');
+define('MH_CONTROL_VERSION', '0.3.0');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -259,3 +259,204 @@ add_filter('wpseo_metadesc', 'mh_control_seo_description', 999);
 add_filter('rank_math/frontend/title', 'mh_control_seo_title', 999);
 add_filter('rank_math/frontend/description', 'mh_control_seo_description', 999);
 add_filter('wp_title', 'mh_control_seo_title', 999);
+
+
+/**
+ * Portfolio page refresh — roadmap step 1.
+ * The original Elementor content remains untouched and can be restored by disabling this module.
+ */
+function mh_control_is_portfolio_page(): bool {
+    return is_page(6141) || is_page('portfolio');
+}
+
+function mh_control_portfolio_markup(): string {
+    $whatsapp = 'https://wa.me/96550204320?text=';
+    $ask_text = rawurlencode('مرحباً ماركوز هوم، شاهدت صفحة أعمالنا وأريد تنفيذ تصميم مشابه. هذه صورة المكان:');
+    ob_start();
+    ?>
+    <main class="mh-portfolio" dir="rtl">
+        <section class="mhp-hero">
+            <div class="mhp-hero__shade"></div>
+            <div class="mhp-shell mhp-hero__content">
+                <span class="mhp-eyebrow">تصميم وتنفيذ داخل الكويت</span>
+                <h1>أعمالنا تتكلم عنّا</h1>
+                <p>مجموعة مختارة من حلول ماركوز هوم للمساحات العصرية، من الفكرة والقياس إلى التنفيذ والتركيب.</p>
+                <a class="mhp-btn mhp-btn--green" href="<?php echo esc_url($whatsapp . $ask_text); ?>" target="_blank" rel="noopener">أرسل صورة مكانك على واتساب</a>
+            </div>
+        </section>
+
+        <nav class="mhp-categories" aria-label="فئات أعمالنا">
+            <div class="mhp-shell">
+                <a href="#screens">خلفيات شاشة</a>
+                <a href="#coffee">أركان قهوة</a>
+                <a href="#beds">خلفيات سرير</a>
+                <a href="#tv">طاولات TV</a>
+                <a href="#parquet">باركيه</a>
+                <a href="#wpc">فواصل بديل الخشب</a>
+                <a href="#fire">جهاز الفير المعطر</a>
+            </div>
+        </nav>
+
+        <section class="mhp-intro">
+            <div class="mhp-shell mhp-intro__grid">
+                <div>
+                    <span class="mhp-eyebrow mhp-eyebrow--blue">حلول مصممة لمساحتك</span>
+                    <h2>اختار الفكرة، وإحنا نضبطها على المقاس</h2>
+                </div>
+                <p>كل مساحة لها مقاس واستخدام مختلف. لذلك نساعدك في اختيار الخامة واللون والتوزيع المناسب، ثم ننفذ التصميم بدقة وتشطيب مرتب.</p>
+            </div>
+        </section>
+
+        <section class="mhp-gallery">
+            <div class="mhp-shell">
+                <article class="mhp-project mhp-project--feature" id="screens">
+                    <div class="mhp-project__image">
+                        <img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_qd4tnvqd4tnvqd4t.jpg" alt="تصميم خلفية شاشة من ماركوز هوم" loading="eager">
+                    </div>
+                    <div class="mhp-project__info">
+                        <span>01</span><h2>خلفيات شاشة</h2>
+                        <p>توزيع متكامل للشاشة والوحدات والإضاءة بلمسات خشبية ودرجات محايدة عصرية.</p>
+                        <a href="<?php echo esc_url($whatsapp . rawurlencode('مرحباً ماركوز هوم، أريد الاستفسار عن تصميم خلفية شاشة.')); ?>" target="_blank" rel="noopener">اطلب تصميم مشابه</a>
+                    </div>
+                </article>
+
+                <div class="mhp-projects">
+                    <article class="mhp-project" id="coffee">
+                        <div class="mhp-project__image">
+                            <img src="https://marcohom.com/wp-content/uploads/2025/11/Generated-Image-November-02-2025-5_59PM.png" alt="ركن قهوة بتصميم عصري" loading="lazy">
+                        </div>
+                        <div class="mhp-project__info"><span>02</span><h2>أركان قهوة</h2><p>ركن عملي ومميز يناسب المساحة ويجمع التخزين مع جمال التفاصيل.</p></div>
+                    </article>
+                    <article class="mhp-project" id="beds">
+                        <div class="mhp-project__image">
+                            <img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.21-PM-1.jpeg" alt="خلفية سرير منفذة من ماركوز هوم" loading="lazy">
+                        </div>
+                        <div class="mhp-project__info"><span>03</span><h2>خلفيات سرير</h2><p>تكوين هادئ بإضاءة مخفية وخامات متناسقة لغرفة نوم أكثر دفئًا.</p></div>
+                    </article>
+                    <article class="mhp-project" id="tv">
+                        <div class="mhp-project__image">
+                            <img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0011.jpg" alt="طاولة تلفزيون معلقة من ماركوز هوم" loading="lazy">
+                        </div>
+                        <div class="mhp-project__info"><span>04</span><h2>طاولات TV</h2><p>وحدات معلقة بخامات وألوان متعددة، وتصميم نظيف يسهل استخدامه.</p></div>
+                    </article>
+                    <article class="mhp-project" id="parquet">
+                        <div class="mhp-project__image">
+                            <img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_9a98879a98879a98.jpeg" alt="أرضيات باركيه عصرية" loading="lazy">
+                        </div>
+                        <div class="mhp-project__info"><span>05</span><h2>أرضيات باركيه</h2><p>درجات خشبية تضيف دفئًا وأناقة، مع اختيار اللون الأنسب للأثاث.</p></div>
+                    </article>
+                    <article class="mhp-project" id="wpc">
+                        <div class="mhp-project__image">
+                            <img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_125uc4125uc4125u-Copy.jpg" alt="فواصل بديل الخشب للمساحات" loading="lazy">
+                        </div>
+                        <div class="mhp-project__info"><span>06</span><h2>فواصل بديل الخشب</h2><p>تقسيم أنيق للمساحات يحافظ على الضوء والاتساع بدون جدران مغلقة.</p></div>
+                    </article>
+                    <article class="mhp-project" id="fire">
+                        <div class="mhp-project__image">
+                            <img src="https://marcohom.com/wp-content/uploads/2025/11/Art-Fireplace-AFW230-3D-Water-Vapor-Fireplace-product-1.webp" alt="جهاز الفير المعطر ببخار الماء" loading="lazy">
+                        </div>
+                        <div class="mhp-project__info"><span>07</span><h2>جهاز الفير المعطر</h2><p>تأثير لهب مائي مميز يضيف أجواء دافئة وتصميمًا لافتًا للمكان.</p></div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhp-real">
+            <div class="mhp-shell">
+                <div class="mhp-section-head">
+                    <span class="mhp-eyebrow mhp-eyebrow--blue">تفاصيل من التنفيذ</span>
+                    <h2>اختيارات هادئة وتشطيب نظيف</h2>
+                </div>
+                <div class="mhp-real__grid">
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.19-PM.jpeg" alt="تنفيذ خلفية سرير رمادية" loading="lazy"><figcaption>خلفية سرير وإضاءة مخفية</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM.jpeg" alt="تنفيذ خلفية غرفة بدرجات خشبية" loading="lazy"><figcaption>خامات خشبية ودرجات محايدة</figcaption></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM-2.jpeg" alt="تصميم غرفة نوم بإضاءة دافئة" loading="lazy"><figcaption>إضاءة دافئة وتكوين متوازن</figcaption></figure>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhp-steps">
+            <div class="mhp-shell">
+                <div class="mhp-section-head mhp-section-head--light">
+                    <span class="mhp-eyebrow">من الصورة إلى التنفيذ</span>
+                    <h2>كيف نبدأ مشروعك؟</h2>
+                </div>
+                <div class="mhp-steps__grid">
+                    <div><b>01</b><h3>أرسل صورة المكان</h3><p>أرسل الصورة والمقاسات المتاحة على واتساب.</p></div>
+                    <div><b>02</b><h3>نختار التصميم</h3><p>نحدد الخامة واللون والتوزيع الأنسب للمساحة.</p></div>
+                    <div><b>03</b><h3>قياس وتنفيذ</h3><p>معاينة دقيقة ثم تنفيذ وتركيب وتشطيب نهائي.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhp-cta">
+            <div class="mhp-shell mhp-cta__box">
+                <div><span class="mhp-eyebrow mhp-eyebrow--blue">فكرتك ممكن تبدأ بصورة</span><h2>أرسل صورة مكانك وخد اقتراح مناسب</h2><p>تواصل مباشر لمعرفة التصميم والمقاس والتكلفة.</p></div>
+                <a class="mhp-btn mhp-btn--dark" href="<?php echo esc_url($whatsapp . $ask_text); ?>" target="_blank" rel="noopener">ابدأ على واتساب</a>
+            </div>
+        </section>
+    </main>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function mh_control_replace_portfolio_content(string $content): string {
+    if (is_admin() || !mh_control_is_portfolio_page() || !in_the_loop() || !is_main_query()) {
+        return $content;
+    }
+    return mh_control_portfolio_markup();
+}
+add_filter('the_content', 'mh_control_replace_portfolio_content', 998);
+
+function mh_control_portfolio_title(string $title): string {
+    if (mh_control_is_portfolio_page()) {
+        return 'أعمال ماركوز هوم | تصميم وتنفيذ ديكور في الكويت';
+    }
+    return $title;
+}
+add_filter('pre_get_document_title', 'mh_control_portfolio_title', 100);
+
+function mh_control_portfolio_seo_title(string $title): string {
+    return mh_control_is_portfolio_page() ? 'أعمال ماركوز هوم | ديكور وتصميم داخلي في الكويت' : $title;
+}
+
+function mh_control_portfolio_seo_description(string $description): string {
+    return mh_control_is_portfolio_page()
+        ? 'شاهد أعمال ماركوز هوم في خلفيات الشاشة وأركان القهوة وخلفيات السرير وطاولات التلفزيون والباركيه وفواصل بديل الخشب والفير المعطر في الكويت.'
+        : $description;
+}
+add_filter('aioseo_title', 'mh_control_portfolio_seo_title', 1000);
+add_filter('aioseo_description', 'mh_control_portfolio_seo_description', 1000);
+add_filter('wpseo_title', 'mh_control_portfolio_seo_title', 1000);
+add_filter('wpseo_metadesc', 'mh_control_portfolio_seo_description', 1000);
+add_filter('rank_math/frontend/title', 'mh_control_portfolio_seo_title', 1000);
+add_filter('rank_math/frontend/description', 'mh_control_portfolio_seo_description', 1000);
+
+function mh_control_portfolio_styles(): void {
+    if (!mh_control_is_portfolio_page()) {
+        return;
+    }
+    ?>
+    <style id="mh-portfolio-styles">
+    :root{--mhp-blue:#1266d6;--mhp-navy:#071a33;--mhp-ink:#14253b;--mhp-soft:#f2f6fa;--mhp-gold:#d6aa62}
+    .mh-portfolio{font-family:Tahoma,Arial,sans-serif;color:var(--mhp-ink);background:#fff;width:100vw;margin-inline:calc(50% - 50vw);overflow:hidden}
+    .mh-portfolio *{box-sizing:border-box}.mhp-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}
+    .mhp-hero{min-height:520px;display:flex;align-items:center;position:relative;background:url('https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM-2.jpeg') center 52%/cover no-repeat}
+    .mhp-hero__shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,26,51,.22),rgba(7,26,51,.9))}
+    .mhp-hero__content{position:relative;z-index:1;color:#fff;padding-block:90px}.mhp-eyebrow{display:inline-flex;align-items:center;gap:10px;color:#dceaff;font-size:14px;font-weight:800;margin-bottom:16px}.mhp-eyebrow:before{content:"";width:32px;height:2px;background:var(--mhp-gold)}.mhp-eyebrow--blue{color:var(--mhp-blue)}
+    .mhp-hero h1{font-size:clamp(44px,7vw,78px);line-height:1.08;color:#fff;margin:0 0 20px;font-weight:900}.mhp-hero p{max-width:670px;font-size:18px;line-height:1.9;color:#edf4ff;margin:0 0 30px}
+    .mhp-btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:12px 24px;border-radius:8px;font-weight:800;text-decoration:none!important;transition:.2s ease}.mhp-btn:hover{transform:translateY(-2px)}.mhp-btn--green{background:#20b95a;color:#fff!important}.mhp-btn--dark{background:var(--mhp-navy);color:#fff!important}
+    .mhp-categories{background:#fff;border-bottom:1px solid #e6edf4;position:relative;z-index:3}.mhp-categories .mhp-shell{display:flex;gap:8px;overflow-x:auto;padding-block:16px;scrollbar-width:none}.mhp-categories .mhp-shell::-webkit-scrollbar{display:none}.mhp-categories a{white-space:nowrap;border:1px solid #dbe4ed;border-radius:999px;padding:9px 16px;color:#31445b;text-decoration:none!important;font-size:13px;font-weight:700}.mhp-categories a:hover{background:var(--mhp-navy);color:#fff}
+    .mhp-intro{padding:86px 0 55px}.mhp-intro__grid{display:grid;grid-template-columns:1.1fr .9fr;gap:70px;align-items:end}.mhp-intro h2,.mhp-section-head h2{font-size:clamp(32px,4vw,52px);line-height:1.25;color:var(--mhp-navy);margin:0}.mhp-intro p{margin:0;color:#637287;line-height:1.95;font-size:16px}
+    .mhp-gallery{padding:25px 0 92px}.mhp-project{background:#fff;border:1px solid #e3eaf1;border-radius:18px;overflow:hidden;box-shadow:0 16px 42px rgba(7,26,51,.07);scroll-margin-top:100px}.mhp-project__image{height:360px;overflow:hidden;background:#e9eef3}.mhp-project__image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .55s ease}.mhp-project:hover .mhp-project__image img{transform:scale(1.035)}.mhp-project__info{padding:26px 28px 30px}.mhp-project__info span{font-size:12px;color:var(--mhp-blue);font-weight:900}.mhp-project__info h2{font-size:25px;color:var(--mhp-navy);margin:8px 0 10px}.mhp-project__info p{font-size:14px;color:#68788d;line-height:1.8;margin:0}.mhp-project__info a{display:inline-block;margin-top:17px;color:var(--mhp-blue);font-weight:800;text-decoration:none!important}
+    .mhp-project--feature{display:grid;grid-template-columns:1.45fr .55fr;margin-bottom:22px}.mhp-project--feature .mhp-project__image{height:520px}.mhp-project--feature .mhp-project__info{display:flex;flex-direction:column;justify-content:center;padding:50px}.mhp-project--feature .mhp-project__info h2{font-size:38px}
+    .mhp-projects{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+    .mhp-real{background:var(--mhp-soft);padding:88px 0}.mhp-section-head{text-align:center;max-width:760px;margin:0 auto 42px}.mhp-real__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.mhp-real figure{margin:0;background:#fff;border-radius:15px;overflow:hidden}.mhp-real img{width:100%;height:380px;object-fit:cover;display:block}.mhp-real figcaption{padding:17px 20px;font-size:14px;font-weight:800;color:var(--mhp-navy)}
+    .mhp-steps{padding:88px 0;background:var(--mhp-navy);color:#fff}.mhp-section-head--light h2{color:#fff}.mhp-steps__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.mhp-steps__grid>div{border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.04);padding:30px;border-radius:14px}.mhp-steps__grid b{color:var(--mhp-gold);font-size:13px}.mhp-steps__grid h3{color:#fff;font-size:21px;margin:13px 0 9px}.mhp-steps__grid p{color:#aebed0;line-height:1.8;margin:0;font-size:14px}
+    .mhp-cta{background:#edf3f9;padding:70px 0}.mhp-cta__box{background:#fff;border-radius:18px;padding:44px 50px;display:flex;align-items:center;justify-content:space-between;gap:30px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mhp-cta h2{margin:0 0 10px;color:var(--mhp-navy);font-size:clamp(28px,4vw,42px)}.mhp-cta p{margin:0;color:#68778b}
+    @media(max-width:900px){.mhp-intro__grid{grid-template-columns:1fr;gap:22px}.mhp-project--feature{grid-template-columns:1fr}.mhp-project--feature .mhp-project__image{height:420px}.mhp-project--feature .mhp-project__info{padding:30px}.mhp-real__grid{grid-template-columns:1fr 1fr}.mhp-steps__grid{grid-template-columns:1fr}.mhp-cta__box{align-items:flex-start;flex-direction:column}}
+    @media(max-width:620px){.mhp-shell{width:min(100% - 28px,1180px)}.mhp-hero{min-height:540px}.mhp-hero__content{padding-block:70px}.mhp-hero h1{font-size:44px}.mhp-hero p{font-size:16px}.mhp-intro{padding:62px 0 38px}.mhp-gallery{padding-bottom:64px}.mhp-projects{grid-template-columns:1fr}.mhp-project__image,.mhp-project--feature .mhp-project__image{height:300px}.mhp-project--feature .mhp-project__info h2{font-size:29px}.mhp-real{padding:64px 0}.mhp-real__grid{grid-template-columns:1fr}.mhp-real img{height:340px}.mhp-steps{padding:64px 0}.mhp-cta{padding:48px 0}.mhp-cta__box{padding:30px 24px}.mhp-btn{width:100%}}
+    </style>
+    <?php
+}
+add_action('wp_head', 'mh_control_portfolio_styles', 99);
