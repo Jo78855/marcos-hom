@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 0.7.0
+ * Version: 0.8.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '0.7.0');
+define('MH_CONTROL_VERSION', '0.8.0');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -132,7 +132,7 @@ function mh_control_homepage_markup(): string {
                         <img src="https://marcohom.com/wp-content/uploads/2025/11/Generated-Image-November-03-2025-7_43PM-270x270.png" alt="طاولات تلفزيون معلقة">
                         <span class="mh-card__shade"></span><span class="mh-card__text"><b>طاولات TV</b><small>مقاسات وألوان تناسب تصميمك</small></span>
                     </a>
-                    <a class="mh-card" href="https://marcohom.com/product-category/%d8%a7%d8%b1%d8%b6%d9%8a%d8%a7%d8%aa-%d8%a8%d8%a7%d8%b1%d9%83%d9%8a%d9%87/">
+                    <a class="mh-card" href="https://marcohom.com/product/%d8%a8%d8%a7%d8%b1%d9%83%d9%8a%d8%a9-%d8%ae%d8%b4%d8%a8-k9188/">
                         <img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_9a98879a98879a98.jpeg" alt="أرضيات باركيه">
                         <span class="mh-card__shade"></span><span class="mh-card__text"><b>أرضيات باركيه</b><small>دفء وأناقة وسهولة في التنظيف</small></span>
                     </a>
@@ -347,7 +347,7 @@ function mh_control_portfolio_markup(): string {
                         <div class="mhp-project__image">
                             <img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_9a98879a98879a98.jpeg" alt="أرضيات باركيه عصرية" loading="lazy">
                         </div>
-                        <div class="mhp-project__info"><span>05</span><h2>أرضيات باركيه</h2><p>درجات خشبية تضيف دفئًا وأناقة، مع اختيار اللون الأنسب للأثاث.</p></div>
+                        <div class="mhp-project__info"><span>05</span><h2>أرضيات باركيه</h2><p>درجات خشبية تضيف دفئًا وأناقة، مع اختيار اللون الأنسب للأثاث.</p><a class="mhp-project__link" href="https://marcohom.com/product/%d8%a8%d8%a7%d8%b1%d9%83%d9%8a%d8%a9-%d8%ae%d8%b4%d8%a8-k9188/">احسب المساحة والتكلفة</a></div>
                     </article>
                     <article class="mhp-project" id="wpc">
                         <div class="mhp-project__image">
@@ -1316,3 +1316,175 @@ function mh_control_wpc_divider_script(): void {
     <?php
 }
 add_action('wp_footer', 'mh_control_wpc_divider_script', 102);
+
+
+/**
+ * 9 mm parquet flooring — roadmap step 2, product 5 of 6.
+ */
+function mh_control_is_parquet_page(): bool {
+    return function_exists('is_product') && is_singular('product') && get_queried_object_id() === 6545;
+}
+
+function mh_control_parquet_markup(): string {
+    $whatsapp = 'https://wa.me/96550204320?text=';
+    $initial_message = rawurlencode('مرحباً ماركوز هوم، أريد باركيه خشب 9 مم درجة K9188 لمساحة 20 م². الكمية المقترحة مع 10% احتياط 22 م²، تكلفة الخامة التقريبية 44 د.ك. أريد مراجعة القياس وسعر التركيب.');
+    ob_start();
+    ?>
+    <main class="mh-parquet" dir="rtl">
+        <section class="mhpq-hero">
+            <div class="mhpq-shell mhpq-hero__grid">
+                <div class="mhpq-hero__copy">
+                    <span class="mhpq-eyebrow">باركيه خشب 9 مم</span>
+                    <h1>دفء الخشب.<br>وشكل يغيّر الغرفة.</h1>
+                    <p>سبع درجات خشبية تناسب الأثاث العصري، مع حاسبة تساعدك في تقدير المساحة وكمية الخامة المطلوبة.</p>
+                    <div class="mhpq-badges"><span>سُمك 9 مم</span><span>7 درجات</span><span>السعر الحالي 2 د.ك</span></div>
+                    <a class="mhpq-btn mhpq-btn--green" href="#mhpq-order">احسب مساحة غرفتك</a>
+                </div>
+                <figure class="mhpq-hero__visual"><img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_4g3pw4g3pw4g3pw4-Copy.jpg" alt="أرضيات باركيه خشب من ماركوز هوم"></figure>
+            </div>
+        </section>
+
+        <section class="mhpq-builder" id="mhpq-order">
+            <div class="mhpq-shell mhpq-builder__grid">
+                <div>
+                    <span class="mhpq-eyebrow mhpq-eyebrow--blue">حاسبة تقديرية</span>
+                    <h2>أدخل طول وعرض المكان</h2>
+                    <div class="mhpq-measures">
+                        <label><span>الطول بالمتر</span><input id="mhpq-length" type="number" min="0.5" max="100" step="0.1" value="4" inputmode="decimal"></label>
+                        <label><span>العرض بالمتر</span><input id="mhpq-width" type="number" min="0.5" max="100" step="0.1" value="5" inputmode="decimal"></label>
+                    </div>
+                    <fieldset><legend>اختار درجة الخشب</legend>
+                        <div class="mhpq-colors" role="group" aria-label="درجة الباركيه">
+                            <button type="button" class="mhpq-color" data-mhpq-color="K2050" aria-pressed="false"><i style="--swatch:#c7a271"></i><span>K2050</span></button>
+                            <button type="button" class="mhpq-color" data-mhpq-color="K2132" aria-pressed="false"><i style="--swatch:#a97f52"></i><span>K2132</span></button>
+                            <button type="button" class="mhpq-color" data-mhpq-color="K306" aria-pressed="false"><i style="--swatch:#d9be91"></i><span>K306</span></button>
+                            <button type="button" class="mhpq-color" data-mhpq-color="K761" aria-pressed="false"><i style="--swatch:#7e5b3f"></i><span>K761</span></button>
+                            <button type="button" class="mhpq-color" data-mhpq-color="K8026" aria-pressed="false"><i style="--swatch:#b49a76"></i><span>K8026</span></button>
+                            <button type="button" class="mhpq-color is-active" data-mhpq-color="K9188" aria-pressed="true"><i style="--swatch:#8c694c"></i><span>K9188</span></button>
+                            <button type="button" class="mhpq-color" data-mhpq-color="K9876" aria-pressed="false"><i style="--swatch:#5b4536"></i><span>K9876</span></button>
+                        </div>
+                    </fieldset>
+                    <div class="mhpq-note"><b>أضفنا 10% احتياط</b><p>الحاسبة تضيف كمية احتياط للقص والزوايا. القياس النهائي وسعر التركيب يتم تأكيدهما بعد مراجعة المكان.</p></div>
+                </div>
+                <aside class="mhpq-summary">
+                    <span>تكلفة الخامة التقريبية</span>
+                    <strong><em id="mhpq-total">44</em> <small>د.ك</small></strong>
+                    <ul>
+                        <li><span>مساحة المكان</span><b id="mhpq-area">20 م²</b></li>
+                        <li><span>الكمية مع الاحتياط</span><b id="mhpq-needed">22 م²</b></li>
+                        <li><span>الدرجة</span><b id="mhpq-color-summary">K9188</b></li>
+                        <li><span>سعر الخامة</span><b>2 د.ك / م²</b></li>
+                    </ul>
+                    <a id="mhpq-whatsapp" class="mhpq-btn mhpq-btn--green mhpq-btn--full" href="<?php echo esc_url($whatsapp . $initial_message); ?>" target="_blank" rel="noopener">أرسل القياس على واتساب</a>
+                    <p>السعر النهائي بعد القياس وتحديد متطلبات التركيب.</p>
+                </aside>
+            </div>
+        </section>
+
+        <section class="mhpq-features">
+            <div class="mhpq-shell">
+                <div class="mhpq-heading"><span class="mhpq-eyebrow mhpq-eyebrow--blue">اختيار عملي للبيت</span><h2>مظهر خشبي بتفاصيل هادئة</h2></div>
+                <div class="mhpq-features__grid">
+                    <div><b>9 مم</b><h3>سُمك الخامة</h3><p>باركيه خشب بالسُمك المسجل للمنتج.</p></div>
+                    <div><b>7</b><h3>درجات متاحة</h3><p>أكواد متعددة من الفاتح إلى الداكن.</p></div>
+                    <div><b>10%</b><h3>احتياط محسوب</h3><p>تقدير إضافي للقص والزوايا أثناء التنفيذ.</p></div>
+                    <div><b>قياس</b><h3>مراجعة قبل التنفيذ</h3><p>نراجع أبعاد المكان والاتجاه الأنسب للتركيب.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhpq-gallery-section">
+            <div class="mhpq-shell">
+                <div class="mhpq-heading"><span class="mhpq-eyebrow mhpq-eyebrow--blue">شكل الأرضية داخل المكان</span><h2>دفء وأناقة في كل غرفة</h2></div>
+                <div class="mhpq-gallery">
+                    <figure class="mhpq-gallery__wide"><img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_f4ev3pf4ev3pf4ev-Copy.jpg" alt="أرضية باركيه خشبية داخل غرفة معيشة" loading="lazy"></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_4g3pw4g3pw4g3pw4-Copy.jpg" alt="باركيه خشب بدرجة دافئة" loading="lazy"></figure>
+                    <figure><img src="https://marcohom.com/wp-content/uploads/2025/12/Gemini_Generated_Image_3ofg6o3ofg6o3ofg.jpg" alt="أرضيات باركيه من ماركوز هوم" loading="lazy"></figure>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhpq-price">
+            <div class="mhpq-shell">
+                <div class="mhpq-heading mhpq-heading--light"><span class="mhpq-eyebrow">عرض المنتج الحالي</span><h2>2 د.ك بدل 3.5 د.ك</h2><p>تكلفة الخامة محسوبة حسب المساحة، وسعر التركيب يُحدد بعد مراجعة المكان.</p></div>
+            </div>
+        </section>
+
+        <section class="mhpq-cta"><div class="mhpq-shell mhpq-cta__box"><div><span class="mhpq-eyebrow mhpq-eyebrow--blue">جاهز تغيّر الأرضية؟</span><h2>أرسل مساحة المكان وصورته</h2><p>نراجع معك الدرجة والكمية وتكلفة التركيب.</p></div><a class="mhpq-btn mhpq-btn--dark" href="#mhpq-order">احسب المساحة الآن</a></div></section>
+        <a class="mhpq-mobile-order" href="#mhpq-order">احسب الباركيه — 2 د.ك / م²</a>
+    </main>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function mh_control_render_parquet_page(): void {
+    if (!mh_control_is_parquet_page()) return;
+    status_header(200);get_header();
+    echo mh_control_parquet_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    get_footer();exit;
+}
+add_action('template_redirect', 'mh_control_render_parquet_page', 33);
+
+function mh_control_parquet_title(string $title): string {
+    return mh_control_is_parquet_page() ? 'باركيه خشب 9 مم من ماركوز هوم | 2 د.ك' : $title;
+}
+add_filter('pre_get_document_title', 'mh_control_parquet_title', 123);
+function mh_control_parquet_description(string $description): string {
+    return mh_control_is_parquet_page() ? 'باركيه خشب 9 مم بسبع درجات. احسب مساحة المكان والكمية المطلوبة مع 10% احتياط. السعر الحالي 2 د.ك بدل 3.5 د.ك.' : $description;
+}
+add_filter('aioseo_title', 'mh_control_parquet_title', 1230);
+add_filter('aioseo_description', 'mh_control_parquet_description', 1230);
+add_filter('wpseo_title', 'mh_control_parquet_title', 1230);
+add_filter('wpseo_metadesc', 'mh_control_parquet_description', 1230);
+add_filter('rank_math/frontend/title', 'mh_control_parquet_title', 1230);
+add_filter('rank_math/frontend/description', 'mh_control_parquet_description', 1230);
+
+function mh_control_parquet_head(): void {
+    if (!mh_control_is_parquet_page()) return;
+    ?>
+    <meta name="description" content="باركيه خشب 9 مم بسبع درجات، السعر الحالي 2 د.ك بدل 3.5 د.ك، مع حاسبة مساحة وكمية.">
+    <style id="mh-parquet-styles">
+    :root{--mhpq-blue:#1266d6;--mhpq-navy:#071a33;--mhpq-ink:#15263a;--mhpq-soft:#f2f6fa;--mhpq-gold:#d6aa62;--mhpq-green:#20b95a}
+    html:has(.mh-parquet),body:has(.mh-parquet){overflow-x:clip}.mh-parquet{font-family:Tahoma,Arial,sans-serif;color:var(--mhpq-ink);background:#fff;width:100vw;margin-inline:calc(50% - 50vw);overflow:hidden}.mh-parquet *{box-sizing:border-box}.mhpq-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}
+    .mhpq-hero{padding:72px 0;background:linear-gradient(135deg,#f8f4ed,#e5d5bf)}.mhpq-hero__grid{display:grid;grid-template-columns:.78fr 1.22fr;gap:58px;align-items:center}.mhpq-eyebrow{display:inline-flex;align-items:center;gap:10px;color:#6e5a43;font-size:14px;font-weight:800;margin-bottom:15px}.mhpq-eyebrow:before{content:"";width:32px;height:2px;background:var(--mhpq-gold)}.mhpq-eyebrow--blue{color:var(--mhpq-blue)}.mhpq-hero h1{font-size:clamp(44px,6vw,72px);line-height:1.12;color:var(--mhpq-navy);margin:0 0 20px;font-weight:900}.mhpq-hero p{font-size:18px;line-height:1.9;color:#655d54;margin:0 0 24px}.mhpq-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}.mhpq-badges span{padding:8px 13px;border:1px solid #cdbb9f;border-radius:999px;font-size:12px;font-weight:700}.mhpq-hero__visual{margin:0;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 28px 70px rgba(68,50,31,.18)}.mhpq-hero__visual img{display:block;width:100%;height:520px;object-fit:cover}
+    .mhpq-btn{display:inline-flex;justify-content:center;align-items:center;min-height:52px;padding:12px 23px;border-radius:8px;text-decoration:none!important;font-weight:900;transition:.2s}.mhpq-btn:hover{transform:translateY(-2px)}.mhpq-btn--green{background:var(--mhpq-green);color:#fff!important}.mhpq-btn--dark{background:var(--mhpq-navy);color:#fff!important}.mhpq-btn--full{width:100%}
+    .mhpq-builder{padding:88px 0}.mhpq-builder__grid{display:grid;grid-template-columns:1.25fr .75fr;gap:38px;align-items:start}.mhpq-builder h2,.mhpq-heading h2{font-size:clamp(34px,5vw,52px);color:var(--mhpq-navy);margin:0 0 30px}.mhpq-measures{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}.mhpq-measures label span{display:block;font-size:13px;font-weight:800;color:var(--mhpq-navy);margin-bottom:8px}.mhpq-measures input{width:100%;height:58px;border:1px solid #d9e2eb;border-radius:12px;padding:0 16px;font:900 19px Tahoma,Arial;color:var(--mhpq-navy)}.mhpq-builder fieldset{border:0;padding:0;margin:0 0 27px}.mhpq-builder legend{font-size:17px;color:var(--mhpq-navy);font-weight:900;margin-bottom:13px}.mhpq-colors{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.mhpq-color{font:inherit;border:1px solid #dde5ed;border-radius:11px;background:#fff;padding:12px 8px;cursor:pointer;color:#44576c}.mhpq-color i{display:block;width:34px;height:34px;border-radius:50%;margin:0 auto 7px;background:var(--swatch);border:1px solid rgba(0,0,0,.12)}.mhpq-color span{font-size:11px;font-weight:800}.mhpq-color.is-active{outline:2px solid var(--mhpq-blue);outline-offset:1px}.mhpq-note{padding:20px 22px;border-radius:13px;background:#f2f6fa}.mhpq-note p{margin:7px 0 0;color:#6a7a8d;line-height:1.7;font-size:13px}
+    .mhpq-summary{position:sticky;top:25px;border-radius:18px;padding:32px;background:var(--mhpq-navy);color:#fff;box-shadow:0 20px 45px rgba(7,26,51,.18)}.mhpq-summary>span{color:#aebed0;font-size:14px}.mhpq-summary>strong{display:block;font-size:60px;line-height:1;margin:14px 0 25px}.mhpq-summary>strong em{font-style:normal}.mhpq-summary>strong small{font-size:18px}.mhpq-summary ul{list-style:none;padding:0;margin:0 0 24px;border-block:1px solid rgba(255,255,255,.13)}.mhpq-summary li{display:flex;justify-content:space-between;gap:16px;padding:12px 0;color:#b8c6d6;font-size:13px}.mhpq-summary li+li{border-top:1px solid rgba(255,255,255,.09)}.mhpq-summary li b{color:#fff}.mhpq-summary>p{text-align:center;color:#9eafc2;font-size:11px;margin:13px 0 0}
+    .mhpq-features{padding:88px 0;background:var(--mhpq-soft)}.mhpq-heading{text-align:center;max-width:760px;margin:0 auto 42px}.mhpq-heading p{color:#68798d;line-height:1.8;margin:0}.mhpq-features__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.mhpq-features__grid>div{background:#fff;border:1px solid #e1e8ef;border-radius:15px;padding:27px}.mhpq-features__grid b{font-size:27px;color:var(--mhpq-blue)}.mhpq-features__grid h3{font-size:18px;color:var(--mhpq-navy);margin:10px 0}.mhpq-features__grid p{font-size:13px;line-height:1.75;color:#6b7b8e;margin:0}
+    .mhpq-gallery-section{padding:90px 0}.mhpq-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:17px}.mhpq-gallery figure{margin:0;border-radius:16px;overflow:hidden;background:#eee}.mhpq-gallery__wide{grid-column:span 2}.mhpq-gallery img{width:100%;height:350px;object-fit:cover;display:block;transition:transform .4s}.mhpq-gallery__wide img{height:480px}.mhpq-gallery figure:hover img{transform:scale(1.02)}
+    .mhpq-price{padding:88px 0;background:var(--mhpq-navy);color:#fff}.mhpq-heading--light h2{color:#fff}.mhpq-heading--light p{color:#b9c6d5}.mhpq-cta{padding:70px 0;background:#eaf1f7}.mhpq-cta__box{display:flex;align-items:center;justify-content:space-between;gap:30px;background:#fff;padding:44px 50px;border-radius:18px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mhpq-cta h2{font-size:clamp(29px,4vw,43px);color:var(--mhpq-navy);margin:0 0 10px}.mhpq-cta p{margin:0;color:#68798e}.mhpq-mobile-order{display:none}
+    @media(max-width:900px){.mhpq-hero__grid,.mhpq-builder__grid{grid-template-columns:1fr}.mhpq-summary{position:static}.mhpq-features__grid{grid-template-columns:1fr 1fr}.mhpq-cta__box{align-items:flex-start;flex-direction:column}}
+    @media(max-width:600px){.mhpq-shell{width:min(100% - 28px,1180px)}.mhpq-hero{padding:52px 0}.mhpq-hero h1{font-size:42px}.mhpq-hero__visual img{height:330px}.mhpq-builder,.mhpq-features,.mhpq-gallery-section,.mhpq-price{padding:64px 0}.mhpq-measures,.mhpq-colors,.mhpq-features__grid,.mhpq-gallery{grid-template-columns:1fr}.mhpq-gallery__wide{grid-column:auto}.mhpq-gallery img,.mhpq-gallery__wide img{height:290px}.mhpq-cta{padding:48px 0 90px}.mhpq-cta__box{padding:30px 24px}.mhpq-mobile-order{display:flex;position:fixed;z-index:9999;left:14px;right:14px;bottom:12px;min-height:52px;align-items:center;justify-content:center;border-radius:10px;background:var(--mhpq-green);color:#fff!important;font-weight:900;text-decoration:none!important;box-shadow:0 12px 32px rgba(0,0,0,.25)}}
+    </style>
+    <?php
+}
+add_action('wp_head', 'mh_control_parquet_head', 104);
+
+function mh_control_parquet_script(): void {
+    if (!mh_control_is_parquet_page()) return;
+    ?>
+    <script id="mh-parquet-builder">
+    document.addEventListener('DOMContentLoaded',function(){
+        var state={color:'K9188',unit:2};
+        var length=document.getElementById('mhpq-length'),width=document.getElementById('mhpq-width');
+        function num(v){v=parseFloat(v);return isFinite(v)&&v>0?v:0;}
+        function fmt(v){return Number.isInteger(v)?String(v):v.toFixed(1);}
+        function update(){
+            var area=Math.round(num(length.value)*num(width.value)*10)/10;
+            var needed=Math.ceil(area*1.10);
+            var total=needed*state.unit;
+            document.getElementById('mhpq-area').textContent=fmt(area)+' م²';
+            document.getElementById('mhpq-needed').textContent=needed+' م²';
+            document.getElementById('mhpq-total').textContent=fmt(total);
+            document.getElementById('mhpq-color-summary').textContent=state.color;
+            var msg='مرحباً ماركوز هوم، أريد باركيه خشب 9 مم درجة '+state.color+' لمساحة '+fmt(area)+' م². الكمية المقترحة مع 10% احتياط '+needed+' م²، تكلفة الخامة التقريبية '+fmt(total)+' د.ك. أريد مراجعة القياس وسعر التركيب.';
+            document.getElementById('mhpq-whatsapp').href='https://wa.me/96550204320?text='+encodeURIComponent(msg);
+        }
+        length.addEventListener('input',update);width.addEventListener('input',update);
+        document.querySelectorAll('[data-mhpq-color]').forEach(function(button){button.addEventListener('click',function(){document.querySelectorAll('[data-mhpq-color]').forEach(function(b){b.classList.remove('is-active');b.setAttribute('aria-pressed','false');});button.classList.add('is-active');button.setAttribute('aria-pressed','true');state.color=button.dataset.mhpqColor;update();});});
+        update();
+    });
+    </script>
+    <?php
+}
+add_action('wp_footer', 'mh_control_parquet_script', 103);
