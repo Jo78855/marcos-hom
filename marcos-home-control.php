@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.3.9
+ * Version: 1.4.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.3.9');
+define('MH_CONTROL_VERSION', '1.4.0');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -715,7 +715,7 @@ function mh_control_tv_console_markup(): string {
                 <div class="mht-heading">
                     <span class="mht-eyebrow mht-eyebrow--blue">مقاس واضح قبل الاختيار</span>
                     <h2>شاهد الطاولة داخل المساحة</h2>
-                    <p>نموذجان لمقاس 1.5 متر بارتفاع 25 سم وعمق 32 سم، مع درجتين تناسبان الديكور العصري.</p>
+                    <p>ستة تشطيبات لمقاس 1.5 متر بارتفاع 25 سم وعمق 32 سم، لتختار الدرجة الأنسب لديكورك.</p>
                 </div>
                 <div class="mht-dimensions__grid">
                     <figure>
