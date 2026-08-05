@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.3.7
+ * Version: 1.3.8
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.3.7');
+define('MH_CONTROL_VERSION', '1.3.8');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -2275,6 +2275,12 @@ function mh_control_disable_tv_console_cache(): void {
     }
 
     nocache_headers();
+    if (!headers_sent()) {
+        header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0', true);
+        header('Pragma: no-cache', true);
+        header('Expires: Wed, 11 Jan 1984 05:00:00 GMT', true);
+        header('X-LiteSpeed-Cache-Control: no-cache', true);
+    }
     do_action('litespeed_control_set_nocache', 'Marco Home TV console gallery');
 }
 add_action('template_redirect', 'mh_control_disable_tv_console_cache', 1);
@@ -2286,6 +2292,10 @@ function mh_control_purge_cache_after_deploy(): void {
     $deployed_version = (string) get_option('mh_control_deployed_version', '');
     if ($deployed_version === MH_CONTROL_VERSION) {
         return;
+    }
+
+    if (!headers_sent()) {
+        header('X-LiteSpeed-Purge: *', false);
     }
 
     do_action('litespeed_purge_all');
