@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.3.6
+ * Version: 1.3.7
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.3.6');
+define('MH_CONTROL_VERSION', '1.3.7');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -2259,6 +2259,27 @@ function mh_control_finish_head_schema_cleanup(): void {
 add_action('wp_head', 'mh_control_finish_head_schema_cleanup', 999999);
 
 /**
+ * Keep the custom TV console page out of page/CDN cache so new gallery
+ * releases remain visible when visitors return through the normal URL.
+ */
+function mh_control_disable_tv_console_cache(): void {
+    if (!mh_control_is_tv_console_page()) {
+        return;
+    }
+
+    if (!defined('DONOTCACHEPAGE')) {
+        define('DONOTCACHEPAGE', true);
+    }
+    if (!defined('DONOTCACHEOBJECT')) {
+        define('DONOTCACHEOBJECT', true);
+    }
+
+    nocache_headers();
+    do_action('litespeed_control_set_nocache', 'Marco Home TV console gallery');
+}
+add_action('template_redirect', 'mh_control_disable_tv_console_cache', 1);
+
+/**
  * Purge LiteSpeed once after a newly deployed plugin version.
  */
 function mh_control_purge_cache_after_deploy(): void {
@@ -2267,8 +2288,16 @@ function mh_control_purge_cache_after_deploy(): void {
         return;
     }
 
-    if (defined('LSCWP_V')) {
-        do_action('litespeed_purge_all');
+    do_action('litespeed_purge_all');
+    do_action('litespeed_purge_all_object');
+
+    $tv_console_url = get_permalink(6455);
+    if (is_string($tv_console_url) && $tv_console_url !== '') {
+        do_action('litespeed_purge_url', $tv_console_url);
+    }
+
+    if (function_exists('wp_cache_flush')) {
+        wp_cache_flush();
     }
 
     update_option('mh_control_deployed_version', MH_CONTROL_VERSION, false);
