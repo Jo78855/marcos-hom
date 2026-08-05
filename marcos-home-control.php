@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.3.5
+ * Version: 1.3.6
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.3.5');
+define('MH_CONTROL_VERSION', '1.3.6');
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -710,6 +710,26 @@ function mh_control_tv_console_markup(): string {
             </div>
         </section>
 
+        <section id="table-gallery" class="mht-dimensions" aria-label="صور ومقاسات طاولات التلفزيون">
+            <div class="mht-shell">
+                <div class="mht-heading">
+                    <span class="mht-eyebrow mht-eyebrow--blue">مقاس واضح قبل الاختيار</span>
+                    <h2>شاهد الطاولة داخل المساحة</h2>
+                    <p>نموذجان لمقاس 1.5 متر بارتفاع 25 سم وعمق 32 سم، مع درجتين تناسبان الديكور العصري.</p>
+                </div>
+                <div class="mht-dimensions__grid">
+                    <figure>
+                        <img src="https://marcohom.com/wp-content/plugins/marcos-home-control/assets/tables/table-wall-unit-walnut.webp" alt="طاولة تلفزيون معلقة خشبية مقاس 150 في 32 في 25 سم" width="1448" height="1086" loading="lazy">
+                        <figcaption><b>تشطيب خشبي دافئ</b><span>150 × 32 × 25 سم</span></figcaption>
+                    </figure>
+                    <figure>
+                        <img src="https://marcohom.com/wp-content/plugins/marcos-home-control/assets/tables/table-wall-unit-charcoal.webp" alt="طاولة تلفزيون معلقة رمادي غامق مقاس 150 في 32 في 25 سم" width="1448" height="1086" loading="lazy">
+                        <figcaption><b>رمادي غامق</b><span>150 × 32 × 25 سم</span></figcaption>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
         <section class="mht-builder" id="order">
             <div class="mht-shell mht-builder__grid">
                 <div class="mht-builder__choices">
@@ -775,25 +795,7 @@ function mh_control_tv_console_markup(): string {
             </div>
         </section>
 
-        <section class="mht-dimensions" aria-label="صور ومقاسات طاولات التلفزيون">
-            <div class="mht-shell">
-                <div class="mht-heading">
-                    <span class="mht-eyebrow mht-eyebrow--blue">مقاس واضح قبل الاختيار</span>
-                    <h2>شاهد الطاولة داخل المساحة</h2>
-                    <p>نموذجان لمقاس 1.5 متر بارتفاع 25 سم وعمق 32 سم، مع درجتين تناسبان الديكور العصري.</p>
-                </div>
-                <div class="mht-dimensions__grid">
-                    <figure>
-                        <img src="https://marcohom.com/wp-content/plugins/marcos-home-control/assets/tables/table-wall-unit-walnut.webp" alt="طاولة تلفزيون معلقة خشبية مقاس 150 في 32 في 25 سم" width="1448" height="1086" loading="lazy">
-                        <figcaption><b>تشطيب خشبي دافئ</b><span>150 × 32 × 25 سم</span></figcaption>
-                    </figure>
-                    <figure>
-                        <img src="https://marcohom.com/wp-content/plugins/marcos-home-control/assets/tables/table-wall-unit-charcoal.webp" alt="طاولة تلفزيون معلقة رمادي غامق مقاس 150 في 32 في 25 سم" width="1448" height="1086" loading="lazy">
-                        <figcaption><b>رمادي غامق</b><span>150 × 32 × 25 سم</span></figcaption>
-                    </figure>
-                </div>
-            </div>
-        </section>
+        
 
         <section class="mht-colors-gallery">
             <div class="mht-shell">
