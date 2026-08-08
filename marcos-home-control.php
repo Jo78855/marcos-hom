@@ -2410,6 +2410,16 @@ function mh_control_add_custom_sitemap_to_robots(string $output): string {
 }
 add_filter('robots_txt', 'mh_control_add_custom_sitemap_to_robots', 99);
 
+function mh_control_add_custom_sitemap_index(array $indexes): array {
+    $indexes[] = [
+        'loc' => home_url('/snap-ready-pages/'),
+        'lastmod' => gmdate('c', (int) filemtime(__FILE__)),
+        'count' => 9,
+    ];
+    return $indexes;
+}
+add_filter('aioseo_sitemap_indexes', 'mh_control_add_custom_sitemap_index', 99);
+
 /**
  * Speed and technical SEO layer for Marco's Home custom pages.
  */
