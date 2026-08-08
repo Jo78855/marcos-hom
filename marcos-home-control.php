@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.4.1
+ * Version: 1.5.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,23 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.4.1');
+define('MH_CONTROL_VERSION', '1.5.0');
+
+function mh_control_request_path(): string {
+    $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash((string) $_SERVER['REQUEST_URI']) : '/';
+    $path = (string) wp_parse_url($request_uri, PHP_URL_PATH);
+    $path = trim($path, '/');
+    return $path === '' ? '/' : '/' . $path . '/';
+}
+
+function mh_control_prepare_virtual_page(): void {
+    global $wp_query;
+    if ($wp_query instanceof WP_Query) {
+        $wp_query->is_404 = false;
+        $wp_query->is_page = true;
+    }
+    status_header(200);
+}
 
 function mh_control_add_admin_page(): void {
     add_management_page(
@@ -128,7 +144,7 @@ function mh_control_homepage_markup(): string {
                         <img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة من ماركوز هوم">
                         <span class="mh-card__shade"></span><span class="mh-card__text"><b>ركن القهوة</b><small>7 تصميمات — يبدأ من 35 د.ك</small></span>
                     </a>
-                    <a class="mh-card" href="https://marcohom.com/product/%d8%b7%d8%a7%d9%88%d9%84%d8%a7%d8%aa-tv/">
+                    <a class="mh-card" href="https://marcohom.com/tv-tables/">
                         <img src="https://marcohom.com/wp-content/uploads/2025/11/Generated-Image-November-03-2025-7_43PM-270x270.png" alt="طاولات تلفزيون معلقة">
                         <span class="mh-card__shade"></span><span class="mh-card__text"><b>طاولات TV</b><small>مقاسات وألوان تناسب تصميمك</small></span>
                     </a>
@@ -342,7 +358,7 @@ function mh_control_portfolio_markup(): string {
                         <div class="mhp-project__image">
                             <img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0011.jpg" alt="طاولة تلفزيون معلقة من ماركوز هوم" loading="lazy">
                         </div>
-                        <div class="mhp-project__info"><span>04</span><h2>طاولات TV</h2><p>وحدات معلقة بخامات وألوان متعددة، وتصميم نظيف يسهل استخدامه.</p><a href="https://marcohom.com/product/%d8%b7%d8%a7%d9%88%d9%84%d8%a7%d8%aa-tv/">شاهد المقاسات والأسعار</a></div>
+                        <div class="mhp-project__info"><span>04</span><h2>طاولات TV</h2><p>وحدات معلقة بخامات وألوان متعددة، وتصميم نظيف يسهل استخدامه.</p><a href="https://marcohom.com/tv-tables/">شاهد المقاسات والأسعار</a></div>
                     </article>
                     <article class="mhp-project" id="parquet">
                         <div class="mhp-project__image">
@@ -688,7 +704,8 @@ add_action('wp_head', 'mh_control_coffee_head', 100);
  * Keeps WooCommerce product 6455 and its public URL unchanged.
  */
 function mh_control_is_tv_console_page(): bool {
-    return is_singular('product') && get_queried_object_id() === 6455;
+    return (is_singular('product') && get_queried_object_id() === 6455)
+        || mh_control_request_path() === '/tv-tables/';
 }
 
 function mh_control_tv_console_markup(): string {
@@ -715,7 +732,7 @@ function mh_control_tv_console_markup(): string {
                 <div class="mht-heading">
                     <span class="mht-eyebrow mht-eyebrow--blue">مقاس واضح قبل الاختيار</span>
                     <h2>شاهد الطاولة داخل المساحة</h2>
-                    <p>ستة تشطيبات لمقاس 1.5 متر بارتفاع 25 سم وعمق 32 سم، لتختار الدرجة الأنسب لديكورك.</p>
+                    <p>سبعة تشطيبات لمقاس 1.5 متر بارتفاع 25 سم وعمق 32 سم، لتختار الدرجة الأنسب لديكورك.</p>
                 </div>
                 <div class="mht-dimensions__grid">
                     <figure>
@@ -846,6 +863,25 @@ function mh_control_tv_console_markup(): string {
             </div>
         </section>
 
+        <section class="mht-faq" id="faq">
+            <div class="mht-shell">
+                <div class="mht-heading">
+                    <span class="mht-eyebrow mht-eyebrow--blue">قبل ما تطلب</span>
+                    <h2>الأسئلة المتكررة</h2>
+                    <p>إجابات واضحة عن المقاسات والأسعار والتركيب وطريقة تأكيد الطلب.</p>
+                </div>
+                <div class="mht-faq__list">
+                    <details><summary>ما مقاسات طاولات التلفزيون المتاحة؟</summary><p>متاح مقاس 1.5 متر ومقاس 2 متر. الارتفاع 25 سم والعمق 32 سم، وكل طاولة تحتوي على أربعة أبواب متساوية.</p></details>
+                    <details><summary>كم سعر الطاولة؟</summary><p>مقاس 1.5 متر بسعر 40 د.ك بدون تركيب، ومقاس 2 متر بسعر 50 د.ك بدون تركيب.</p></details>
+                    <details><summary>هل التركيب متاح داخل الكويت؟</summary><p>نعم، التركيب اختياري داخل الكويت بقيمة 10 د.ك، ويُراجع العنوان ومتطلبات الحائط قبل تأكيد الطلب.</p></details>
+                    <details><summary>ما الألوان المتاحة؟</summary><p>سبعة ألوان: أبيض، أسود، رمادي فاتح، رمادي غامق، بيج خشبي، عسلي خشبي، وجوزي. نؤكد الدرجة النهائية معك قبل التنفيذ لأن عرض اللون قد يختلف قليلًا من شاشة لأخرى.</p></details>
+                    <details><summary>كيف أؤكد طلبي؟</summary><p>اختار المقاس واللون وخدمة التركيب من الصفحة، ثم أرسل الطلب على واتساب. لا يصبح الطلب مؤكدًا إلا بعد مراجعة التفاصيل والتكلفة وموعد التنفيذ معك.</p></details>
+                    <details><summary>كم يستغرق التجهيز والتوصيل؟</summary><p>يتم تحديد المدة قبل تأكيد الطلب حسب المقاس واللون وتوفر الخامة وموقع التسليم داخل الكويت.</p></details>
+                    <details><summary>ماذا أفعل إذا وصل المنتج تالفًا أو مختلفًا عن الطلب؟</summary><p>تواصل معنا فور الاستلام مع صورة واضحة للمشكلة، وسنراجع الحالة ونوضح الإجراء المناسب وفق سياسة الاستبدال والاسترجاع.</p></details>
+                </div>
+            </div>
+        </section>
+
         <section class="mht-cta">
             <div class="mht-shell mht-cta__box">
                 <div><span class="mht-eyebrow mht-eyebrow--blue">جاهز تطلب؟</span><h2>اختار المقاس واللون وأرسل الطلب</h2><p>رسالة واتساب جاهزة بكل اختياراتك والسعر النهائي.</p></div>
@@ -862,7 +898,7 @@ function mh_control_render_tv_console_page(): void {
     if (!mh_control_is_tv_console_page()) {
         return;
     }
-    status_header(200);
+    mh_control_prepare_virtual_page();
     get_header();
     echo mh_control_tv_console_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     get_footer();
@@ -880,8 +916,26 @@ function mh_control_tv_console_description(string $description): string {
         ? 'طاولات تلفزيون معلقة بمقاس 1.5 أو 2 متر، ارتفاع 25 سم وعمق 32 سم وسبعة ألوان. تبدأ من 40 د.ك، والتركيب داخل الكويت 10 د.ك.'
         : $description;
 }
+function mh_control_tv_console_canonical(string $url): string {
+    return mh_control_is_tv_console_page() ? home_url('/tv-tables/') : $url;
+}
+
+function mh_control_tv_console_price($price, $product) {
+    return is_object($product) && method_exists($product, 'get_id') && (int) $product->get_id() === 6455 ? '40' : $price;
+}
+function mh_control_tv_console_sale_price($price, $product) {
+    return is_object($product) && method_exists($product, 'get_id') && (int) $product->get_id() === 6455 ? '' : $price;
+}
+function mh_control_tv_console_is_on_sale(bool $on_sale, $product): bool {
+    return is_object($product) && method_exists($product, 'get_id') && (int) $product->get_id() === 6455 ? false : $on_sale;
+}
+add_filter('woocommerce_product_get_price', 'mh_control_tv_console_price', 999, 2);
+add_filter('woocommerce_product_get_regular_price', 'mh_control_tv_console_price', 999, 2);
+add_filter('woocommerce_product_get_sale_price', 'mh_control_tv_console_sale_price', 999, 2);
+add_filter('woocommerce_product_is_on_sale', 'mh_control_tv_console_is_on_sale', 999, 2);
 add_filter('aioseo_title', 'mh_control_tv_console_title', 1200);
 add_filter('aioseo_description', 'mh_control_tv_console_description', 1200);
+add_filter('aioseo_canonical_url', 'mh_control_tv_console_canonical', 1200);
 add_filter('wpseo_title', 'mh_control_tv_console_title', 1200);
 add_filter('wpseo_metadesc', 'mh_control_tv_console_description', 1200);
 add_filter('rank_math/frontend/title', 'mh_control_tv_console_title', 1200);
@@ -892,7 +946,6 @@ function mh_control_tv_console_head(): void {
         return;
     }
     ?>
-    <meta name="description" content="طاولات تلفزيون معلقة بمقاس 1.5 أو 2 متر وسبعة ألوان. تبدأ من 40 د.ك، وخدمة التركيب داخل الكويت 10 د.ك.">
     <style id="mh-tv-styles">
     :root{--mht-blue:#1266d6;--mht-navy:#071a33;--mht-ink:#15263a;--mht-soft:#f2f6fa;--mht-gold:#d6aa62;--mht-green:#20b95a}
     html:has(.mh-tv),body:has(.mh-tv){overflow-x:clip}.mh-tv{font-family:Tahoma,Arial,sans-serif;color:var(--mht-ink);background:#fff;width:100%;margin-inline:0;overflow:hidden}.mh-tv *{box-sizing:border-box}.mht-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}
@@ -903,10 +956,43 @@ function mh_control_tv_console_head(): void {
     .mht-dimensions{padding:90px 0;background:#fff}.mht-dimensions__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.mht-dimensions figure{margin:0;border:1px solid #e1e8ef;border-radius:17px;overflow:hidden;background:#fff;box-shadow:0 15px 38px rgba(7,26,51,.08)}.mht-dimensions img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover}.mht-dimensions figcaption{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;color:var(--mht-navy)}.mht-dimensions figcaption b{font-size:16px}.mht-dimensions figcaption span{font-size:13px;color:#6a7b8e;font-weight:800}
     .mht-colors-gallery{padding:90px 0}.mht-gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:17px}.mht-gallery figure{margin:0;border:1px solid #e1e8ef;border-radius:15px;overflow:hidden;background:#fff}.mht-gallery figure:first-child{grid-column:span 2}.mht-gallery img{width:100%;height:310px;object-fit:contain;background:#f7f8f9;display:block;transition:transform .4s ease}.mht-gallery figure:hover img{transform:scale(1.025)}.mht-gallery figcaption{padding:16px 18px;color:var(--mht-navy);font-weight:900}
     .mht-prices{padding:88px 0;background:var(--mht-navy);color:#fff}.mht-heading--light h2{color:#fff}.mht-prices__grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:760px;margin:0 auto}.mht-prices__grid>div{position:relative;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);border-radius:16px;padding:31px}.mht-prices__grid>div.is-featured{border:2px solid #4f9cff}.mht-prices__grid i{position:absolute;top:-13px;right:20px;background:var(--mht-blue);padding:5px 11px;border-radius:999px;font-size:11px;font-style:normal}.mht-prices__grid span{display:block;color:#b9c6d5;font-weight:800}.mht-prices__grid strong{display:block;font-size:52px;margin:13px 0 8px}.mht-prices__grid strong small{font-size:17px}.mht-prices__grid p{margin:0 0 12px;color:#aebdce}.mht-prices__grid b{color:#fff}.mht-install-note{text-align:center;color:#b9c6d5;margin:24px 0 0}
+    .mht-faq{padding:88px 0;background:#fff}.mht-faq__list{max-width:900px;margin:0 auto;display:grid;gap:12px}.mht-faq details{border:1px solid #dde6ef;border-radius:13px;background:#fff;padding:0 22px}.mht-faq summary{cursor:pointer;list-style:none;padding:21px 0;color:var(--mht-navy);font-weight:900;display:flex;justify-content:space-between;gap:18px}.mht-faq summary::-webkit-details-marker{display:none}.mht-faq summary:after{content:"+";color:var(--mht-blue);font-size:22px;line-height:1}.mht-faq details[open] summary:after{content:"−"}.mht-faq details p{margin:0;padding:0 0 21px;color:#68798d;line-height:1.9;font-size:14px}
     .mht-cta{padding:70px 0;background:#eaf1f7}.mht-cta__box{display:flex;align-items:center;justify-content:space-between;gap:30px;background:#fff;padding:44px 50px;border-radius:18px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mht-cta h2{font-size:clamp(29px,4vw,43px);color:var(--mht-navy);margin:0 0 10px}.mht-cta p{margin:0;color:#68798e}.mht-mobile-order{display:none}
     @media(max-width:900px){.mht-hero__grid,.mht-builder__grid{grid-template-columns:1fr}.mht-dimensions__grid{grid-template-columns:1fr 1fr}.mht-hero__visual img{height:440px}.mht-summary{position:static}.mht-specs__grid{grid-template-columns:1fr 1fr}.mht-gallery{grid-template-columns:1fr 1fr}.mht-gallery figure:first-child{grid-column:span 2}.mht-cta__box{align-items:flex-start;flex-direction:column}}
-    @media(max-width:600px){.mht-shell{width:min(100% - 28px,1180px)}.mht-hero{padding:52px 0}.mht-hero h1{font-size:43px}.mht-hero__visual img{height:330px}.mht-builder,.mht-specs,.mht-colors-gallery,.mht-prices{padding:64px 0}.mht-choice-row,.mht-install,.mht-specs__grid,.mht-gallery,.mht-dimensions__grid{grid-template-columns:1fr}.mht-colors{grid-template-columns:repeat(2,minmax(0,1fr))}.mht-gallery figure:first-child{grid-column:auto}.mht-gallery img{height:270px}.mht-prices__grid{grid-template-columns:1fr}.mht-cta{padding:48px 0 90px}.mht-cta__box{padding:30px 24px}.mht-mobile-order{display:flex;position:fixed;z-index:9999;left:14px;right:14px;bottom:12px;min-height:52px;align-items:center;justify-content:center;border-radius:10px;background:var(--mht-green);color:#fff!important;font-weight:900;text-decoration:none!important;box-shadow:0 12px 32px rgba(0,0,0,.25)}}
+    @media(max-width:600px){.mht-shell{width:min(100% - 28px,1180px)}.mht-hero{padding:52px 0}.mht-hero h1{font-size:43px}.mht-hero__visual img{height:330px}.mht-builder,.mht-specs,.mht-colors-gallery,.mht-prices,.mht-faq{padding:64px 0}.mht-choice-row,.mht-install,.mht-specs__grid,.mht-gallery,.mht-dimensions__grid{grid-template-columns:1fr}.mht-colors{grid-template-columns:repeat(2,minmax(0,1fr))}.mht-gallery figure:first-child{grid-column:auto}.mht-gallery img{height:270px}.mht-prices__grid{grid-template-columns:1fr}.mht-cta{padding:48px 0 90px}.mht-cta__box{padding:30px 24px}.mht-mobile-order{display:flex;position:fixed;z-index:9999;left:14px;right:14px;bottom:12px;min-height:52px;align-items:center;justify-content:center;border-radius:10px;background:var(--mht-green);color:#fff!important;font-weight:900;text-decoration:none!important;box-shadow:0 12px 32px rgba(0,0,0,.25)}}
     </style>
+    <?php
+    $faq = [
+        ['@type' => 'Question', 'name' => 'ما مقاسات طاولات التلفزيون المتاحة؟', 'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'متاح مقاس 1.5 متر ومقاس 2 متر، بارتفاع 25 سم وعمق 32 سم وأربعة أبواب متساوية.']],
+        ['@type' => 'Question', 'name' => 'كم سعر طاولة التلفزيون المعلقة؟', 'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'مقاس 1.5 متر بسعر 40 د.ك بدون تركيب، ومقاس 2 متر بسعر 50 د.ك بدون تركيب. التركيب الاختياري داخل الكويت 10 د.ك.']],
+        ['@type' => 'Question', 'name' => 'ما الألوان المتاحة؟', 'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'متاحة بسبعة ألوان: أبيض، أسود، رمادي فاتح، رمادي غامق، بيج خشبي، عسلي خشبي، وجوزي.']],
+        ['@type' => 'Question', 'name' => 'كيف أؤكد طلبي؟', 'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'اختار المقاس واللون وخدمة التركيب ثم أرسل الطلب على واتساب، وبعد مراجعة التفاصيل والتكلفة والموعد يتم تأكيد الطلب.']],
+    ];
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@graph' => [
+            [
+                '@type' => 'Product',
+                '@id' => home_url('/tv-tables/#product'),
+                'name' => 'طاولات TV معلقة من ماركوز هوم',
+                'description' => 'طاولات تلفزيون معلقة بمقاس 1.5 أو 2 متر وسبعة ألوان، تبدأ من 40 د.ك داخل الكويت.',
+                'image' => 'https://marcohom.com/wp-content/plugins/marcos-home-control/assets/tables/table-wall-unit-white.webp',
+                'brand' => ['@type' => 'Brand', 'name' => "Marco's Home"],
+                'offers' => [
+                    '@type' => 'AggregateOffer',
+                    'url' => home_url('/tv-tables/'),
+                    'priceCurrency' => 'KWD',
+                    'lowPrice' => '40',
+                    'highPrice' => '60',
+                    'offerCount' => 4,
+                    'availability' => 'https://schema.org/InStock',
+                ],
+            ],
+            ['@type' => 'FAQPage', '@id' => home_url('/tv-tables/#faq'), 'mainEntity' => $faq],
+        ],
+    ];
+    ?>
+    <script type="application/ld+json" id="mh-tv-product-faq-schema"><?php echo wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?></script>
     <?php
 }
 add_action('wp_head', 'mh_control_tv_console_head', 101);
@@ -930,6 +1016,11 @@ function mh_control_tv_console_script(): void {
             var msg='مرحباً ماركوز هوم، أريد طلب طاولة TV مقاس '+state.size+'، اللون '+state.color+'، '+state.installation+'، السعر '+finalPrice+' د.ك.';
             link.href='https://wa.me/96550204320?text='+encodeURIComponent(msg);
         }
+        if(typeof window.snaptr==='function'){window.snaptr('track','VIEW_CONTENT',{item_ids:['tv-tables'],item_category:'TV Tables',price:40,currency:'KWD'});}
+        link.addEventListener('click',function(){
+            if(typeof window.snaptr==='function'){window.snaptr('track','START_CHECKOUT',{item_ids:['tv-tables'],price:Number(price.textContent),currency:'KWD'});}
+            window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:'whatsapp_order_click',product:'tv-tables',value:Number(price.textContent),currency:'KWD'});
+        });
         document.querySelectorAll('[data-mht-size]').forEach(function(button){
             button.addEventListener('click',function(){
                 document.querySelectorAll('[data-mht-size]').forEach(function(b){b.classList.remove('is-active');b.setAttribute('aria-pressed','false');});
@@ -1786,7 +1877,7 @@ function mh_control_about_markup(): string {
                 <div class="mhab-services__grid">
                     <a href="https://marcohom.com/product-category/%d9%86%d9%85%d8%a7%d8%b0%d8%ac-%d9%88%d8%aa%d8%b5%d9%85%d9%8a%d9%85%d8%a7%d8%aa/?service=tv-wall"><span>01</span><h3>خلفيات الشاشة</h3><p>تصميمات متكاملة مع طاولة معلقة وإخفاء الأسلاك.</p></a>
                     <a href="https://marcohom.com/coffee-corner/"><span>02</span><h3>أركان القهوة</h3><p>حلول جاهزة ومخصصة لتنظيم ركن القهوة.</p></a>
-                    <a href="https://marcohom.com/product/%d8%b7%d8%a7%d9%88%d9%84%d8%a7%d8%aa-tv/"><span>03</span><h3>طاولات TV</h3><p>مقاسات وألوان متعددة مع تركيب اختياري.</p></a>
+                    <a href="https://marcohom.com/tv-tables/"><span>03</span><h3>طاولات TV</h3><p>مقاسات وألوان متعددة مع تركيب اختياري.</p></a>
                     <a href="https://marcohom.com/product/%d8%a8%d8%a7%d8%b1%d9%83%d9%8a%d8%a9-%d8%ae%d8%b4%d8%a8-k9188/"><span>04</span><h3>أرضيات الباركيه</h3><p>درجات خشبية دافئة وقياس للكمية المطلوبة.</p></a>
                     <a href="https://marcohom.com/product/%d9%82%d8%a7%d8%b7%d8%b9-%d8%a7%d9%84%d8%a7%d8%b9%d9%85%d8%af%d8%a9/"><span>05</span><h3>فواصل بديل الخشب</h3><p>فصل أنيق للمساحات بأعمدة WPC.</p></a>
                     <a href="https://marcohom.com/product/%d8%a7%d9%84%d9%81%d9%8a%d8%b1-%d8%a7%d9%84%d9%85%d8%b9%d8%b7%d8%b1/"><span>06</span><h3>جهاز الفير المعطر</h3><p>ديكور بخار مائي بمقاسات متعددة.</p></a>
@@ -2142,6 +2233,184 @@ function mh_control_trust_styles(): void {
 add_action('wp_head', 'mh_control_trust_styles', 207);
 
 /**
+ * Trust and policy pages required by advertising platforms and customers.
+ * They are rendered as stable, direct 200 URLs without depending on editor content.
+ */
+function mh_control_policy_pages(): array {
+    return [
+        'privacy-policy' => [
+            'title' => 'سياسة الخصوصية | ماركوز هوم',
+            'description' => 'تعرف على طريقة تعامل ماركوز هوم مع بيانات التواصل والطلبات وملفات الارتباط عند استخدام الموقع داخل الكويت.',
+            'eyebrow' => 'خصوصيتك مهمة لنا',
+            'heading' => 'سياسة الخصوصية',
+            'intro' => 'توضح هذه الصفحة البيانات التي قد نجمعها عند زيارة موقع ماركوز هوم أو التواصل معنا، ولماذا نستخدمها وكيف يمكنك الاستفسار عنها.',
+            'sections' => [
+                ['البيانات التي نتعامل معها', ['قد نستلم اسمك ورقم الهاتف والعنوان وصورة المكان والمقاسات وتفاصيل الطلب عندما ترسلها لنا بنفسك عبر واتساب أو نماذج الموقع.', 'قد تسجل أدوات القياس بيانات تقنية عامة مثل نوع الجهاز والصفحات التي تمت زيارتها ومصدر الزيارة، بهدف تحسين الموقع وقياس أداء الحملات.']],
+                ['كيف نستخدم البيانات', ['نستخدم البيانات للرد على الاستفسار، تجهيز عرض مناسب، تأكيد تفاصيل الطلب والتوصيل أو التركيب، وتحسين تجربة الموقع والإعلانات.', 'لا نبيع بيانات العملاء. وقد نستعين بمقدمي خدمات الاستضافة والتحليلات والإعلانات بالقدر اللازم لتشغيل الموقع وقياس الأداء.']],
+                ['ملفات الارتباط والإعلانات', ['قد يستخدم الموقع ملفات ارتباط وتقنيات قياس من منصات مثل Google وMeta وSnapchat إذا تم تفعيلها. يمكنك التحكم في ملفات الارتباط من إعدادات المتصفح أو الجهاز.']],
+                ['الاحتفاظ والحماية', ['نحتفظ بمعلومات الطلب والتواصل للمدة اللازمة لخدمة العميل والالتزامات التشغيلية والقانونية، ونتخذ إجراءات معقولة لحمايتها من الوصول غير المصرح به.']],
+                ['حقوقك والتواصل', ['يمكنك طلب تصحيح بياناتك أو الاستفسار عن استخدامها عبر واتساب على الرقم +965 5020 4320. سنراجع الطلب ونتعامل معه وفق القوانين المعمول بها في الكويت.']],
+            ],
+        ],
+        'terms-and-conditions' => [
+            'title' => 'الشروط والأحكام | ماركوز هوم',
+            'description' => 'شروط طلب منتجات وخدمات ماركوز هوم والأسعار والمقاسات والتأكيد والتوريد والتركيب داخل الكويت.',
+            'eyebrow' => 'اتفاق واضح قبل التنفيذ',
+            'heading' => 'الشروط والأحكام',
+            'intro' => 'استخدامك للموقع أو إرسال طلب يعني موافقتك على مراجعة تفاصيل المنتج والخدمة قبل التأكيد النهائي. المعلومات التالية تساعد على منع أي اختلاف في المقاس أو اللون أو السعر.',
+            'sections' => [
+                ['الأسعار والعروض', ['الأسعار المعروضة بالدينار الكويتي وتشمل فقط البنود الموضحة بجوار كل منتج. يتم توضيح أي تكلفة إضافية للتوصيل أو التركيب قبل اعتماد الطلب.', 'لا يصبح الطلب مؤكدًا إلا بعد مراجعة المنتج والمقاس واللون والسعر والعنوان والموعد مع العميل.']],
+                ['المقاسات والألوان', ['يتحمل العميل مسؤولية إرسال مقاسات وصور واضحة للمكان، ونراجعها معه قبل التنفيذ. قد تختلف درجة اللون الظاهرة قليلًا حسب الشاشة والإضاءة، لذلك يتم تأكيد الاختيار قبل التجهيز.']],
+                ['المنتجات المخصصة', ['بعض المنتجات تُجهّز حسب المقاس أو اللون المختار. سنوضح للعميل متى يبدأ التجهيز وما إذا كان التعديل أو الإلغاء متاحًا قبل تأكيد الطلب.']],
+                ['الاستخدام والمسؤولية', ['يجب تركيب المنتجات بالطريقة المناسبة لنوع الحائط والاستخدام المقصود. يتم توضيح أي متطلبات خاصة قبل التركيب، ويجب إبلاغنا بأي ملاحظة فور الاستلام.']],
+                ['التواصل', ['للاستفسار عن أي شرط قبل الطلب تواصل معنا عبر واتساب على +965 5020 4320. وتظل حقوق المستهلك المقررة في الكويت محفوظة.']],
+            ],
+        ],
+        'shipping-and-installation' => [
+            'title' => 'سياسة التوصيل والتركيب | ماركوز هوم الكويت',
+            'description' => 'تفاصيل التوصيل والتركيب ومراجعة العنوان والحائط والموعد لطلبات ماركوز هوم داخل الكويت.',
+            'eyebrow' => 'من التجهيز حتى التسليم',
+            'heading' => 'التوصيل والتركيب',
+            'intro' => 'نخدم العملاء داخل الكويت، ويتم تحديد موعد وطريقة التوصيل أو التركيب قبل تأكيد الطلب حسب المنتج والعنوان وجاهزية المكان.',
+            'sections' => [
+                ['نطاق الخدمة', ['يتم التوصيل والتركيب داخل الكويت بعد مراجعة المنطقة والعنوان وإمكانية الوصول إلى الموقع. قد تختلف الرسوم حسب المنتج والخدمة المطلوبة، ويتم إبلاغك بها قبل التأكيد.']],
+                ['موعد التنفيذ', ['مدة التجهيز والتسليم تعتمد على المقاس واللون وتوفر الخامة وجدول التنفيذ. نرسل المدة المتوقعة للعميل قبل اعتماد الطلب ونبلغه إذا طرأ تغيير خارج عن الإرادة.']],
+                ['جاهزية المكان', ['على العميل التأكد من خلو مساحة العمل وتوفر حائط مناسب ومصدر كهرباء عند الحاجة. نراجع الصور والمقاسات المبدئية قبل الزيارة، وقد يتطلب بعض العمل معاينة.']],
+                ['فحص الطلب', ['يرجى فحص المنتج والتشطيب عند الاستلام أو بعد التركيب وإبلاغ فريقنا فورًا بأي ملاحظة واضحة مع صور تساعد على مراجعة الحالة.']],
+            ],
+        ],
+        'returns-and-refunds' => [
+            'title' => 'سياسة الاستبدال والاسترجاع | ماركوز هوم',
+            'description' => 'طريقة الإبلاغ عن التلف أو اختلاف الطلب وشروط مراجعة الاستبدال والاسترجاع لمنتجات ماركوز هوم.',
+            'eyebrow' => 'حل واضح عند وجود مشكلة',
+            'heading' => 'الاستبدال والاسترجاع',
+            'intro' => 'نراجع كل حالة بصورة عادلة وفق حالة المنتج وطبيعة الطلب وما تم الاتفاق عليه، مع الحفاظ على حقوق المستهلك المقررة في الكويت.',
+            'sections' => [
+                ['التلف أو اختلاف الطلب', ['إذا وصل المنتج تالفًا أو مختلفًا بوضوح عن المقاس أو اللون المؤكد، تواصل معنا فور الاستلام على واتساب وأرسل رقم الطلب وصورًا واضحة. سنراجع الحالة ونوضح حل الإصلاح أو الاستبدال أو الاسترجاع المناسب.']],
+                ['المنتجات المخصصة', ['المنتج الذي بدأ تصنيعه خصيصًا حسب مقاس أو لون اختاره العميل قد لا يقبل الإلغاء أو الاسترجاع لمجرد تغيير الرأي، ما لم يوجد عيب أو اختلاف عن الاتفاق. نوضح هذه النقطة قبل تأكيد الطلب.']],
+                ['حالة المنتج', ['يجب الحفاظ على المنتج وملحقاته وعدم استخدامه أو تركيبه بطريقة تسبب تلفًا إضافيًا أثناء مراجعة الطلب. لا يشمل الضمان الضرر الناتج عن سوء الاستخدام أو تعديل المنتج بواسطة طرف آخر.']],
+                ['طريقة التواصل', ['أرسل تفاصيل الحالة إلى واتساب +965 5020 4320. يبدأ فحص الطلب بعد استلام المعلومات والصور المطلوبة، ثم نبلغك بالإجراء والمدة المتوقعة.']],
+            ],
+        ],
+    ];
+}
+
+function mh_control_policy_slug(): string {
+    $slug = trim(mh_control_request_path(), '/');
+    return array_key_exists($slug, mh_control_policy_pages()) ? $slug : '';
+}
+
+function mh_control_is_policy_page(): bool {
+    return mh_control_policy_slug() !== '';
+}
+
+function mh_control_policy_markup(): string {
+    $pages = mh_control_policy_pages();
+    $page = $pages[mh_control_policy_slug()];
+    ob_start();
+    ?>
+    <main class="mh-policy" dir="rtl">
+        <section class="mhpcy-hero"><div class="mhpcy-shell"><span><?php echo esc_html($page['eyebrow']); ?></span><h1><?php echo esc_html($page['heading']); ?></h1><p><?php echo esc_html($page['intro']); ?></p></div></section>
+        <section class="mhpcy-content"><div class="mhpcy-shell mhpcy-grid">
+            <article>
+                <?php foreach ($page['sections'] as $section) : ?>
+                    <section><h2><?php echo esc_html($section[0]); ?></h2><?php foreach ($section[1] as $paragraph) : ?><p><?php echo esc_html($paragraph); ?></p><?php endforeach; ?></section>
+                <?php endforeach; ?>
+                <p class="mhpcy-updated">آخر تحديث: 8 أغسطس 2026</p>
+            </article>
+            <aside><h2>بيانات النشاط</h2><b>Marco's Home — ماركوز هوم</b><p>ديكور وحلول منزلية داخل الكويت</p><p>حولي — شارع نادي القادسية</p><a href="https://wa.me/96550204320" target="_blank" rel="noopener">واتساب: +965 5020 4320</a><a href="https://marcohom.com/contact/">صفحة التواصل</a></aside>
+        </div></section>
+    </main>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function mh_control_render_policy_page(): void {
+    if (!mh_control_is_policy_page()) return;
+    mh_control_prepare_virtual_page();
+    get_header();
+    echo mh_control_policy_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    get_footer();
+    exit;
+}
+add_action('template_redirect', 'mh_control_render_policy_page', 24);
+
+function mh_control_policy_title(string $title): string {
+    if (!mh_control_is_policy_page()) return $title;
+    $pages = mh_control_policy_pages();
+    return $pages[mh_control_policy_slug()]['title'];
+}
+
+function mh_control_policy_description(string $description): string {
+    if (!mh_control_is_policy_page()) return $description;
+    $pages = mh_control_policy_pages();
+    return $pages[mh_control_policy_slug()]['description'];
+}
+
+function mh_control_policy_canonical(string $url): string {
+    return mh_control_is_policy_page() ? home_url('/' . mh_control_policy_slug() . '/') : $url;
+}
+add_filter('pre_get_document_title', 'mh_control_policy_title', 130);
+add_filter('aioseo_title', 'mh_control_policy_title', 1300);
+add_filter('aioseo_description', 'mh_control_policy_description', 1300);
+add_filter('aioseo_canonical_url', 'mh_control_policy_canonical', 1300);
+add_filter('wpseo_title', 'mh_control_policy_title', 1300);
+add_filter('wpseo_metadesc', 'mh_control_policy_description', 1300);
+add_filter('rank_math/frontend/title', 'mh_control_policy_title', 1300);
+add_filter('rank_math/frontend/description', 'mh_control_policy_description', 1300);
+
+function mh_control_policy_styles(): void {
+    if (!mh_control_is_policy_page()) return;
+    ?>
+    <style id="mh-policy-styles">
+    .mh-policy{font-family:Tahoma,Arial,sans-serif;color:#15263a;background:#fff}.mh-policy *{box-sizing:border-box}.mhpcy-shell{width:min(1080px,calc(100% - 40px));margin-inline:auto}.mhpcy-hero{padding:86px 0;background:linear-gradient(135deg,#071a33,#12345d);color:#fff}.mhpcy-hero span{display:inline-block;color:#a9c9ef;font-weight:900;margin-bottom:14px}.mhpcy-hero h1{font-size:clamp(40px,6vw,64px);color:#fff;margin:0 0 20px}.mhpcy-hero p{max-width:800px;color:#dce7f3;font-size:17px;line-height:1.9;margin:0}.mhpcy-content{padding:76px 0}.mhpcy-grid{display:grid;grid-template-columns:1fr 310px;gap:48px;align-items:start}.mhpcy-grid article>section{padding-bottom:27px;margin-bottom:27px;border-bottom:1px solid #e1e8ef}.mhpcy-grid h2{font-size:24px;color:#071a33;margin:0 0 15px}.mhpcy-grid p{color:#5f7085;line-height:1.95;margin:0 0 11px}.mhpcy-grid aside{position:sticky;top:25px;padding:27px;border-radius:15px;background:#f2f6fa;border:1px solid #dce5ee}.mhpcy-grid aside b,.mhpcy-grid aside a{display:block}.mhpcy-grid aside a{margin-top:12px;color:#1266d6;font-weight:900;text-decoration:none}.mhpcy-updated{font-size:12px;color:#7a8999!important}@media(max-width:760px){.mhpcy-shell{width:min(100% - 28px,1080px)}.mhpcy-hero{padding:62px 0}.mhpcy-content{padding:55px 0}.mhpcy-grid{grid-template-columns:1fr;gap:28px}.mhpcy-grid aside{position:static}}
+    </style>
+    <?php
+}
+add_action('wp_head', 'mh_control_policy_styles', 208);
+
+function mh_control_trust_footer_links(): void {
+    if (is_admin()) return;
+    ?>
+    <nav class="mh-trust-footer" dir="rtl" aria-label="روابط الثقة والسياسات">
+        <a href="https://marcohom.com/about/">عن ماركوز هوم</a>
+        <a href="https://marcohom.com/contact/">تواصل معنا</a>
+        <a href="https://marcohom.com/privacy-policy/">سياسة الخصوصية</a>
+        <a href="https://marcohom.com/terms-and-conditions/">الشروط والأحكام</a>
+        <a href="https://marcohom.com/shipping-and-installation/">التوصيل والتركيب</a>
+        <a href="https://marcohom.com/returns-and-refunds/">الاستبدال والاسترجاع</a>
+    </nav>
+    <style id="mh-trust-footer-styles">.mh-trust-footer{display:flex;justify-content:center;gap:14px 24px;flex-wrap:wrap;padding:20px 24px;background:#071a33;border-top:1px solid rgba(255,255,255,.12);font-family:Tahoma,Arial,sans-serif}.mh-trust-footer a{color:#e6eef7!important;font-size:12px;font-weight:800;text-decoration:none!important}.mh-trust-footer a:hover{text-decoration:underline!important}</style>
+    <?php
+}
+add_action('wp_footer', 'mh_control_trust_footer_links', 5);
+
+function mh_control_render_custom_sitemap(): void {
+    if (mh_control_request_path() !== '/marcos-sitemap.xml/') return;
+    $urls = [
+        home_url('/'), home_url('/tv-tables/'), home_url('/portfolio/'), home_url('/about/'), home_url('/contact/'),
+        home_url('/privacy-policy/'), home_url('/terms-and-conditions/'), home_url('/shipping-and-installation/'), home_url('/returns-and-refunds/'),
+    ];
+    status_header(200);
+    header('Content-Type: application/xml; charset=UTF-8');
+    $lastmod = gmdate('c', (int) filemtime(__FILE__));
+    echo '<?xml version="1.0" encoding="UTF-8"?>';
+    echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+    foreach ($urls as $url) {
+        echo '<url><loc>' . esc_url($url) . '</loc><lastmod>' . esc_html($lastmod) . '</lastmod></url>';
+    }
+    echo '</urlset>';
+    exit;
+}
+add_action('template_redirect', 'mh_control_render_custom_sitemap', 2);
+
+function mh_control_add_custom_sitemap_to_robots(string $output): string {
+    $line = 'Sitemap: ' . home_url('/marcos-sitemap.xml');
+    return str_contains($output, $line) ? $output : rtrim($output) . "\n" . $line . "\n";
+}
+add_filter('robots_txt', 'mh_control_add_custom_sitemap_to_robots', 99);
+
+/**
  * Speed and technical SEO layer for Marco's Home custom pages.
  */
 function mh_control_is_lightweight_page(): bool {
@@ -2154,7 +2423,8 @@ function mh_control_is_lightweight_page(): bool {
         || mh_control_is_parquet_page()
         || mh_control_is_tv_wall_archive()
         || mh_control_is_about_page()
-        || mh_control_is_trust_page();
+        || mh_control_is_trust_page()
+        || mh_control_is_policy_page();
 }
 
 function mh_control_trim_unused_assets(): void {
@@ -2222,9 +2492,8 @@ function mh_control_preload_hero_image(): void {
 add_action('wp_head', 'mh_control_preload_hero_image', 2);
 
 /**
- * SureRank and AIOSEO were both outputting overlapping WebSite/WebPage schema.
- * Keep AIOSEO as the primary SEO source, remove only the duplicate SureRank graph,
- * and add one accurate local-business entity for Marco's Home.
+ * SureRank and AIOSEO both output metadata. Keep a single, accurate set on the
+ * advertising landing and policy pages, then add one local-business entity.
  */
 function mh_control_capture_head_for_schema_cleanup(): void {
     ob_start();
@@ -2262,15 +2531,91 @@ function mh_control_local_business_schema(): string {
         . '</script>' . "\n";
 }
 
+function mh_control_ad_page_seo_data(): array {
+    $image = 'https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.19-PM.jpeg';
+    if (mh_control_is_tv_console_page()) {
+        return [
+            'canonical' => home_url('/tv-tables/'),
+            'title' => 'طاولات TV معلقة من ماركوز هوم | تبدأ من 40 د.ك',
+            'description' => 'طاولات تلفزيون معلقة بمقاس 1.5 أو 2 متر، ارتفاع 25 سم وعمق 32 سم وسبعة ألوان. تبدأ من 40 د.ك، والتركيب داخل الكويت 10 د.ك.',
+            'image' => 'https://marcohom.com/wp-content/plugins/marcos-home-control/assets/tables/table-wall-unit-white.webp',
+            'type' => 'product',
+        ];
+    }
+    if (mh_control_is_policy_page()) {
+        $pages = mh_control_policy_pages();
+        $page = $pages[mh_control_policy_slug()];
+        return [
+            'canonical' => home_url('/' . mh_control_policy_slug() . '/'),
+            'title' => $page['title'],
+            'description' => $page['description'],
+            'image' => $image,
+            'type' => 'website',
+        ];
+    }
+    return [];
+}
+
+function mh_control_special_page_schema(array $seo): string {
+    if ($seo === []) return '';
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@type' => 'WebPage',
+        '@id' => $seo['canonical'] . '#webpage',
+        'url' => $seo['canonical'],
+        'name' => $seo['title'],
+        'description' => $seo['description'],
+        'inLanguage' => 'ar',
+        'isPartOf' => ['@id' => home_url('/#website')],
+        'about' => ['@id' => home_url('/#marcos-home')],
+        'primaryImageOfPage' => ['@type' => 'ImageObject', 'url' => $seo['image']],
+    ];
+    return '<script type="application/ld+json" id="mh-special-webpage-schema">'
+        . wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        . '</script>' . "\n";
+}
+
 function mh_control_finish_head_schema_cleanup(): void {
     $head = (string) ob_get_clean();
+    $head = (string) preg_replace(
+        '#<!--\s*SureRank Meta Data\s*-->.*?<!--\s*/SureRank Meta Data\s*-->#is',
+        '',
+        $head
+    );
     $head = (string) preg_replace(
         '#<script[^>]*id=(["\\\'])surerank-schema\\1[^>]*>.*?</script>#is',
         '',
         $head
     );
+
+    $seo = mh_control_ad_page_seo_data();
+    if ($seo !== []) {
+        $head = (string) preg_replace('#<script[^>]*class=(["\\\'])[^"\\\']*aioseo-schema[^"\\\']*\\1[^>]*>.*?</script>#is', '', $head);
+        $head = (string) preg_replace('#<link\\b[^>]*\\brel=(["\\\'])canonical\\1[^>]*>\\s*#i', '', $head);
+        $head = (string) preg_replace(
+            '#<meta\\b[^>]*(?:name|property)=(["\\\'])(?:description|robots|og:title|og:description|og:url|og:type|og:image|og:image:secure_url|og:image:width|og:image:height|twitter:card|twitter:title|twitter:description|twitter:image|twitter:label1|twitter:data1|twitter:label2|twitter:data2|product:price:amount|product:price:currency|product:availability)\\1[^>]*>\\s*#i',
+            '',
+            $head
+        );
+        $head .= '<meta name="description" content="' . esc_attr($seo['description']) . '">' . "\n";
+        $head .= '<meta name="robots" content="index, follow, max-image-preview:large">' . "\n";
+        $head .= '<link rel="canonical" href="' . esc_url($seo['canonical']) . '">' . "\n";
+        $head .= '<meta property="og:locale" content="ar_AR">' . "\n";
+        $head .= '<meta property="og:site_name" content="Marco\'s Home | ماركوز هوم">' . "\n";
+        $head .= '<meta property="og:type" content="' . esc_attr($seo['type']) . '">' . "\n";
+        $head .= '<meta property="og:title" content="' . esc_attr($seo['title']) . '">' . "\n";
+        $head .= '<meta property="og:description" content="' . esc_attr($seo['description']) . '">' . "\n";
+        $head .= '<meta property="og:url" content="' . esc_url($seo['canonical']) . '">' . "\n";
+        $head .= '<meta property="og:image" content="' . esc_url($seo['image']) . '">' . "\n";
+        $head .= '<meta name="twitter:card" content="summary_large_image">' . "\n";
+        $head .= '<meta name="twitter:title" content="' . esc_attr($seo['title']) . '">' . "\n";
+        $head .= '<meta name="twitter:description" content="' . esc_attr($seo['description']) . '">' . "\n";
+        $head .= '<meta name="twitter:image" content="' . esc_url($seo['image']) . '">' . "\n";
+    }
+    $head .= '<meta name="google-site-verification" content="SjWnIYjrIaKvrg76WMbxQ-BSOPVUjb1EASMCIIARO4k">' . "\n";
     echo $head; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     echo mh_control_local_business_schema(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    echo mh_control_special_page_schema($seo); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 }
 add_action('wp_head', 'mh_control_finish_head_schema_cleanup', 999999);
 
