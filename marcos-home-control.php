@@ -2386,7 +2386,7 @@ function mh_control_trust_footer_links(): void {
 add_action('wp_footer', 'mh_control_trust_footer_links', 5);
 
 function mh_control_render_custom_sitemap(): void {
-    if (mh_control_request_path() !== '/marcos-sitemap.xml/') return;
+    if (mh_control_request_path() !== '/snap-ready-pages/') return;
     $urls = [
         home_url('/'), home_url('/tv-tables/'), home_url('/portfolio/'), home_url('/about/'), home_url('/contact/'),
         home_url('/privacy-policy/'), home_url('/terms-and-conditions/'), home_url('/shipping-and-installation/'), home_url('/returns-and-refunds/'),
@@ -2405,7 +2405,7 @@ function mh_control_render_custom_sitemap(): void {
 add_action('template_redirect', 'mh_control_render_custom_sitemap', 2);
 
 function mh_control_add_custom_sitemap_to_robots(string $output): string {
-    $line = 'Sitemap: ' . home_url('/marcos-sitemap.xml');
+    $line = 'Sitemap: ' . home_url('/snap-ready-pages/');
     return str_contains($output, $line) ? $output : rtrim($output) . "\n" . $line . "\n";
 }
 add_filter('robots_txt', 'mh_control_add_custom_sitemap_to_robots', 99);
