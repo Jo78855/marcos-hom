@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.5.0
+ * Version: 1.6.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.5.0');
+define('MH_CONTROL_VERSION', '1.6.0');
 
 function mh_control_request_path(): string {
     $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash((string) $_SERVER['REQUEST_URI']) : '/';
@@ -115,7 +115,7 @@ function mh_control_homepage_markup(): string {
                 <p>خلفيات شاشة، أركان قهوة، باركيه، فواصل بديل الخشب وتصميمات مخصصة بخامات مختارة وتنفيذ احترافي.</p>
                 <div class="mh-actions">
                     <a class="mh-btn mh-btn--primary" href="https://wa.me/96550204320?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D9%85%D8%A7%D8%B1%D9%83%D9%88%D8%B2%20%D9%87%D9%88%D9%85%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AA%D8%B5%D9%85%D9%8A%D9%85" target="_blank" rel="noopener">اطلب استشارة على واتساب</a>
-                    <a class="mh-btn mh-btn--ghost" href="#mh-services">شاهد خدماتنا</a>
+                    <a class="mh-btn mh-btn--ghost" href="<?php echo esc_url(home_url('/services/')); ?>">شاهد خدماتنا</a>
                 </div>
             </div>
         </section>
@@ -1991,6 +1991,157 @@ add_action('wp_head', 'mh_control_about_head', 106);
 
 
 /**
+ * Crawlable local-services hub for search engines and AI search.
+ */
+function mh_control_is_services_page(): bool {
+    return mh_control_request_path() === '/services/';
+}
+
+function mh_control_services_data(): array {
+    return [
+        [
+            'name' => 'خلفيات شاشة وديكور TV',
+            'summary' => 'تصميم خلفية شاشة حسب مقاس الحائط مع طاولة معلقة، توزيع مناسب للتلفزيون وإمكانية إخفاء الأسلاك.',
+            'details' => 'تبدأ التصميمات المختارة من 98 د.ك شامل التوريد والتركيب داخل الكويت، بعد مراجعة صورة المكان والمقاسات ومتطلبات الحائط.',
+            'url' => home_url('/product-category/نماذج-وتصميمات/?service=tv-wall'),
+        ],
+        [
+            'name' => 'طاولات تلفزيون معلقة',
+            'summary' => 'طاولات TV معلقة بمقاسات 150 أو 200 سم، وسبعة ألوان تناسب الأثاث والديكور.',
+            'details' => 'يظهر في صفحة الطاولات المقاس والعمق والارتفاع وصور الألوان والسعر وخيار التركيب قبل إرسال الطلب على واتساب.',
+            'url' => home_url('/tv-tables/'),
+        ],
+        [
+            'name' => 'أركان قهوة',
+            'summary' => 'ركن قهوة عملي للمنازل والمكاتب يجمع بين اللوح الديكوري والطاولة المعلقة والتخزين المنظم.',
+            'details' => 'تتوفر تصميمات وألوان متعددة مع أسعار واضحة وخيار التوريد أو التوريد والتركيب داخل الكويت.',
+            'url' => home_url('/coffee-corner/'),
+        ],
+        [
+            'name' => 'أرضيات باركيه',
+            'summary' => 'باركيه بدرجات خشبية متعددة لإضافة الدفء للمساحة، مع حساب الكمية المطلوبة حسب الطول والعرض.',
+            'details' => 'نساعد في اختيار الدرجة المناسبة للأثاث، وحساب المساحة والكمية مع نسبة احتياط قبل تأكيد الطلب.',
+            'url' => home_url('/product/باركية-خشب-k9188/'),
+        ],
+        [
+            'name' => 'فواصل بديل الخشب WPC',
+            'summary' => 'أعمدة بديل الخشب لتقسيم المساحات بشكل أنيق مع الحفاظ على الضوء والإحساس بالاتساع.',
+            'details' => 'تتوفر عدة درجات، ويمكن حساب عدد الأعمدة والسعر مع أو بدون تركيب قبل التواصل.',
+            'url' => home_url('/product/قاطع-الاعمدة/'),
+        ],
+        [
+            'name' => 'جهاز الفير المائي',
+            'summary' => 'ديكور لهب ثلاثي الأبعاد يعمل ببخار الماء والكهرباء ويضيف نقطة مميزة للحائط أو الوحدة.',
+            'details' => 'متوفر بخمسة مقاسات تبدأ من 40 سم حتى 150 سم، مع عرض الأسعار والمواصفات وطريقة الطلب.',
+            'url' => home_url('/product/الفير-المعطر/'),
+        ],
+    ];
+}
+
+function mh_control_services_markup(): string {
+    $whatsapp = 'https://wa.me/96550204320?text=' . rawurlencode('مرحباً ماركوز هوم، شاهدت صفحة خدمات الديكور وأريد اقتراحاً مناسباً لمساحتي. هذه صورة المكان والمقاسات:');
+    ob_start();
+    ?>
+    <main class="mh-services-page" dir="rtl">
+        <section class="mhsvc-hero">
+            <div class="mhsvc-shell">
+                <span>Marco's Home — الكويت</span>
+                <h1>خدمات الديكور الداخلي<br>وحلول الحوائط</h1>
+                <p>تصميم وتنفيذ خلفيات شاشة، طاولات تلفزيون معلقة، أركان قهوة، باركيه وفواصل بديل الخشب حسب المساحة والاحتياج داخل الكويت.</p>
+                <div class="mhsvc-actions"><a href="<?php echo esc_url($whatsapp); ?>" target="_blank" rel="noopener">أرسل صورة المكان</a><a href="<?php echo esc_url(home_url('/portfolio/')); ?>">شاهد أعمالنا</a></div>
+            </div>
+        </section>
+
+        <section class="mhsvc-intro">
+            <div class="mhsvc-shell mhsvc-intro__grid">
+                <div><span>اختيار واضح قبل التنفيذ</span><h2>حلول مصممة على مقاس بيتك</h2></div>
+                <p>نراجع صورة المكان والمقاسات ومواقع الكهرباء والألوان الموجودة، ثم نوضح التصميم والخامة والسعر وما يشمله التوريد والتركيب. جميع الخدمات متاحة للعملاء داخل الكويت، ويختلف موعد التنفيذ حسب المنتج والمقاس وتجهيزات الموقع.</p>
+            </div>
+        </section>
+
+        <section class="mhsvc-list" aria-label="خدمات ماركوز هوم">
+            <div class="mhsvc-shell">
+                <?php foreach (mh_control_services_data() as $index => $service) : ?>
+                    <article class="mhsvc-card">
+                        <div class="mhsvc-card__number"><?php echo esc_html(sprintf('%02d', $index + 1)); ?></div>
+                        <div><h2><?php echo esc_html($service['name']); ?></h2><p><?php echo esc_html($service['summary']); ?></p><small><?php echo esc_html($service['details']); ?></small></div>
+                        <a href="<?php echo esc_url($service['url']); ?>">التفاصيل والمقاسات والأسعار ←</a>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        </section>
+
+        <section class="mhsvc-areas">
+            <div class="mhsvc-shell mhsvc-areas__grid">
+                <div><span>نطاق الخدمة</span><h2>معاينة وقياس وتركيب داخل الكويت</h2><p>يقع نشاط ماركوز هوم في حولي — شارع نادي القادسية، ونخدم مناطق الكويت وفق نوع المنتج ومتطلبات القياس والتركيب.</p></div>
+                <div class="mhsvc-areas__steps"><div><b>1</b><p>أرسل صورة واضحة للحائط أو المساحة.</p></div><div><b>2</b><p>أرسل العرض والارتفاع وموقع الكهرباء.</p></div><div><b>3</b><p>نراجع التصميم والخامة والسعر والتركيب.</p></div></div>
+            </div>
+        </section>
+
+        <section class="mhsvc-faq" id="faq">
+            <div class="mhsvc-shell"><div class="mhsvc-heading"><span>أسئلة متكررة</span><h2>معلومات تساعدك قبل الطلب</h2></div>
+                <div class="mhsvc-faq__list">
+                    <details><summary>ما الخدمات التي تقدمها ماركوز هوم؟</summary><p>نقدم خلفيات شاشة وديكور TV، طاولات تلفزيون معلقة، أركان قهوة، أرضيات باركيه، فواصل بديل الخشب وأجهزة فير مائي، مع تصميمات قابلة للتخصيص داخل الكويت.</p></details>
+                    <details><summary>هل يتوفر القياس والتركيب داخل الكويت؟</summary><p>نعم، يتوفر القياس والتركيب وفق نوع الخدمة والمنطقة وتجهيزات الموقع. يتم تأكيد المطلوب والسعر والموعد قبل بدء التنفيذ.</p></details>
+                    <details><summary>كيف أحصل على اقتراح وسعر مناسب؟</summary><p>أرسل صورة المكان والمقاسات المتاحة على واتساب، وحدد الخدمة المطلوبة. نراجع المساحة ونوضح الاختيارات والسعر وما يشمله التركيب.</p></details>
+                    <details><summary>هل يمكن تغيير المقاس أو اللون؟</summary><p>تتوفر خيارات متعددة حسب المنتج، وبعض التصميمات تُنفذ حسب المقاس. يجب تأكيد المقاس واللون والخامة قبل التصنيع أو التوريد.</p></details>
+                </div>
+            </div>
+        </section>
+
+        <section class="mhsvc-cta"><div class="mhsvc-shell"><div><span>ابدأ بصورة</span><h2>خلّي اختيار التصميم أسهل</h2><p>أرسل صورة المكان والمقاسات وسنراجع معك الحل الأنسب.</p></div><a href="<?php echo esc_url($whatsapp); ?>" target="_blank" rel="noopener">تواصل على واتساب</a></div></section>
+    </main>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function mh_control_render_services_page(): void {
+    if (!mh_control_is_services_page()) return;
+    mh_control_prepare_virtual_page();
+    get_header();
+    echo mh_control_services_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    get_footer();
+    exit;
+}
+add_action('template_redirect', 'mh_control_render_services_page', 23);
+
+function mh_control_services_title(string $title): string {
+    return mh_control_is_services_page() ? 'خدمات الديكور الداخلي في الكويت | ماركوز هوم' : $title;
+}
+function mh_control_services_description(string $description): string {
+    return mh_control_is_services_page() ? 'خدمات ماركوز هوم في الكويت: خلفيات شاشة، طاولات TV معلقة، أركان قهوة، باركيه، فواصل بديل الخشب وفير مائي مع خيارات القياس والتركيب.' : $description;
+}
+function mh_control_services_canonical(string $url): string {
+    return mh_control_is_services_page() ? home_url('/services/') : $url;
+}
+add_filter('pre_get_document_title', 'mh_control_services_title', 127);
+add_filter('aioseo_title', 'mh_control_services_title', 1270);
+add_filter('aioseo_description', 'mh_control_services_description', 1270);
+add_filter('aioseo_canonical_url', 'mh_control_services_canonical', 1270);
+add_filter('wpseo_title', 'mh_control_services_title', 1270);
+add_filter('wpseo_metadesc', 'mh_control_services_description', 1270);
+add_filter('rank_math/frontend/title', 'mh_control_services_title', 1270);
+add_filter('rank_math/frontend/description', 'mh_control_services_description', 1270);
+
+function mh_control_services_head(): void {
+    if (!mh_control_is_services_page()) return;
+    ?>
+    <style id="mh-services-page-styles">
+    :root{--mhsvc-blue:#1266d6;--mhsvc-navy:#071a33;--mhsvc-ink:#15263a;--mhsvc-soft:#f2f6fa;--mhsvc-gold:#d6aa62;--mhsvc-green:#20b95a}.mh-services-page{font-family:Tahoma,Arial,sans-serif;color:var(--mhsvc-ink);background:#fff}.mh-services-page *{box-sizing:border-box}.mhsvc-shell{width:min(1120px,calc(100% - 40px));margin-inline:auto}
+    .mhsvc-hero{padding:105px 0;background:linear-gradient(120deg,rgba(7,26,51,.97),rgba(18,65,112,.9)),url('https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM-2.jpeg') center/cover;color:#fff}.mhsvc-hero span,.mhsvc-intro span,.mhsvc-areas span,.mhsvc-heading span,.mhsvc-cta span{display:inline-block;color:#9bc5f8;font-size:14px;font-weight:900;margin-bottom:14px}.mhsvc-hero h1{font-size:clamp(43px,7vw,72px);line-height:1.12;color:#fff;margin:0 0 20px}.mhsvc-hero p{max-width:760px;color:#e6eef7;font-size:18px;line-height:1.9;margin:0 0 30px}.mhsvc-actions{display:flex;gap:12px;flex-wrap:wrap}.mhsvc-actions a,.mhsvc-cta a{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:12px 24px;border-radius:8px;background:var(--mhsvc-green);color:#fff!important;font-weight:900;text-decoration:none!important}.mhsvc-actions a+ a{background:transparent;border:1px solid rgba(255,255,255,.65)}
+    .mhsvc-intro{padding:75px 0}.mhsvc-intro__grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:55px;align-items:end}.mhsvc-intro span,.mhsvc-areas span,.mhsvc-heading span,.mhsvc-cta span{color:var(--mhsvc-blue)}.mhsvc-intro h2,.mhsvc-areas h2,.mhsvc-heading h2,.mhsvc-cta h2{font-size:clamp(31px,5vw,47px);line-height:1.25;color:var(--mhsvc-navy);margin:0}.mhsvc-intro p,.mhsvc-areas p{color:#607287;line-height:1.95;margin:0}
+    .mhsvc-list{padding:10px 0 85px}.mhsvc-card{display:grid;grid-template-columns:70px 1fr auto;gap:24px;align-items:center;padding:29px 0;border-bottom:1px solid #dde6ef}.mhsvc-card__number{font-size:13px;color:var(--mhsvc-blue);font-weight:900}.mhsvc-card h2{font-size:25px;color:var(--mhsvc-navy);margin:0 0 8px}.mhsvc-card p{margin:0 0 8px;color:#52667c;line-height:1.8}.mhsvc-card small{display:block;color:#7b8998;line-height:1.7}.mhsvc-card>a{white-space:nowrap;color:var(--mhsvc-blue)!important;font-weight:900;text-decoration:none!important}
+    .mhsvc-areas{padding:85px 0;background:var(--mhsvc-navy);color:#fff}.mhsvc-areas__grid{display:grid;grid-template-columns:1fr 1fr;gap:55px;align-items:center}.mhsvc-areas h2{color:#fff;margin-bottom:16px}.mhsvc-areas p{color:#b3c3d4}.mhsvc-areas__steps{display:grid;gap:12px}.mhsvc-areas__steps>div{display:grid;grid-template-columns:42px 1fr;gap:14px;align-items:center;padding:18px;border:1px solid rgba(255,255,255,.13);border-radius:12px}.mhsvc-areas__steps b{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:var(--mhsvc-blue);color:#fff}.mhsvc-areas__steps p{margin:0}
+    .mhsvc-faq{padding:85px 0}.mhsvc-heading{text-align:center;margin-bottom:38px}.mhsvc-faq__list{max-width:880px;margin:auto;display:grid;gap:12px}.mhsvc-faq details{border:1px solid #dce5ee;border-radius:12px;padding:0 21px}.mhsvc-faq summary{cursor:pointer;list-style:none;padding:20px 0;color:var(--mhsvc-navy);font-weight:900}.mhsvc-faq summary::-webkit-details-marker{display:none}.mhsvc-faq details p{margin:0;padding:0 0 20px;color:#607287;line-height:1.9}
+    .mhsvc-cta{padding:68px 0;background:var(--mhsvc-soft)}.mhsvc-cta .mhsvc-shell{display:flex;align-items:center;justify-content:space-between;gap:28px;background:#fff;padding:40px 45px;border-radius:17px;box-shadow:0 16px 45px rgba(7,26,51,.08)}.mhsvc-cta h2{font-size:clamp(28px,4vw,40px);margin-bottom:10px}.mhsvc-cta p{margin:0;color:#68798c}
+    @media(max-width:760px){.mhsvc-shell{width:min(100% - 28px,1120px)}.mhsvc-hero{padding:72px 0}.mhsvc-intro__grid,.mhsvc-areas__grid{grid-template-columns:1fr;gap:24px}.mhsvc-card{grid-template-columns:44px 1fr}.mhsvc-card>a{grid-column:2;white-space:normal}.mhsvc-cta .mhsvc-shell{align-items:flex-start;flex-direction:column;padding:30px 24px}.mhsvc-actions{display:grid}.mhsvc-actions a{width:100%}}
+    </style>
+    <?php
+}
+add_action('wp_head', 'mh_control_services_head', 107);
+
+
+/**
  * Simplified site-wide header and mobile navigation — roadmap step 4.
  */
 function mh_control_render_global_header(): void {
@@ -2005,7 +2156,7 @@ function mh_control_render_global_header(): void {
 
             <nav class="mh-global-nav" id="mh-global-nav" aria-label="القائمة الرئيسية">
                 <a href="https://marcohom.com/?site=mh">الرئيسية</a>
-                <a href="https://marcohom.com/?site=mh#mh-services">خدماتنا</a>
+                <a href="https://marcohom.com/services/">خدماتنا</a>
                 <a href="https://marcohom.com/portfolio/?site=mh">أعمالنا</a>
                 <a href="https://marcohom.com/about/?company=marcos-home">عن ماركوز هوم</a>
                 <a class="mh-global-nav__instagram" href="https://www.instagram.com/marcoshomekw?igsh=MWk0bXh1a2duYnVoMA%3D%3D&utm_source=qr" target="_blank" rel="noopener">Instagram</a>
@@ -2373,6 +2524,7 @@ function mh_control_trust_footer_links(): void {
     if (is_admin()) return;
     ?>
     <nav class="mh-trust-footer" dir="rtl" aria-label="روابط الثقة والسياسات">
+        <a href="https://marcohom.com/services/">خدماتنا</a>
         <a href="https://marcohom.com/about/">عن ماركوز هوم</a>
         <a href="https://marcohom.com/contact/">تواصل معنا</a>
         <a href="https://marcohom.com/privacy-policy/">سياسة الخصوصية</a>
@@ -2388,7 +2540,10 @@ add_action('wp_footer', 'mh_control_trust_footer_links', 5);
 function mh_control_render_custom_sitemap(): void {
     if (mh_control_request_path() !== '/snap-ready-pages/') return;
     $urls = [
-        home_url('/'), home_url('/tv-tables/'), home_url('/portfolio/'), home_url('/about/'), home_url('/contact/'),
+        home_url('/'), home_url('/services/'), home_url('/portfolio/'), home_url('/about/'), home_url('/contact/'),
+        home_url('/tv-tables/'), home_url('/coffee-corner/'),
+        home_url('/product-category/نماذج-وتصميمات/'),
+        home_url('/product/باركية-خشب-k9188/'), home_url('/product/قاطع-الاعمدة/'), home_url('/product/الفير-المعطر/'),
         home_url('/privacy-policy/'), home_url('/terms-and-conditions/'), home_url('/shipping-and-installation/'), home_url('/returns-and-refunds/'),
     ];
     status_header(200);
@@ -2410,11 +2565,28 @@ function mh_control_add_custom_sitemap_to_robots(string $output): string {
 }
 add_filter('robots_txt', 'mh_control_add_custom_sitemap_to_robots', 99);
 
+function mh_control_allow_search_crawlers(string $output): string {
+    $groups = [
+        'User-agent: OAI-SearchBot' . "\n" . 'Allow: /',
+        'User-agent: ChatGPT-User' . "\n" . 'Allow: /',
+        'User-agent: Googlebot' . "\n" . 'Allow: /',
+        'User-agent: Bingbot' . "\n" . 'Allow: /',
+    ];
+    foreach ($groups as $group) {
+        $agent = strtok($group, "\n");
+        if ($agent !== false && !str_contains($output, $agent)) {
+            $output = rtrim($output) . "\n\n" . $group . "\n";
+        }
+    }
+    return $output;
+}
+add_filter('robots_txt', 'mh_control_allow_search_crawlers', 100);
+
 function mh_control_add_custom_sitemap_index(array $indexes): array {
     $indexes[] = [
         'loc' => home_url('/snap-ready-pages/'),
         'lastmod' => gmdate('c', (int) filemtime(__FILE__)),
-        'count' => 9,
+        'count' => 15,
     ];
     return $indexes;
 }
@@ -2433,6 +2605,7 @@ function mh_control_is_lightweight_page(): bool {
         || mh_control_is_parquet_page()
         || mh_control_is_tv_wall_archive()
         || mh_control_is_about_page()
+        || mh_control_is_services_page()
         || mh_control_is_trust_page()
         || mh_control_is_policy_page();
 }
@@ -2511,16 +2684,40 @@ function mh_control_capture_head_for_schema_cleanup(): void {
 add_action('wp_head', 'mh_control_capture_head_for_schema_cleanup', -999999);
 
 function mh_control_local_business_schema(): string {
+    $catalog_items = [];
+    foreach (mh_control_services_data() as $position => $service) {
+        $catalog_items[] = [
+            '@type' => 'Offer',
+            'position' => $position + 1,
+            'url' => $service['url'],
+            'itemOffered' => [
+                '@type' => 'Service',
+                'name' => $service['name'],
+                'description' => $service['summary'],
+                'areaServed' => 'Kuwait',
+                'provider' => ['@id' => home_url('/#marcos-home')],
+            ],
+        ];
+    }
     $schema = [
         '@context' => 'https://schema.org',
         '@type' => 'HomeAndConstructionBusiness',
         '@id' => home_url('/#marcos-home'),
         'name' => "Marco's Home",
-        'alternateName' => 'ماركوز هوم',
+        'alternateName' => ['ماركوز هوم', 'ماركو هوم'],
+        'description' => 'ماركوز هوم لتصميم وتنفيذ الديكور الداخلي وحلول الحوائط وخلفيات الشاشة والطاولات المعلقة وأركان القهوة والباركيه وفواصل بديل الخشب داخل الكويت.',
         'url' => home_url('/'),
         'logo' => 'https://marcohom.com/wp-content/uploads/2025/03/صورة-واتساب-بتاريخ-2025-03-14-في-04.03.49_157c93e1-480x360.jpg',
         'image' => 'https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.19-PM.jpeg',
         'telephone' => '+96550204320',
+        'priceRange' => 'د.ك',
+        'contactPoint' => [
+            '@type' => 'ContactPoint',
+            'telephone' => '+96550204320',
+            'contactType' => 'customer service',
+            'availableLanguage' => ['ar', 'en'],
+            'areaServed' => 'KW',
+        ],
         'address' => [
             '@type' => 'PostalAddress',
             'streetAddress' => 'شارع نادي القادسية',
@@ -2534,6 +2731,15 @@ function mh_control_local_business_schema(): string {
         'sameAs' => [
             'https://www.instagram.com/marcoshomekw/',
         ],
+        'knowsAbout' => [
+            'التصميم الداخلي', 'خلفيات الشاشة', 'طاولات التلفزيون المعلقة', 'أركان القهوة',
+            'أرضيات الباركيه', 'فواصل بديل الخشب WPC', 'الديكور المنزلي في الكويت',
+        ],
+        'hasOfferCatalog' => [
+            '@type' => 'OfferCatalog',
+            'name' => 'خدمات ماركوز هوم للديكور الداخلي في الكويت',
+            'itemListElement' => $catalog_items,
+        ],
     ];
 
     return '<script type="application/ld+json" id="mh-local-business-schema">'
@@ -2543,6 +2749,15 @@ function mh_control_local_business_schema(): string {
 
 function mh_control_ad_page_seo_data(): array {
     $image = 'https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.19-PM.jpeg';
+    if (mh_control_is_services_page()) {
+        return [
+            'canonical' => home_url('/services/'),
+            'title' => 'خدمات الديكور الداخلي في الكويت | ماركوز هوم',
+            'description' => 'خدمات ماركوز هوم في الكويت: خلفيات شاشة، طاولات TV معلقة، أركان قهوة، باركيه، فواصل بديل الخشب وفير مائي مع خيارات القياس والتركيب.',
+            'image' => $image,
+            'type' => 'website',
+        ];
+    }
     if (mh_control_is_tv_console_page()) {
         return [
             'canonical' => home_url('/tv-tables/'),
@@ -2581,6 +2796,61 @@ function mh_control_special_page_schema(array $seo): string {
         'primaryImageOfPage' => ['@type' => 'ImageObject', 'url' => $seo['image']],
     ];
     return '<script type="application/ld+json" id="mh-special-webpage-schema">'
+        . wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        . '</script>' . "\n";
+}
+
+function mh_control_services_structured_data(): string {
+    if (!mh_control_is_services_page()) return '';
+    $items = [];
+    foreach (mh_control_services_data() as $position => $service) {
+        $items[] = [
+            '@type' => 'ListItem',
+            'position' => $position + 1,
+            'url' => $service['url'],
+            'name' => $service['name'],
+        ];
+    }
+    $questions = [
+        ['ما الخدمات التي تقدمها ماركوز هوم؟', 'نقدم خلفيات شاشة وديكور TV، طاولات تلفزيون معلقة، أركان قهوة، أرضيات باركيه، فواصل بديل الخشب وأجهزة فير مائي، مع تصميمات قابلة للتخصيص داخل الكويت.'],
+        ['هل يتوفر القياس والتركيب داخل الكويت؟', 'نعم، يتوفر القياس والتركيب وفق نوع الخدمة والمنطقة وتجهيزات الموقع. يتم تأكيد المطلوب والسعر والموعد قبل بدء التنفيذ.'],
+        ['كيف أحصل على اقتراح وسعر مناسب؟', 'أرسل صورة المكان والمقاسات المتاحة على واتساب، وحدد الخدمة المطلوبة. نراجع المساحة ونوضح الاختيارات والسعر وما يشمله التركيب.'],
+        ['هل يمكن تغيير المقاس أو اللون؟', 'تتوفر خيارات متعددة حسب المنتج، وبعض التصميمات تنفذ حسب المقاس. يجب تأكيد المقاس واللون والخامة قبل التصنيع أو التوريد.'],
+    ];
+    $faq = [];
+    foreach ($questions as $question) {
+        $faq[] = [
+            '@type' => 'Question',
+            'name' => $question[0],
+            'acceptedAnswer' => ['@type' => 'Answer', 'text' => $question[1]],
+        ];
+    }
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@graph' => [
+            [
+                '@type' => 'ItemList',
+                '@id' => home_url('/services/#service-list'),
+                'name' => 'خدمات ماركوز هوم للديكور الداخلي في الكويت',
+                'numberOfItems' => count($items),
+                'itemListElement' => $items,
+            ],
+            [
+                '@type' => 'FAQPage',
+                '@id' => home_url('/services/#faq'),
+                'mainEntity' => $faq,
+            ],
+            [
+                '@type' => 'BreadcrumbList',
+                '@id' => home_url('/services/#breadcrumb'),
+                'itemListElement' => [
+                    ['@type' => 'ListItem', 'position' => 1, 'name' => 'الرئيسية', 'item' => home_url('/')],
+                    ['@type' => 'ListItem', 'position' => 2, 'name' => 'خدماتنا', 'item' => home_url('/services/')],
+                ],
+            ],
+        ],
+    ];
+    return '<script type="application/ld+json" id="mh-services-schema">'
         . wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         . '</script>' . "\n";
 }
@@ -2626,6 +2896,7 @@ function mh_control_finish_head_schema_cleanup(): void {
     echo $head; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     echo mh_control_local_business_schema(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     echo mh_control_special_page_schema($seo); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    echo mh_control_services_structured_data(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 }
 add_action('wp_head', 'mh_control_finish_head_schema_cleanup', 999999);
 
