@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.8.0
+ * Version: 1.8.1
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.8.0');
+define('MH_CONTROL_VERSION', '1.8.1');
 
 function mh_control_google_maps_url(): string {
     return 'https://maps.app.goo.gl/GMPEmTXtd66YkdpY6?g_st=iwb';
@@ -52,6 +52,7 @@ function mh_control_render_admin_page(): void {
     }
     $stats = get_option('mh_control_ad_stats', []);
     $stats = is_array($stats) ? $stats : [];
+    $stats = array_filter($stats, static fn($row): bool => is_array($row) && ($row['source'] ?? '') !== 'deployment_check');
     $views = 0;
     $clicks = 0;
     foreach ($stats as $row) {
@@ -159,6 +160,9 @@ function mh_control_record_ad_event(WP_REST_Request $request): WP_REST_Response 
     $date = current_time('Y-m-d');
     $source = $source !== '' ? $source : 'direct';
     $page = $page !== '' ? $page : '/';
+    if ($source === 'deployment_check') {
+        return new WP_REST_Response(['recorded' => true, 'test' => true], 200);
+    }
 
     $stats = get_option('mh_control_ad_stats', []);
     $stats = is_array($stats) ? $stats : [];
