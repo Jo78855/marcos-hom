@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.6.0
+ * Version: 1.6.1
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.6.0');
+define('MH_CONTROL_VERSION', '1.6.1');
+
+function mh_control_google_maps_url(): string {
+    return 'https://maps.app.goo.gl/GMPEmTXtd66YkdpY6?g_st=iwb';
+}
 
 function mh_control_request_path(): string {
     $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash((string) $_SERVER['REQUEST_URI']) : '/';
@@ -2261,6 +2265,7 @@ function mh_control_home_trust_markup(): string {
             </div>
             <div class="mhtrust-actions">
                 <a class="mhtrust-link" href="https://marcohom.com/portfolio/?site=mh">شاهد كل الأعمال</a>
+                <a class="mhtrust-link mhtrust-link--google" href="<?php echo esc_url(mh_control_google_maps_url()); ?>" target="_blank" rel="noopener">شاهد تقييماتنا على Google</a>
                 <a class="mhtrust-link mhtrust-link--soft" href="https://marcohom.com/testimonials/?trust=verified">كيف نتحقق من آراء العملاء؟</a>
             </div>
         </div>
@@ -2333,8 +2338,11 @@ function mh_control_trust_page_markup(): string {
 
         <section class="mhtrust-review">
             <div class="mhtrust-shell mhtrust-review__box">
-                <div><span class="mhtrust-eyebrow">نفذنا لك مشروعاً؟</span><h2>شاركنا رأيك بصراحة</h2><p>أرسل نوع المشروع وتقييمك والاسم الذي تسمح لنا بنشره. لن ننشر اسمًا أو رأيًا بدون موافقة واضحة.</p></div>
-                <a class="mhtrust-btn mhtrust-btn--green" href="https://wa.me/96550204320?text=<?php echo esc_attr($review_message); ?>" target="_blank" rel="noopener">أرسل التقييم على واتساب</a>
+                <div><span class="mhtrust-eyebrow">نفذنا لك مشروعاً؟</span><h2>شاركنا رأيك بصراحة</h2><p>اكتب تجربتك الحقيقية على Google لمساعدة العملاء على اتخاذ قرارهم. لا نطلب تقييمًا محددًا ولا نقدم مقابلاً للتقييم.</p></div>
+                <div class="mhtrust-review__actions">
+                    <a class="mhtrust-btn mhtrust-btn--google" href="<?php echo esc_url(mh_control_google_maps_url()); ?>" target="_blank" rel="noopener">قيّم تجربتك على Google</a>
+                    <a class="mhtrust-btn mhtrust-btn--soft" href="https://wa.me/96550204320?text=<?php echo esc_attr($review_message); ?>" target="_blank" rel="noopener">أرسل ملاحظتك لنا</a>
+                </div>
             </div>
         </section>
     </main>
@@ -2371,11 +2379,11 @@ function mh_control_trust_styles(): void {
     ?>
     <style id="mh-trust-styles">
     :root{--mht-blue:#1266d6;--mht-navy:#071a33;--mht-ink:#15263a;--mht-soft:#f2f6fa;--mht-gold:#d6aa62;--mht-green:#20b95a}.mhtrust-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}.mhtrust-heading{text-align:center;max-width:760px;margin:0 auto 42px}.mhtrust-heading h2{font-size:clamp(33px,5vw,51px);line-height:1.2;color:var(--mht-navy);margin:0 0 14px}.mhtrust-heading p{color:#68798d;line-height:1.8;margin:0}.mhtrust-eyebrow{display:inline-flex;align-items:center;gap:10px;color:var(--mht-blue);font-size:14px;font-weight:900;margin-bottom:14px}.mhtrust-eyebrow:before{content:"";width:32px;height:2px;background:var(--mht-gold)}.mhtrust-eyebrow--light{color:#dce9f7}
-    .mhtrust-home{font-family:Tahoma,Arial,sans-serif;padding:92px 0;background:#fff}.mhtrust-proof{display:grid;grid-template-columns:.88fr 1.12fr;gap:28px;align-items:stretch}.mhtrust-proof__steps{display:grid;grid-template-columns:1fr 1fr;gap:12px}.mhtrust-proof__steps article{padding:23px;border:1px solid #dfe7ef;border-radius:14px;background:#f8fafc}.mhtrust-proof__steps b{font-size:12px;color:var(--mht-blue)}.mhtrust-proof__steps h3{font-size:18px;color:var(--mht-navy);margin:11px 0 8px}.mhtrust-proof__steps p{font-size:12px;line-height:1.7;color:#697a8c;margin:0}.mhtrust-proof__gallery{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px}.mhtrust-proof__gallery figure{position:relative;margin:0;border-radius:14px;overflow:hidden;min-height:185px;background:#e8edf2}.mhtrust-proof__main{grid-row:span 2}.mhtrust-proof__gallery img{width:100%;height:100%;object-fit:cover;display:block}.mhtrust-proof__gallery figcaption{position:absolute;inset-inline:12px;bottom:10px;padding:7px 9px;border-radius:7px;background:rgba(7,26,51,.78);color:#fff;font-size:11px}.mhtrust-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:28px}.mhtrust-link{display:inline-flex;padding:12px 18px;border-radius:8px;background:var(--mht-navy);color:#fff!important;text-decoration:none!important;font-weight:900}.mhtrust-link--soft{background:#eaf2fb;color:var(--mht-blue)!important}
+    .mhtrust-home{font-family:Tahoma,Arial,sans-serif;padding:92px 0;background:#fff}.mhtrust-proof{display:grid;grid-template-columns:.88fr 1.12fr;gap:28px;align-items:stretch}.mhtrust-proof__steps{display:grid;grid-template-columns:1fr 1fr;gap:12px}.mhtrust-proof__steps article{padding:23px;border:1px solid #dfe7ef;border-radius:14px;background:#f8fafc}.mhtrust-proof__steps b{font-size:12px;color:var(--mht-blue)}.mhtrust-proof__steps h3{font-size:18px;color:var(--mht-navy);margin:11px 0 8px}.mhtrust-proof__steps p{font-size:12px;line-height:1.7;color:#697a8c;margin:0}.mhtrust-proof__gallery{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px}.mhtrust-proof__gallery figure{position:relative;margin:0;border-radius:14px;overflow:hidden;min-height:185px;background:#e8edf2}.mhtrust-proof__main{grid-row:span 2}.mhtrust-proof__gallery img{width:100%;height:100%;object-fit:cover;display:block}.mhtrust-proof__gallery figcaption{position:absolute;inset-inline:12px;bottom:10px;padding:7px 9px;border-radius:7px;background:rgba(7,26,51,.78);color:#fff;font-size:11px}.mhtrust-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:28px}.mhtrust-link{display:inline-flex;padding:12px 18px;border-radius:8px;background:var(--mht-navy);color:#fff!important;text-decoration:none!important;font-weight:900}.mhtrust-link--google{background:#fff;color:#26354a!important;border:1px solid #cfd9e4}.mhtrust-link--soft{background:#eaf2fb;color:var(--mht-blue)!important}
     .mhtrust-page{font-family:Tahoma,Arial,sans-serif;color:var(--mht-ink);background:#fff;width:100%;margin-inline:0;overflow:hidden}.mhtrust-page *{box-sizing:border-box}.mhtrust-hero{min-height:620px;display:flex;align-items:center;position:relative;background:url('https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0011.jpg') center/cover no-repeat}.mhtrust-hero__shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,16,32,.26),rgba(4,16,32,.92))}.mhtrust-hero__content{position:relative;z-index:1;color:#fff;padding-block:80px}.mhtrust-hero h1{font-size:clamp(46px,7vw,76px);line-height:1.08;color:#fff;margin:0 0 20px}.mhtrust-hero p{max-width:690px;font-size:18px;line-height:1.9;color:#e6eef7;margin:0 0 28px}.mhtrust-btn{display:inline-flex;justify-content:center;align-items:center;min-height:52px;padding:12px 22px;border-radius:8px;text-decoration:none!important;font-weight:900}.mhtrust-btn--green{background:var(--mht-green);color:#fff!important}
     .mhtrust-commitments{padding:90px 0}.mhtrust-commitments__grid,.mhtrust-flow__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.mhtrust-commitments article,.mhtrust-flow article{padding:27px;border:1px solid #dfe7ef;border-radius:14px;background:#fff}.mhtrust-commitments span,.mhtrust-flow b{font-size:12px;color:var(--mht-blue);font-weight:900}.mhtrust-commitments h3,.mhtrust-flow h3{font-size:19px;color:var(--mht-navy);margin:12px 0 8px}.mhtrust-commitments p,.mhtrust-flow p{font-size:13px;line-height:1.7;color:#68798c;margin:0}
     .mhtrust-real-work{padding:90px 0;background:var(--mht-navy);text-align:center}.mhtrust-heading--light h2{color:#fff}.mhtrust-heading--light p{color:#b4c3d3}.mhtrust-real-work__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}.mhtrust-real-work figure{position:relative;margin:0;border-radius:15px;overflow:hidden;background:#1a2f47}.mhtrust-real-work img{width:100%;height:390px;object-fit:cover;display:block}.mhtrust-real-work figcaption{position:absolute;inset-inline:12px;bottom:12px;padding:8px 10px;border-radius:7px;background:rgba(7,26,51,.78);color:#fff;font-size:12px}.mhtrust-text-link{display:inline-flex;color:#fff!important;text-decoration:none!important;font-weight:900;border-bottom:1px solid var(--mht-gold);padding-bottom:6px}
-    .mhtrust-flow{padding:90px 0;background:var(--mht-soft)}.mhtrust-review{padding:74px 0;background:#e8f0f8}.mhtrust-review__box{display:flex;align-items:center;justify-content:space-between;gap:35px;background:#fff;padding:45px 50px;border-radius:18px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mhtrust-review h2{font-size:clamp(30px,4vw,45px);color:var(--mht-navy);margin:0 0 11px}.mhtrust-review p{color:#68798c;line-height:1.8;margin:0;max-width:690px}
+    .mhtrust-flow{padding:90px 0;background:var(--mht-soft)}.mhtrust-review{padding:74px 0;background:#e8f0f8}.mhtrust-review__box{display:flex;align-items:center;justify-content:space-between;gap:35px;background:#fff;padding:45px 50px;border-radius:18px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mhtrust-review h2{font-size:clamp(30px,4vw,45px);color:var(--mht-navy);margin:0 0 11px}.mhtrust-review p{color:#68798c;line-height:1.8;margin:0;max-width:690px}.mhtrust-review__actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.mhtrust-btn--google{background:#1266d6;color:#fff!important}.mhtrust-btn--soft{background:#edf3f9;color:var(--mht-navy)!important}
     @media(max-width:900px){.mhtrust-proof{grid-template-columns:1fr}.mhtrust-commitments__grid,.mhtrust-flow__grid,.mhtrust-real-work__grid{grid-template-columns:1fr 1fr}.mhtrust-review__box{align-items:flex-start;flex-direction:column}}
     @media(max-width:600px){.mhtrust-shell{width:min(100% - 28px,1180px)}.mhtrust-home,.mhtrust-commitments,.mhtrust-real-work,.mhtrust-flow{padding:64px 0}.mhtrust-proof__steps,.mhtrust-proof__gallery,.mhtrust-commitments__grid,.mhtrust-flow__grid,.mhtrust-real-work__grid{grid-template-columns:1fr}.mhtrust-proof__gallery{grid-template-rows:auto}.mhtrust-proof__main{grid-row:auto}.mhtrust-proof__gallery figure{height:280px}.mhtrust-hero{min-height:590px;background-position:40% center}.mhtrust-hero h1{font-size:43px}.mhtrust-real-work img{height:320px}.mhtrust-review{padding:48px 0}.mhtrust-review__box{padding:30px 24px}}
     </style>
@@ -2730,6 +2738,7 @@ function mh_control_local_business_schema(): string {
         ],
         'sameAs' => [
             'https://www.instagram.com/marcoshomekw/',
+            mh_control_google_maps_url(),
         ],
         'knowsAbout' => [
             'التصميم الداخلي', 'خلفيات الشاشة', 'طاولات التلفزيون المعلقة', 'أركان القهوة',
