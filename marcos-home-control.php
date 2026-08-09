@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.9.0
+ * Version: 1.10.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,8 +13,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.9.0');
+define('MH_CONTROL_VERSION', '1.10.0');
 define('MH_CONTROL_SNAP_PIXEL_ID', '2770b368-fa3d-49f1-bf4e-685b62c10ecf');
+define('MH_CONTROL_META_PIXEL_ID', '761400161961314');
 
 function mh_control_google_maps_url(): string {
     return 'https://maps.app.goo.gl/GMPEmTXtd66YkdpY6?g_st=iwb';
@@ -258,6 +259,60 @@ function mh_control_snap_pixel_script(): void {
     <?php
 }
 add_action('wp_footer', 'mh_control_snap_pixel_script', 998);
+
+function mh_control_meta_pixel_script(): void {
+    $path = mh_control_request_path();
+    $products = [
+        '/fire-blaze/' => [
+            'content_ids' => ['fire-blaze'],
+            'content_name' => 'Fire Blaze Water Flame Diffuser',
+            'content_category' => 'Home Decor',
+            'content_type' => 'product',
+            'value' => 85.00,
+            'currency' => 'KWD',
+        ],
+        '/tv-tables/' => [
+            'content_ids' => ['tv-tables'],
+            'content_name' => 'Floating TV Table',
+            'content_category' => 'TV Tables',
+            'content_type' => 'product',
+            'value' => 40.00,
+            'currency' => 'KWD',
+        ],
+    ];
+    $tracked_paths = array_merge(array_keys($products), ['/services/', '/coffee-corner/']);
+    if (!in_array($path, $tracked_paths, true)) return;
+
+    $product = $products[$path] ?? null;
+    $contact = is_array($product) ? $product : [
+        'content_name' => 'Marco Home consultation',
+        'content_category' => 'Interior Design',
+    ];
+    ?>
+    <script id="mh-meta-pixel">
+    !function(f,b,e,v,n,t,s){
+        if(f.fbq)return;
+        n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;
+        n.push=n;n.loaded=true;n.version='2.0';n.queue=[];
+        t=b.createElement(e);t.async=true;t.src=v;
+        s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s);
+    }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init',<?php echo wp_json_encode(MH_CONTROL_META_PIXEL_ID); ?>);
+    fbq('track','PageView');
+    <?php if (is_array($product)): ?>
+    fbq('track','ViewContent',<?php echo wp_json_encode($product); ?>);
+    <?php endif; ?>
+    var mhMetaContact=<?php echo wp_json_encode($contact); ?>;
+    document.addEventListener('click',function(event){
+        var target=event.target;
+        var link=target&&target.closest?target.closest('a[href*="wa.me/"]'):null;
+        if(link){fbq('track','Contact',mhMetaContact);}
+    },true);
+    </script>
+    <?php
+}
+add_action('wp_footer', 'mh_control_meta_pixel_script', 997);
 
 
 function mh_control_query_status(): void {
