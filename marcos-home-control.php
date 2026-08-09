@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.10.0
+ * Version: 1.11.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,9 +13,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.10.0');
+define('MH_CONTROL_VERSION', '1.11.0');
 define('MH_CONTROL_SNAP_PIXEL_ID', '2770b368-fa3d-49f1-bf4e-685b62c10ecf');
 define('MH_CONTROL_META_PIXEL_ID', '761400161961314');
+define('MH_CONTROL_LEADS_DB_VERSION', '1.0');
 
 function mh_control_google_maps_url(): string {
     return 'https://maps.app.goo.gl/GMPEmTXtd66YkdpY6?g_st=iwb';
@@ -27,6 +28,43 @@ function mh_control_request_path(): string {
     $path = trim($path, '/');
     return $path === '' ? '/' : '/' . $path . '/';
 }
+
+function mh_control_leads_table(): string {
+    global $wpdb;
+    return $wpdb->prefix . 'mh_leads';
+}
+
+function mh_control_install_leads_table(): void {
+    if ((string) get_option('mh_control_leads_db_version', '') === MH_CONTROL_LEADS_DB_VERSION) {
+        return;
+    }
+    global $wpdb;
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    $table = mh_control_leads_table();
+    $charset = $wpdb->get_charset_collate();
+    $sql = "CREATE TABLE {$table} (
+        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+        created_at datetime NOT NULL,
+        updated_at datetime NOT NULL,
+        name varchar(120) NOT NULL,
+        phone varchar(24) NOT NULL,
+        area varchar(120) NOT NULL DEFAULT '',
+        product varchar(80) NOT NULL,
+        details text NOT NULL,
+        source varchar(80) NOT NULL DEFAULT 'direct',
+        medium varchar(80) NOT NULL DEFAULT '',
+        campaign varchar(120) NOT NULL DEFAULT '',
+        page varchar(160) NOT NULL DEFAULT '',
+        status varchar(30) NOT NULL DEFAULT 'new',
+        consent tinyint(1) unsigned NOT NULL DEFAULT 1,
+        PRIMARY KEY  (id),
+        KEY status (status),
+        KEY created_at (created_at)
+    ) {$charset};";
+    dbDelta($sql);
+    update_option('mh_control_leads_db_version', MH_CONTROL_LEADS_DB_VERSION, false);
+}
+add_action('plugins_loaded', 'mh_control_install_leads_table');
 
 function mh_control_prepare_virtual_page(): void {
     global $wp_query;
@@ -52,6 +90,17 @@ function mh_control_render_admin_page(): void {
     if (!current_user_can('manage_options')) {
         return;
     }
+    global $wpdb;
+    $leads = $wpdb->get_results('SELECT * FROM ' . mh_control_leads_table() . ' ORDER BY created_at DESC LIMIT 200', ARRAY_A);
+    $leads = is_array($leads) ? $leads : [];
+    $lead_count = (int) $wpdb->get_var('SELECT COUNT(*) FROM ' . mh_control_leads_table());
+    $status_labels = [
+        'new' => 'جديد',
+        'contacted' => 'تم التواصل',
+        'quoted' => 'تم إرسال عرض',
+        'won' => 'تم البيع',
+        'closed' => 'مغلق',
+    ];
     $stats = get_option('mh_control_ad_stats', []);
     $stats = is_array($stats) ? $stats : [];
     $stats = array_filter($stats, static fn($row): bool => is_array($row) && ($row['source'] ?? '') !== 'deployment_check');
@@ -71,8 +120,43 @@ function mh_control_render_admin_page(): void {
         <div class="mh-admin-cards">
             <div><span>زيارات صفحات الإعلان</span><strong><?php echo esc_html(number_format_i18n($views)); ?></strong></div>
             <div><span>نقرات واتساب</span><strong><?php echo esc_html(number_format_i18n($clicks)); ?></strong></div>
-            <div><span>نسبة التفاعل</span><strong><?php echo esc_html($views > 0 ? number_format_i18n(($clicks / $views) * 100, 1) . '%' : '—'); ?></strong></div>
+            <div><span>طلبات عرض السعر</span><strong><?php echo esc_html(number_format_i18n($lead_count)); ?></strong></div>
+            <div><span>تحويل الزيارة إلى طلب</span><strong><?php echo esc_html($views > 0 ? number_format_i18n(($lead_count / $views) * 100, 1) . '%' : '—'); ?></strong></div>
         </div>
+        <h2 id="mh-leads">العملاء وطلبات عرض السعر</h2>
+        <p>تظهر الطلبات الجديدة هنا مع مصدر الحملة. استخدم الحالة لمتابعة العميل حتى إتمام البيع.</p>
+        <div class="mh-admin-table mh-leads-table"><table class="widefat striped"><thead><tr><th>رقم</th><th>التاريخ</th><th>العميل</th><th>المنطقة</th><th>المنتج والتفاصيل</th><th>المصدر</th><th>الحالة</th><th>تواصل</th></tr></thead><tbody>
+        <?php if ($leads === []): ?>
+            <tr><td colspan="8">لا توجد طلبات بعد. سيظهر أول طلب فور إرساله من صفحة الفاير أو الطاولات.</td></tr>
+        <?php else: foreach ($leads as $lead):
+            $phone_digits = preg_replace('/\D+/', '', (string) ($lead['phone'] ?? ''));
+            $product_label = ($lead['product'] ?? '') === 'fire-blaze' ? 'جهاز Fire Blaze' : 'طاولة TV معلقة';
+            $current_status = (string) ($lead['status'] ?? 'new');
+            $message = rawurlencode('مرحباً ' . (string) ($lead['name'] ?? '') . '، معك ماركوز هوم بخصوص طلب عرض السعر رقم #' . (string) ($lead['id'] ?? '') . '.');
+        ?>
+            <tr>
+                <td><strong>#<?php echo esc_html((string) ($lead['id'] ?? '')); ?></strong></td>
+                <td><?php echo esc_html((string) ($lead['created_at'] ?? '')); ?></td>
+                <td><b><?php echo esc_html((string) ($lead['name'] ?? '')); ?></b><br><span dir="ltr"><?php echo esc_html((string) ($lead['phone'] ?? '')); ?></span></td>
+                <td><?php echo esc_html((string) ($lead['area'] ?? '—')); ?></td>
+                <td><b><?php echo esc_html($product_label); ?></b><br><?php echo esc_html((string) ($lead['details'] ?? '')); ?></td>
+                <td><?php echo esc_html((string) ($lead['source'] ?? 'direct')); ?><br><small><?php echo esc_html((string) ($lead['campaign'] ?? '')); ?></small></td>
+                <td>
+                    <form action="<?php echo esc_url(admin_url('admin-post.php')); ?>" method="post" class="mh-status-form">
+                        <input type="hidden" name="action" value="mh_update_lead_status">
+                        <input type="hidden" name="lead_id" value="<?php echo esc_attr((string) ($lead['id'] ?? '')); ?>">
+                        <?php wp_nonce_field('mh_update_lead_' . (string) ($lead['id'] ?? '')); ?>
+                        <select name="status" onchange="this.form.submit()" aria-label="حالة الطلب">
+                            <?php foreach ($status_labels as $value => $label): ?>
+                                <option value="<?php echo esc_attr($value); ?>" <?php selected($current_status, $value); ?>><?php echo esc_html($label); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
+                </td>
+                <td><a class="button button-primary" href="https://wa.me/<?php echo esc_attr($phone_digits); ?>?text=<?php echo esc_attr($message); ?>" target="_blank" rel="noopener">واتساب</a></td>
+            </tr>
+        <?php endforeach; endif; ?>
+        </tbody></table></div>
         <h2>تفاصيل آخر 90 يومًا</h2>
         <p>البيانات مجمعة ولا تخزن اسم الزائر أو رقم الهاتف أو عنوان IP.</p>
         <div class="mh-admin-table"><table class="widefat striped"><thead><tr><th>التاريخ</th><th>الصفحة</th><th>المصدر</th><th>الحملة</th><th>النتيجة</th><th>العدد</th></tr></thead><tbody>
@@ -84,15 +168,38 @@ function mh_control_render_admin_page(): void {
                 <td><?php echo esc_html((string) ($row['page'] ?? '')); ?></td>
                 <td><?php echo esc_html((string) ($row['source'] ?? 'direct')); ?></td>
                 <td><?php echo esc_html((string) ($row['campaign'] ?? '—')); ?></td>
-                <td><?php echo esc_html(($row['event'] ?? '') === 'whatsapp_click' ? 'نقرة واتساب' : 'زيارة'); ?></td>
+                <td><?php echo esc_html(($row['event'] ?? '') === 'whatsapp_click' ? 'نقرة واتساب' : (($row['event'] ?? '') === 'lead_submitted' ? 'طلب عرض سعر' : 'زيارة')); ?></td>
                 <td><strong><?php echo esc_html(number_format_i18n((int) ($row['count'] ?? 0))); ?></strong></td>
             </tr>
         <?php endforeach; endif; ?>
         </tbody></table></div>
     </div>
-    <style>.mh-admin{max-width:1180px}.mh-admin-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0}.mh-admin-cards>div{background:#fff;border:1px solid #dcdcde;border-radius:12px;padding:24px}.mh-admin-cards span{display:block;color:#646970;font-weight:700}.mh-admin-cards strong{display:block;font-size:36px;color:#071a33;margin-top:12px}.mh-admin-table{overflow:auto;background:#fff}@media(max-width:700px){.mh-admin-cards{grid-template-columns:1fr}}</style>
+    <style>.mh-admin{max-width:1280px}.mh-admin-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:24px 0}.mh-admin-cards>div{background:#fff;border:1px solid #dcdcde;border-radius:12px;padding:24px}.mh-admin-cards span{display:block;color:#646970;font-weight:700}.mh-admin-cards strong{display:block;font-size:34px;color:#071a33;margin-top:12px}.mh-admin-table{overflow:auto;background:#fff;margin-bottom:32px}.mh-leads-table td{vertical-align:middle;min-width:90px}.mh-leads-table td:nth-child(5){min-width:240px}.mh-status-form select{min-width:120px}@media(max-width:900px){.mh-admin-cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.mh-admin-cards{grid-template-columns:1fr}}</style>
     <?php
 }
+
+function mh_control_update_lead_status(): void {
+    if (!current_user_can('manage_options')) {
+        wp_die('غير مسموح.');
+    }
+    $lead_id = isset($_POST['lead_id']) ? absint($_POST['lead_id']) : 0;
+    check_admin_referer('mh_update_lead_' . $lead_id);
+    $status = isset($_POST['status']) ? sanitize_key(wp_unslash((string) $_POST['status'])) : 'new';
+    $allowed = ['new', 'contacted', 'quoted', 'won', 'closed'];
+    if ($lead_id > 0 && in_array($status, $allowed, true)) {
+        global $wpdb;
+        $wpdb->update(
+            mh_control_leads_table(),
+            ['status' => $status, 'updated_at' => current_time('mysql')],
+            ['id' => $lead_id],
+            ['%s', '%s'],
+            ['%d']
+        );
+    }
+    wp_safe_redirect(admin_url('tools.php?page=marcos-home-control#mh-leads'));
+    exit;
+}
+add_action('admin_post_mh_update_lead_status', 'mh_control_update_lead_status');
 
 function mh_control_activation_notice(): void {
     if (!current_user_can('manage_options')) {
@@ -135,6 +242,127 @@ function mh_control_register_ad_event_route(): void {
     ]);
 }
 add_action('rest_api_init', 'mh_control_register_ad_event_route');
+
+function mh_control_register_lead_route(): void {
+    register_rest_route('marcos-home/v1', '/lead', [
+        'methods' => 'POST',
+        'callback' => 'mh_control_create_lead',
+        'permission_callback' => '__return_true',
+    ]);
+}
+add_action('rest_api_init', 'mh_control_register_lead_route');
+
+function mh_control_record_internal_stat(string $event, string $page, string $source, string $campaign, string $medium): void {
+    $date = current_time('Y-m-d');
+    $source = $source !== '' ? $source : 'direct';
+    $page = $page !== '' ? $page : '/';
+    $stats = get_option('mh_control_ad_stats', []);
+    $stats = is_array($stats) ? $stats : [];
+    $key = md5(implode('|', [$date, $page, $source, $campaign, $medium, $event]));
+    $stats[$key] = [
+        'date' => $date,
+        'page' => $page,
+        'source' => $source,
+        'campaign' => $campaign,
+        'medium' => $medium,
+        'event' => $event,
+        'count' => max(0, (int) ($stats[$key]['count'] ?? 0)) + 1,
+    ];
+    $cutoff = gmdate('Y-m-d', strtotime('-90 days'));
+    $stats = array_filter($stats, static fn($row): bool => is_array($row) && (string) ($row['date'] ?? '') >= $cutoff);
+    update_option('mh_control_ad_stats', $stats, false);
+}
+
+function mh_control_create_lead(WP_REST_Request $request): WP_REST_Response {
+    $site_host = strtolower((string) wp_parse_url(home_url('/'), PHP_URL_HOST));
+    $origin = (string) $request->get_header('origin');
+    $referer = (string) $request->get_header('referer');
+    $request_host = strtolower((string) wp_parse_url($origin !== '' ? $origin : $referer, PHP_URL_HOST));
+    if ($request_host !== $site_host && $request_host !== 'www.' . $site_host) {
+        return new WP_REST_Response(['saved' => false, 'message' => 'تعذر التحقق من مصدر الطلب.'], 403);
+    }
+    if ((string) $request->get_param('website') !== '') {
+        return new WP_REST_Response(['saved' => true], 200);
+    }
+
+    $started_at = (int) $request->get_param('started_at');
+    $elapsed = (int) round(microtime(true) * 1000) - $started_at;
+    if ($started_at <= 0 || $elapsed < 1500 || $elapsed > 21600000) {
+        return new WP_REST_Response(['saved' => false, 'message' => 'حدّث الصفحة وحاول مرة أخرى.'], 400);
+    }
+
+    $clean = static function ($value, int $max): string {
+        $value = sanitize_text_field((string) $value);
+        return function_exists('mb_substr') ? mb_substr($value, 0, $max) : substr($value, 0, $max);
+    };
+    $name = $clean($request->get_param('name'), 120);
+    $phone_digits = (string) preg_replace('/\D+/', '', (string) $request->get_param('phone'));
+    if (strlen($phone_digits) === 11 && str_starts_with($phone_digits, '965')) {
+        $phone_digits = substr($phone_digits, 3);
+    }
+    $area = $clean($request->get_param('area'), 120);
+    $product = sanitize_key((string) $request->get_param('product'));
+    $details = $clean($request->get_param('details'), 500);
+    $source = strtolower($clean($request->get_param('source'), 80));
+    $medium = strtolower($clean($request->get_param('medium'), 80));
+    $campaign = $clean($request->get_param('campaign'), 120);
+    $page = $clean($request->get_param('page'), 160);
+    $consent = (bool) $request->get_param('consent');
+    $allowed_products = ['fire-blaze', 'tv-tables'];
+
+    if ((function_exists('mb_strlen') ? mb_strlen($name) : strlen($name)) < 2) {
+        return new WP_REST_Response(['saved' => false, 'field' => 'name', 'message' => 'اكتب الاسم بشكل صحيح.'], 400);
+    }
+    if (strlen($phone_digits) !== 8) {
+        return new WP_REST_Response(['saved' => false, 'field' => 'phone', 'message' => 'اكتب رقم كويتي صحيح من 8 أرقام.'], 400);
+    }
+    if (!in_array($product, $allowed_products, true) || !$consent) {
+        return new WP_REST_Response(['saved' => false, 'message' => 'راجع بيانات الطلب والموافقة.'], 400);
+    }
+
+    $rate_key = 'mh_lead_' . md5($phone_digits);
+    if (get_transient($rate_key)) {
+        return new WP_REST_Response(['saved' => false, 'message' => 'تم استلام طلبك بالفعل. يمكنك المتابعة على واتساب.'], 429);
+    }
+
+    mh_control_install_leads_table();
+    global $wpdb;
+    $now = current_time('mysql');
+    $inserted = $wpdb->insert(
+        mh_control_leads_table(),
+        [
+            'created_at' => $now,
+            'updated_at' => $now,
+            'name' => $name,
+            'phone' => '+965' . $phone_digits,
+            'area' => $area,
+            'product' => $product,
+            'details' => $details,
+            'source' => $source !== '' ? $source : 'direct',
+            'medium' => $medium,
+            'campaign' => $campaign,
+            'page' => $page,
+            'status' => 'new',
+            'consent' => 1,
+        ],
+        ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d']
+    );
+    if ($inserted === false) {
+        return new WP_REST_Response(['saved' => false, 'message' => 'تعذر حفظ الطلب الآن. جرّب التواصل على واتساب.'], 500);
+    }
+    set_transient($rate_key, 1, 120);
+    mh_control_record_internal_stat('lead_submitted', $page, $source, $campaign, $medium);
+
+    $product_name = $product === 'fire-blaze' ? 'جهاز Fire Blaze' : 'طاولة TV معلقة';
+    $message = "مرحباً ماركوز هوم، سجلت طلب عرض سعر رقم #{$wpdb->insert_id}.\n"
+        . "الاسم: {$name}\nالمنتج: {$product_name}\nالمنطقة: " . ($area !== '' ? $area : 'غير محددة')
+        . "\nالتفاصيل: " . ($details !== '' ? $details : 'أحتاج عرض سعر وتفاصيل أكثر.');
+    return new WP_REST_Response([
+        'saved' => true,
+        'lead_id' => (int) $wpdb->insert_id,
+        'whatsapp_url' => 'https://wa.me/96550204320?text=' . rawurlencode($message),
+    ], 201);
+}
 
 function mh_control_record_ad_event(WP_REST_Request $request): WP_REST_Response {
     $site_host = strtolower((string) wp_parse_url(home_url('/'), PHP_URL_HOST));
@@ -184,6 +412,107 @@ function mh_control_record_ad_event(WP_REST_Request $request): WP_REST_Response 
 
     return new WP_REST_Response(['recorded' => true], 200);
 }
+
+function mh_control_quote_form(): void {
+    $path = mh_control_request_path();
+    $products = [
+        '/fire-blaze/' => ['slug' => 'fire-blaze', 'label' => 'جهاز Fire Blaze'],
+        '/tv-tables/' => ['slug' => 'tv-tables', 'label' => 'طاولة TV معلقة'],
+    ];
+    if (!isset($products[$path])) return;
+    $product = $products[$path];
+    ?>
+    <button type="button" class="mhq-floating" id="mhq-open">اطلب عرض سعر</button>
+    <div class="mhq-modal" id="mhq-modal" hidden>
+        <div class="mhq-backdrop" data-mhq-close></div>
+        <section class="mhq-dialog" role="dialog" aria-modal="true" aria-labelledby="mhq-title" dir="rtl">
+            <button type="button" class="mhq-close" data-mhq-close aria-label="إغلاق">×</button>
+            <span class="mhq-kicker">طلب سريع — أقل من دقيقة</span>
+            <h2 id="mhq-title">احصل على عرض سعر لـ<?php echo esc_html($product['label']); ?></h2>
+            <p>سنسجل اختيارك ونفتح واتساب برسالة جاهزة لإكمال التفاصيل.</p>
+            <form id="mhq-form" novalidate>
+                <div class="mhq-grid">
+                    <label><span>الاسم *</span><input name="name" type="text" autocomplete="name" maxlength="120" required></label>
+                    <label><span>رقم الهاتف الكويتي *</span><input name="phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="15" placeholder="مثال: 50204320" required></label>
+                </div>
+                <label><span>المنطقة</span><input name="area" type="text" autocomplete="address-level2" maxlength="120" placeholder="مثال: حولي، السالمية، الفروانية"></label>
+                <label><span>ملاحظة إضافية</span><textarea name="note" rows="3" maxlength="300" placeholder="المقاس أو موعد التواصل المناسب"></textarea></label>
+                <label class="mhq-consent"><input name="consent" type="checkbox" value="1" required><span>أوافق على استخدام بياناتي للتواصل بخصوص هذا الطلب وفق <a href="<?php echo esc_url(home_url('/privacy-policy/')); ?>" target="_blank" rel="noopener">سياسة الخصوصية</a>.</span></label>
+                <label class="mhq-hp" aria-hidden="true"><span>Website</span><input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+                <p class="mhq-error" id="mhq-error" role="alert" hidden></p>
+                <button type="submit" class="mhq-submit">سجل الطلب وتابع على واتساب</button>
+            </form>
+            <div class="mhq-success" id="mhq-success" hidden><b>تم تسجيل طلبك بنجاح</b><span>جاري فتح واتساب لإكمال الطلب…</span></div>
+        </section>
+    </div>
+    <style id="mhq-style">
+    .mhq-floating{position:fixed;left:24px;bottom:24px;z-index:99990;border:0;border-radius:999px;background:#0877c9;color:#fff;padding:14px 22px;font:800 15px/1.2 inherit;box-shadow:0 12px 30px rgba(3,45,82,.28);cursor:pointer}.mhq-floating:hover{background:#065f9f}.mhq-modal[hidden]{display:none!important}.mhq-modal{position:fixed;inset:0;z-index:999999;display:grid;place-items:center;padding:18px}.mhq-backdrop{position:absolute;inset:0;background:rgba(2,14,28,.72);backdrop-filter:blur(4px)}.mhq-dialog{position:relative;width:min(620px,100%);max-height:calc(100vh - 36px);overflow:auto;background:#fff;border-radius:22px;padding:34px;box-shadow:0 28px 80px rgba(0,0,0,.3);color:#102238}.mhq-close{position:absolute;left:16px;top:12px;border:0;background:#eef3f7;width:38px;height:38px;border-radius:50%;font-size:28px;line-height:1;cursor:pointer}.mhq-kicker{display:inline-block;color:#0877c9;font-weight:800;margin-bottom:7px}.mhq-dialog h2{margin:0 0 8px;font-size:28px;line-height:1.35}.mhq-dialog>p{margin:0 0 22px;color:#586777}.mhq-dialog label{display:block;margin-bottom:15px}.mhq-dialog label>span:first-child{display:block;font-weight:750;margin-bottom:7px}.mhq-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mhq-dialog input[type=text],.mhq-dialog input[type=tel],.mhq-dialog textarea{box-sizing:border-box;width:100%;border:1px solid #cad5df;border-radius:11px;padding:12px 13px;font:500 16px/1.5 inherit;background:#fff;color:#102238}.mhq-dialog input:focus,.mhq-dialog textarea:focus{outline:3px solid rgba(8,119,201,.16);border-color:#0877c9}.mhq-consent{display:flex!important;gap:9px;align-items:flex-start;color:#465567;font-size:14px}.mhq-consent input{margin-top:4px;flex:0 0 auto}.mhq-consent span{font-weight:500!important;margin:0!important}.mhq-consent a{color:#0877c9}.mhq-hp{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}.mhq-submit{width:100%;border:0;border-radius:12px;background:#1fa463;color:#fff;padding:14px 18px;font:800 16px/1.3 inherit;cursor:pointer}.mhq-submit:disabled{opacity:.6;cursor:wait}.mhq-error{background:#fff1f1;color:#a51d27;border-radius:9px;padding:10px 12px;margin:0 0 12px}.mhq-success{padding:28px;text-align:center;background:#effaf4;border-radius:14px;color:#12633d}.mhq-success b,.mhq-success span{display:block}.mhq-success b{font-size:23px;margin-bottom:8px}@media(max-width:640px){.mhq-floating{left:14px;bottom:78px;padding:12px 17px}.mhq-dialog{padding:30px 20px 22px;border-radius:18px}.mhq-dialog h2{font-size:23px}.mhq-grid{grid-template-columns:1fr;gap:0}}
+    </style>
+    <script id="mhq-script">
+    (function(){
+        var modal=document.getElementById('mhq-modal');
+        var form=document.getElementById('mhq-form');
+        var error=document.getElementById('mhq-error');
+        var success=document.getElementById('mhq-success');
+        var startedAt=Date.now();
+        var endpoint=<?php echo wp_json_encode(rest_url('marcos-home/v1/lead')); ?>;
+        var product=<?php echo wp_json_encode($product); ?>;
+        var params=new URLSearchParams(location.search);
+        function readText(selector){var node=document.querySelector(selector);return node?node.textContent.trim():'';}
+        function productDetails(){
+            var note=form.elements.note.value.trim();
+            var parts=[];
+            if(product.slug==='fire-blaze'){
+                parts.push('المقاس: '+(readText('#mhf-size-summary')||'40 سم'));
+                parts.push('السعر الظاهر: '+(readText('#mhf-price')||'85')+' د.ك');
+            }else{
+                parts.push('المقاس: '+(readText('#mht-size-summary')||'1.5 متر'));
+                parts.push('اللون: '+(readText('#mht-color-summary')||'أبيض'));
+                parts.push('الخدمة: '+(readText('#mht-install-summary')||'بدون تركيب'));
+                parts.push('السعر الظاهر: '+(readText('#mht-price')||'40')+' د.ك');
+            }
+            if(note)parts.push('ملاحظة: '+note);
+            return parts.join(' — ');
+        }
+        function openModal(){startedAt=Date.now();modal.hidden=false;document.body.style.overflow='hidden';setTimeout(function(){form.elements.name.focus();},50);}
+        function closeModal(){modal.hidden=true;document.body.style.overflow='';}
+        document.getElementById('mhq-open').addEventListener('click',openModal);
+        modal.querySelectorAll('[data-mhq-close]').forEach(function(el){el.addEventListener('click',closeModal);});
+        document.addEventListener('keydown',function(event){if(event.key==='Escape'&&!modal.hidden)closeModal();});
+        document.addEventListener('click',function(event){
+            var target=event.target;
+            var order=target&&target.closest?target.closest('#mht-whatsapp,#mhf-whatsapp'):null;
+            if(!order)return;
+            event.preventDefault();event.stopImmediatePropagation();openModal();
+        },true);
+        form.addEventListener('submit',function(event){
+            event.preventDefault();
+            error.hidden=true;
+            if(!form.reportValidity())return;
+            var button=form.querySelector('button[type=submit]');
+            button.disabled=true;button.textContent='جاري تسجيل الطلب…';
+            var payload={
+                name:form.elements.name.value.trim(),phone:form.elements.phone.value.trim(),area:form.elements.area.value.trim(),
+                product:product.slug,details:productDetails(),page:location.pathname,
+                source:params.get('utm_source')||'direct',medium:params.get('utm_medium')||'',campaign:params.get('utm_campaign')||'',
+                consent:form.elements.consent.checked,website:form.elements.website.value,started_at:startedAt
+            };
+            fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(payload)})
+                .then(function(response){return response.json().then(function(data){if(!response.ok)throw new Error(data.message||'تعذر تسجيل الطلب.');return data;});})
+                .then(function(data){
+                    if(typeof window.fbq==='function'){window.fbq('track','Lead',{content_name:product.label,content_category:product.slug});}
+                    if(typeof window.snaptr==='function'){window.snaptr('track','START_CHECKOUT',{item_ids:[product.slug],item_category:product.label});}
+                    window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:'quote_lead_submit',product:product.slug,lead_id:data.lead_id});
+                    form.hidden=true;success.hidden=false;
+                    setTimeout(function(){window.location.assign(data.whatsapp_url);},800);
+                })
+                .catch(function(err){error.textContent=err.message;error.hidden=false;button.disabled=false;button.textContent='سجل الطلب وتابع على واتساب';});
+        });
+    }());
+    </script>
+    <?php
+}
+add_action('wp_footer', 'mh_control_quote_form', 996);
 
 function mh_control_ad_tracking_script(): void {
     $tracked_paths = ['/fire-blaze/', '/tv-tables/', '/services/', '/coffee-corner/'];
