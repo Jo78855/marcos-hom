@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.8.1
+ * Version: 1.9.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.8.1');
+define('MH_CONTROL_VERSION', '1.9.0');
+define('MH_CONTROL_SNAP_PIXEL_ID', '2770b368-fa3d-49f1-bf4e-685b62c10ecf');
 
 function mh_control_google_maps_url(): string {
     return 'https://maps.app.goo.gl/GMPEmTXtd66YkdpY6?g_st=iwb';
@@ -210,6 +211,53 @@ function mh_control_ad_tracking_script(): void {
     <?php
 }
 add_action('wp_footer', 'mh_control_ad_tracking_script', 999);
+
+function mh_control_snap_pixel_script(): void {
+    $path = mh_control_request_path();
+    $products = [
+        '/fire-blaze/' => [
+            'item_ids' => ['fire-blaze'],
+            'item_category' => 'Home Decor',
+            'price' => 85.00,
+            'currency' => 'KWD',
+        ],
+        '/tv-tables/' => [
+            'item_ids' => ['tv-tables'],
+            'item_category' => 'TV Tables',
+            'price' => 40.00,
+            'currency' => 'KWD',
+        ],
+    ];
+    $tracked_paths = array_merge(array_keys($products), ['/services/', '/coffee-corner/']);
+    if (!in_array($path, $tracked_paths, true)) return;
+
+    $product = $products[$path] ?? null;
+    ?>
+    <script id="mh-snap-pixel">
+    (function(e,t,n){
+        if(e.snaptr)return;
+        var a=e.snaptr=function(){a.handleRequest?a.handleRequest.apply(a,arguments):a.queue.push(arguments)};
+        a.queue=[];
+        var s='script',r=t.createElement(s);
+        r.async=true;r.src=n;
+        var u=t.getElementsByTagName(s)[0];
+        u.parentNode.insertBefore(r,u);
+    })(window,document,'https://sc-static.net/scevent.min.js');
+    snaptr('init',<?php echo wp_json_encode(MH_CONTROL_SNAP_PIXEL_ID); ?>);
+    snaptr('track','PAGE_VIEW');
+    <?php if (is_array($product)): ?>
+    var mhSnapProduct=<?php echo wp_json_encode($product); ?>;
+    snaptr('track','VIEW_CONTENT',mhSnapProduct);
+    document.addEventListener('click',function(event){
+        var target=event.target;
+        var link=target&&target.closest?target.closest('a[href*="wa.me/"]'):null;
+        if(link){snaptr('track','START_CHECKOUT',mhSnapProduct);}
+    },true);
+    <?php endif; ?>
+    </script>
+    <?php
+}
+add_action('wp_footer', 'mh_control_snap_pixel_script', 998);
 
 
 function mh_control_query_status(): void {
@@ -1138,9 +1186,7 @@ function mh_control_tv_console_script(): void {
             var msg='مرحباً ماركوز هوم، أريد طلب طاولة TV مقاس '+state.size+'، اللون '+state.color+'، '+state.installation+'، السعر '+finalPrice+' د.ك.';
             link.href='https://wa.me/96550204320?text='+encodeURIComponent(msg);
         }
-        if(typeof window.snaptr==='function'){window.snaptr('track','VIEW_CONTENT',{item_ids:['tv-tables'],item_category:'TV Tables',price:40,currency:'KWD'});}
         link.addEventListener('click',function(){
-            if(typeof window.snaptr==='function'){window.snaptr('track','START_CHECKOUT',{item_ids:['tv-tables'],price:Number(price.textContent),currency:'KWD'});}
             window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:'whatsapp_order_click',product:'tv-tables',value:Number(price.textContent),currency:'KWD'});
         });
         document.querySelectorAll('[data-mht-size]').forEach(function(button){
