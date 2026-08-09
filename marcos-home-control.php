@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.7.0
+ * Version: 1.8.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.7.0');
+define('MH_CONTROL_VERSION', '1.8.0');
 
 function mh_control_google_maps_url(): string {
     return 'https://maps.app.goo.gl/GMPEmTXtd66YkdpY6?g_st=iwb';
@@ -50,13 +50,44 @@ function mh_control_render_admin_page(): void {
     if (!current_user_can('manage_options')) {
         return;
     }
+    $stats = get_option('mh_control_ad_stats', []);
+    $stats = is_array($stats) ? $stats : [];
+    $views = 0;
+    $clicks = 0;
+    foreach ($stats as $row) {
+        if (!is_array($row)) continue;
+        $count = max(0, (int) ($row['count'] ?? 0));
+        if (($row['event'] ?? '') === 'page_view') $views += $count;
+        if (($row['event'] ?? '') === 'whatsapp_click') $clicks += $count;
+    }
+    uasort($stats, static fn($a, $b): int => strcmp((string) ($b['date'] ?? ''), (string) ($a['date'] ?? '')));
     ?>
-    <div class="wrap" dir="rtl">
-        <h1>ربط Marco's Home</h1>
-        <p><strong>حالة الإضافة:</strong> جاهزة</p>
-        <p><strong>الإصدار:</strong> <?php echo esc_html(MH_CONTROL_VERSION); ?></p>
-        <p>هذه الإضافة مخصصة لنشر تعديلات الموقع المعتمدة من قناة GitHub المنفصلة، بدون تعديل ملفات تطبيق Marco's Home.</p>
+    <div class="wrap mh-admin" dir="rtl">
+        <h1>لوحة إعلانات Marco's Home</h1>
+        <p><strong>حالة الربط:</strong> جاهز لتسجيل الزيارات والنقرات &nbsp; | &nbsp; <strong>الإصدار:</strong> <?php echo esc_html(MH_CONTROL_VERSION); ?></p>
+        <div class="mh-admin-cards">
+            <div><span>زيارات صفحات الإعلان</span><strong><?php echo esc_html(number_format_i18n($views)); ?></strong></div>
+            <div><span>نقرات واتساب</span><strong><?php echo esc_html(number_format_i18n($clicks)); ?></strong></div>
+            <div><span>نسبة التفاعل</span><strong><?php echo esc_html($views > 0 ? number_format_i18n(($clicks / $views) * 100, 1) . '%' : '—'); ?></strong></div>
+        </div>
+        <h2>تفاصيل آخر 90 يومًا</h2>
+        <p>البيانات مجمعة ولا تخزن اسم الزائر أو رقم الهاتف أو عنوان IP.</p>
+        <div class="mh-admin-table"><table class="widefat striped"><thead><tr><th>التاريخ</th><th>الصفحة</th><th>المصدر</th><th>الحملة</th><th>النتيجة</th><th>العدد</th></tr></thead><tbody>
+        <?php if ($stats === []): ?>
+            <tr><td colspan="6">لا توجد بيانات بعد. ستبدأ اللوحة في التسجيل عند زيارة روابط UTM الجديدة.</td></tr>
+        <?php else: foreach (array_slice($stats, 0, 200) as $row): ?>
+            <tr>
+                <td><?php echo esc_html((string) ($row['date'] ?? '')); ?></td>
+                <td><?php echo esc_html((string) ($row['page'] ?? '')); ?></td>
+                <td><?php echo esc_html((string) ($row['source'] ?? 'direct')); ?></td>
+                <td><?php echo esc_html((string) ($row['campaign'] ?? '—')); ?></td>
+                <td><?php echo esc_html(($row['event'] ?? '') === 'whatsapp_click' ? 'نقرة واتساب' : 'زيارة'); ?></td>
+                <td><strong><?php echo esc_html(number_format_i18n((int) ($row['count'] ?? 0))); ?></strong></td>
+            </tr>
+        <?php endforeach; endif; ?>
+        </tbody></table></div>
     </div>
+    <style>.mh-admin{max-width:1180px}.mh-admin-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0}.mh-admin-cards>div{background:#fff;border:1px solid #dcdcde;border-radius:12px;padding:24px}.mh-admin-cards span{display:block;color:#646970;font-weight:700}.mh-admin-cards strong{display:block;font-size:36px;color:#071a33;margin-top:12px}.mh-admin-table{overflow:auto;background:#fff}@media(max-width:700px){.mh-admin-cards{grid-template-columns:1fr}}</style>
     <?php
 }
 
@@ -92,6 +123,89 @@ function mh_control_register_status_route(): void {
     ]);
 }
 add_action('rest_api_init', 'mh_control_register_status_route');
+
+function mh_control_register_ad_event_route(): void {
+    register_rest_route('marcos-home/v1', '/ad-event', [
+        'methods' => 'POST',
+        'callback' => 'mh_control_record_ad_event',
+        'permission_callback' => '__return_true',
+    ]);
+}
+add_action('rest_api_init', 'mh_control_register_ad_event_route');
+
+function mh_control_record_ad_event(WP_REST_Request $request): WP_REST_Response {
+    $site_host = strtolower((string) wp_parse_url(home_url('/'), PHP_URL_HOST));
+    $origin = (string) $request->get_header('origin');
+    $referer = (string) $request->get_header('referer');
+    $request_host = strtolower((string) wp_parse_url($origin !== '' ? $origin : $referer, PHP_URL_HOST));
+    if ($request_host !== '' && $request_host !== $site_host && $request_host !== 'www.' . $site_host) {
+        return new WP_REST_Response(['recorded' => false], 403);
+    }
+
+    $event = sanitize_key((string) $request->get_param('event'));
+    $allowed_events = ['page_view', 'whatsapp_click'];
+    if (!in_array($event, $allowed_events, true)) {
+        return new WP_REST_Response(['recorded' => false], 400);
+    }
+
+    $clean = static function ($value, int $max = 80): string {
+        $value = sanitize_text_field((string) $value);
+        return function_exists('mb_substr') ? mb_substr($value, 0, $max) : substr($value, 0, $max);
+    };
+    $page = $clean($request->get_param('page'), 100);
+    $source = strtolower($clean($request->get_param('source'), 50));
+    $campaign = $clean($request->get_param('campaign'), 80);
+    $medium = $clean($request->get_param('medium'), 50);
+    $date = current_time('Y-m-d');
+    $source = $source !== '' ? $source : 'direct';
+    $page = $page !== '' ? $page : '/';
+
+    $stats = get_option('mh_control_ad_stats', []);
+    $stats = is_array($stats) ? $stats : [];
+    $key = md5(implode('|', [$date, $page, $source, $campaign, $medium, $event]));
+    $stats[$key] = [
+        'date' => $date,
+        'page' => $page,
+        'source' => $source,
+        'campaign' => $campaign,
+        'medium' => $medium,
+        'event' => $event,
+        'count' => max(0, (int) ($stats[$key]['count'] ?? 0)) + 1,
+    ];
+    $cutoff = gmdate('Y-m-d', strtotime('-90 days'));
+    $stats = array_filter($stats, static fn($row): bool => is_array($row) && (string) ($row['date'] ?? '') >= $cutoff);
+    update_option('mh_control_ad_stats', $stats, false);
+
+    return new WP_REST_Response(['recorded' => true], 200);
+}
+
+function mh_control_ad_tracking_script(): void {
+    $tracked_paths = ['/fire-blaze/', '/tv-tables/', '/services/', '/coffee-corner/'];
+    if (!in_array(mh_control_request_path(), $tracked_paths, true)) return;
+    ?>
+    <script id="mh-ad-tracking">
+    (function(){
+        var endpoint=<?php echo wp_json_encode(rest_url('marcos-home/v1/ad-event')); ?>;
+        var params=new URLSearchParams(location.search);
+        var source=params.get('utm_source')||'';
+        if(!source&&document.referrer){try{source=new URL(document.referrer).hostname.replace(/^www\./,'');}catch(e){}}
+        var payload={page:location.pathname,source:source||'direct',medium:params.get('utm_medium')||'',campaign:params.get('utm_campaign')||''};
+        function send(event){
+            var body=JSON.stringify(Object.assign({},payload,{event:event}));
+            if(navigator.sendBeacon){navigator.sendBeacon(endpoint,new Blob([body],{type:'application/json'}));}
+            else{fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:body,credentials:'same-origin',keepalive:true});}
+        }
+        var viewKey='mh_ad_view:'+location.pathname+':'+payload.source+':'+payload.campaign;
+        if(!sessionStorage.getItem(viewKey)){send('page_view');sessionStorage.setItem(viewKey,'1');}
+        document.addEventListener('click',function(event){
+            var link=event.target.closest('a[href*="wa.me/"]');
+            if(link){send('whatsapp_click');}
+        },true);
+    }());
+    </script>
+    <?php
+}
+add_action('wp_footer', 'mh_control_ad_tracking_script', 999);
 
 
 function mh_control_query_status(): void {
