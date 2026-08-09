@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.6.1
+ * Version: 1.7.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.6.1');
+define('MH_CONTROL_VERSION', '1.7.0');
 
 function mh_control_google_maps_url(): string {
     return 'https://maps.app.goo.gl/GMPEmTXtd66YkdpY6?g_st=iwb';
@@ -1059,9 +1059,11 @@ add_action('wp_footer', 'mh_control_tv_console_script', 100);
  * The WooCommerce product and fire.marcohom.com app remain untouched.
  */
 function mh_control_is_fire_diffuser_page(): bool {
-    return function_exists('is_product')
+    return (
+        function_exists('is_product')
         && is_singular('product')
-        && get_queried_object_id() === 6445;
+        && get_queried_object_id() === 6445
+    ) || mh_control_request_path() === '/fire-blaze/';
 }
 
 function mh_control_fire_diffuser_markup(): string {
@@ -1076,7 +1078,7 @@ function mh_control_fire_diffuser_markup(): string {
                     <span class="mhf-eyebrow">Fire Blaze — لهب مائي ثلاثي الأبعاد</span>
                     <h1>دفء بصري.<br>وعطر يملأ المكان.</h1>
                     <p>جهاز ديكور يعمل بالماء والكهرباء ليصنع لهبًا مائيًا واقعيًا، ويمكن إضافة الزيت العطري المفضل لديك.</p>
-                    <div class="mhf-badges"><span>ماء + كهرباء</span><span>زيوت اختيارية</span><span>5 مقاسات</span></div>
+                    <div class="mhf-badges"><span>تأثير مائي بلا حرارة</span><span>ماء + كهرباء</span><span>5 مقاسات</span></div>
                     <div class="mhf-actions">
                         <a class="mhf-btn mhf-btn--green" href="#mhf-order">اختار المقاس والسعر</a>
                         <a class="mhf-btn mhf-btn--outline" href="https://fire.marcohom.com/" target="_blank" rel="noopener">افتح تطبيق الفير</a>
@@ -1126,7 +1128,7 @@ function mh_control_fire_diffuser_markup(): string {
                     <div><b>3D</b><h3>لهب مائي واقعي</h3><p>بخار ماء وإضاءة يصنعان تأثير لهب ثلاثي الأبعاد.</p></div>
                     <div><b>H₂O</b><h3>تشغيل بالماء</h3><p>يعمل بخزان ماء مع توصيل كهربائي مناسب.</p></div>
                     <div><b>عطر</b><h3>زيوت اختيارية</h3><p>أضف الزيت العطري المفضل لتحويله إلى معطر ديكوري.</p></div>
-                    <div><b>UV</b><h3>أشعة فوق بنفسجية</h3><p>تقنية مدمجة ضمن نظام تشغيل الجهاز.</p></div>
+                    <div><b>5×</b><h3>خمسة مقاسات</h3><p>خيارات تبدأ من 40 سم وتصل إلى 1.50 متر.</p></div>
                 </div>
             </div>
         </section>
@@ -1168,6 +1170,27 @@ function mh_control_fire_diffuser_markup(): string {
                 <a class="mhf-btn mhf-btn--dark" href="https://wa.me/96550204320?text=<?php echo rawurlencode('مرحباً ماركوز هوم، أريد الاستفسار عن صيانة أو قطع غيار جهاز الفير المعطر.'); ?>" target="_blank" rel="noopener">تواصل مع الصيانة</a>
             </div>
         </section>
+
+        <section class="mhf-faq" aria-labelledby="mhf-faq-title">
+            <div class="mhf-shell">
+                <div class="mhf-heading">
+                    <span class="mhf-eyebrow mhf-eyebrow--blue">قبل الطلب</span>
+                    <h2 id="mhf-faq-title">أسئلة مهمة عن جهاز Fire Blaze</h2>
+                </div>
+                <div class="mhf-faq__grid">
+                    <details open><summary>هل الجهاز مصدر تدفئة؟</summary><p>لا. الجهاز يقدم تأثير لهب بصري ببخار الماء والإضاءة، وليس مدفأة أو مصدرًا للحرارة.</p></details>
+                    <details><summary>كيف يعمل الجهاز؟</summary><p>يعمل بالماء مع توصيل كهربائي مناسب. نوضح تعليمات التشغيل والتجهيز قبل تأكيد الطلب.</p></details>
+                    <details><summary>هل يمكن استخدام زيت عطري؟</summary><p>تتوفر إمكانية التعطير الاختيارية وفق تعليمات التشغيل الخاصة بالجهاز.</p></details>
+                    <details><summary>كيف يتم التوصيل والتركيب؟</summary><p>يتم تأكيد المقاس ومكان الاستخدام والمنطقة وموعد التوصيل أو التركيب قبل إتمام الطلب.</p></details>
+                </div>
+                <nav class="mhf-policies" aria-label="سياسات المتجر">
+                    <a href="<?php echo esc_url(home_url('/privacy-policy/')); ?>">الخصوصية</a>
+                    <a href="<?php echo esc_url(home_url('/terms-and-conditions/')); ?>">الشروط والأحكام</a>
+                    <a href="<?php echo esc_url(home_url('/shipping-and-installation/')); ?>">التوصيل والتركيب</a>
+                    <a href="<?php echo esc_url(home_url('/returns-and-refunds/')); ?>">الاستبدال والاسترجاع</a>
+                </nav>
+            </div>
+        </section>
         <a class="mhf-mobile-order" href="#mhf-order">اختار جهاز الفير — يبدأ من 85 د.ك</a>
     </main>
     <?php
@@ -1178,7 +1201,7 @@ function mh_control_render_fire_diffuser_page(): void {
     if (!mh_control_is_fire_diffuser_page()) {
         return;
     }
-    status_header(200);
+    mh_control_prepare_virtual_page();
     get_header();
     echo mh_control_fire_diffuser_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     get_footer();
@@ -1187,7 +1210,7 @@ function mh_control_render_fire_diffuser_page(): void {
 add_action('template_redirect', 'mh_control_render_fire_diffuser_page', 31);
 
 function mh_control_fire_diffuser_title(string $title): string {
-    return mh_control_is_fire_diffuser_page() ? 'جهاز الفير المعطر من ماركوز هوم | يبدأ من 85 د.ك' : $title;
+    return mh_control_is_fire_diffuser_page() ? 'جهاز Fire Blaze المائي | يبدأ من 85 د.ك — ماركوز هوم' : $title;
 }
 add_filter('pre_get_document_title', 'mh_control_fire_diffuser_title', 121);
 
@@ -1219,9 +1242,9 @@ function mh_control_fire_diffuser_head(): void {
     .mhf-features{padding:88px 0;background:var(--mhf-soft)}.mhf-heading{text-align:center;max-width:760px;margin:0 auto 42px}.mhf-heading p{color:#68798d;line-height:1.8;margin:0}.mhf-features__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.mhf-features__grid>div{background:#fff;border:1px solid #e1e8ef;border-radius:15px;padding:27px}.mhf-features__grid b{font-size:27px;color:var(--mhf-blue)}.mhf-features__grid h3{font-size:18px;color:var(--mhf-navy);margin:10px 0}.mhf-features__grid p{font-size:13px;line-height:1.75;color:#6b7b8e;margin:0}
     .mhf-gallery-section{padding:90px 0}.mhf-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:17px}.mhf-gallery figure{margin:0;border-radius:16px;overflow:hidden;background:#0a1018}.mhf-gallery__wide{grid-column:span 2}.mhf-gallery img{width:100%;height:350px;object-fit:cover;display:block;transition:transform .4s}.mhf-gallery__wide img{height:480px}.mhf-gallery figure:hover img{transform:scale(1.02)}
     .mhf-prices{padding:88px 0;background:var(--mhf-navy);color:#fff}.mhf-heading--light h2{color:#fff}.mhf-prices__grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.mhf-prices__grid>div{position:relative;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);border-radius:15px;padding:27px 20px}.mhf-prices__grid>div.is-featured{border:2px solid #4f9cff}.mhf-prices__grid i{position:absolute;top:-12px;right:17px;background:var(--mhf-blue);padding:5px 10px;border-radius:999px;font-size:10px;font-style:normal}.mhf-prices__grid span{display:block;color:#b9c6d5;font-weight:800}.mhf-prices__grid strong{display:block;font-size:34px;margin-top:12px}.mhf-prices__grid strong small{font-size:13px}
-    .mhf-support{padding:70px 0;background:#eaf1f7}.mhf-support__box{display:flex;align-items:center;justify-content:space-between;gap:30px;background:#fff;padding:44px 50px;border-radius:18px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mhf-support h2{font-size:clamp(29px,4vw,43px);color:var(--mhf-navy);margin:0 0 10px}.mhf-support p{margin:0;color:#68798e;line-height:1.8}.mhf-mobile-order{display:none}
+    .mhf-support{padding:70px 0;background:#eaf1f7}.mhf-support__box{display:flex;align-items:center;justify-content:space-between;gap:30px;background:#fff;padding:44px 50px;border-radius:18px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mhf-support h2{font-size:clamp(29px,4vw,43px);color:var(--mhf-navy);margin:0 0 10px}.mhf-support p{margin:0;color:#68798e;line-height:1.8}.mhf-faq{padding:82px 0;background:#fff}.mhf-faq__grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mhf-faq details{border:1px solid #dfe7ef;border-radius:14px;padding:20px 22px;background:#f8fafc}.mhf-faq summary{cursor:pointer;font-weight:900;color:var(--mhf-navy)}.mhf-faq details p{color:#617286;line-height:1.8;margin:14px 0 0}.mhf-policies{display:flex;justify-content:center;gap:12px 22px;flex-wrap:wrap;margin-top:30px}.mhf-policies a{color:var(--mhf-blue)!important;font-size:13px;font-weight:800}.mhf-mobile-order{display:none}
     @media(max-width:950px){.mhf-hero__grid,.mhf-builder__grid{grid-template-columns:1fr}.mhf-summary{position:static}.mhf-features__grid{grid-template-columns:1fr 1fr}.mhf-prices__grid{grid-template-columns:repeat(2,1fr)}.mhf-support__box{align-items:flex-start;flex-direction:column}}
-    @media(max-width:600px){.mhf-shell{width:min(100% - 28px,1180px)}.mhf-hero{padding:52px 0}.mhf-hero h1{font-size:42px}.mhf-hero__visual img{height:330px}.mhf-actions{display:grid}.mhf-btn{width:100%}.mhf-builder,.mhf-features,.mhf-gallery-section,.mhf-prices{padding:64px 0}.mhf-size-list,.mhf-features__grid,.mhf-gallery,.mhf-prices__grid{grid-template-columns:1fr}.mhf-gallery__wide{grid-column:auto}.mhf-gallery img,.mhf-gallery__wide img{height:290px}.mhf-support{padding:48px 0 90px}.mhf-support__box{padding:30px 24px}.mhf-mobile-order{display:flex;position:fixed;z-index:9999;left:14px;right:14px;bottom:12px;min-height:52px;align-items:center;justify-content:center;border-radius:10px;background:var(--mhf-green);color:#fff!important;font-weight:900;text-decoration:none!important;box-shadow:0 12px 32px rgba(0,0,0,.25)}}
+    @media(max-width:600px){.mhf-shell{width:min(100% - 28px,1180px)}.mhf-hero{padding:52px 0}.mhf-hero h1{font-size:42px}.mhf-hero__visual img{height:330px}.mhf-actions{display:grid}.mhf-btn{width:100%}.mhf-builder,.mhf-features,.mhf-gallery-section,.mhf-prices,.mhf-faq{padding:64px 0}.mhf-size-list,.mhf-features__grid,.mhf-gallery,.mhf-prices__grid,.mhf-faq__grid{grid-template-columns:1fr}.mhf-gallery__wide{grid-column:auto}.mhf-gallery img,.mhf-gallery__wide img{height:290px}.mhf-support{padding:48px 0 90px}.mhf-support__box{padding:30px 24px}.mhf-mobile-order{display:flex;position:fixed;z-index:9999;left:14px;right:14px;bottom:12px;min-height:52px;align-items:center;justify-content:center;border-radius:10px;background:var(--mhf-green);color:#fff!important;font-weight:900;text-decoration:none!important;box-shadow:0 12px 32px rgba(0,0,0,.25)}}
     </style>
     <?php
 }
@@ -1242,6 +1265,10 @@ function mh_control_fire_diffuser_script(): void {
             price.textContent=String(state.price);
             size.textContent=state.size;
             var msg='مرحباً ماركوز هوم، أريد طلب جهاز الفير المعطر مقاس '+state.size+'، السعر '+state.price+' د.ك.';
+            var params=new URLSearchParams(window.location.search);
+            var source=params.get('utm_source');
+            var campaign=params.get('utm_campaign');
+            if(source){msg+=' مصدر الزيارة: '+source+(campaign?' / '+campaign:'')+'.';}
             link.href='https://wa.me/96550204320?text='+encodeURIComponent(msg);
         }
         document.querySelectorAll('[data-mhf-size]').forEach(function(button){
@@ -2037,7 +2064,7 @@ function mh_control_services_data(): array {
             'name' => 'جهاز الفير المائي',
             'summary' => 'ديكور لهب ثلاثي الأبعاد يعمل ببخار الماء والكهرباء ويضيف نقطة مميزة للحائط أو الوحدة.',
             'details' => 'متوفر بخمسة مقاسات تبدأ من 40 سم حتى 150 سم، مع عرض الأسعار والمواصفات وطريقة الطلب.',
-            'url' => home_url('/product/الفير-المعطر/'),
+            'url' => home_url('/fire-blaze/'),
         ],
     ];
 }
@@ -2551,7 +2578,7 @@ function mh_control_render_custom_sitemap(): void {
         home_url('/'), home_url('/services/'), home_url('/portfolio/'), home_url('/about/'), home_url('/contact/'),
         home_url('/tv-tables/'), home_url('/coffee-corner/'),
         home_url('/product-category/نماذج-وتصميمات/'),
-        home_url('/product/باركية-خشب-k9188/'), home_url('/product/قاطع-الاعمدة/'), home_url('/product/الفير-المعطر/'),
+        home_url('/product/باركية-خشب-k9188/'), home_url('/product/قاطع-الاعمدة/'), home_url('/fire-blaze/'),
         home_url('/privacy-policy/'), home_url('/terms-and-conditions/'), home_url('/shipping-and-installation/'), home_url('/returns-and-refunds/'),
     ];
     status_header(200);
@@ -2776,6 +2803,15 @@ function mh_control_ad_page_seo_data(): array {
             'type' => 'product',
         ];
     }
+    if (mh_control_is_fire_diffuser_page()) {
+        return [
+            'canonical' => home_url('/fire-blaze/'),
+            'title' => 'جهاز Fire Blaze المائي | يبدأ من 85 د.ك — ماركوز هوم',
+            'description' => 'جهاز Fire Blaze ديكوري بتأثير لهب مائي بلا حرارة أو دخان، يعمل بالماء والكهرباء. خمسة مقاسات من 40 سم إلى 1.50 متر وأسعار من 85 إلى 270 د.ك داخل الكويت.',
+            'image' => 'https://marcohom.com/wp-content/uploads/2025/11/Art-Fireplace-AFW230-3D-Water-Vapor-Fireplace-product.webp',
+            'type' => 'product',
+        ];
+    }
     if (mh_control_is_policy_page()) {
         $pages = mh_control_policy_pages();
         $page = $pages[mh_control_policy_slug()];
@@ -2864,6 +2900,54 @@ function mh_control_services_structured_data(): string {
         . '</script>' . "\n";
 }
 
+function mh_control_fire_structured_data(): string {
+    if (!mh_control_is_fire_diffuser_page()) return '';
+    $canonical = home_url('/fire-blaze/');
+    $questions = [
+        ['هل جهاز Fire Blaze مصدر تدفئة؟', 'لا. الجهاز يقدم تأثير لهب بصري ببخار الماء والإضاءة، وليس مدفأة أو مصدرًا للحرارة.'],
+        ['كيف يعمل جهاز Fire Blaze؟', 'يعمل بالماء مع توصيل كهربائي مناسب، ويتم توضيح تعليمات التشغيل والتجهيز قبل تأكيد الطلب.'],
+        ['ما المقاسات والأسعار المتوفرة؟', 'تتوفر خمسة مقاسات: 40 سم بسعر 85 د.ك، 70 سم بسعر 135 د.ك، متر بسعر 180 د.ك، 1.20 متر بسعر 220 د.ك، و1.50 متر بسعر 270 د.ك.'],
+    ];
+    $faq = [];
+    foreach ($questions as $question) {
+        $faq[] = ['@type' => 'Question', 'name' => $question[0], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $question[1]]];
+    }
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@graph' => [
+            [
+                '@type' => 'Product',
+                '@id' => $canonical . '#product',
+                'name' => 'جهاز Fire Blaze المائي',
+                'description' => 'جهاز ديكوري بتأثير لهب مائي ثلاثي الأبعاد بلا حرارة أو دخان، متوفر بخمسة مقاسات داخل الكويت.',
+                'image' => ['https://marcohom.com/wp-content/uploads/2025/11/Art-Fireplace-AFW230-3D-Water-Vapor-Fireplace-product.webp'],
+                'brand' => ['@type' => 'Brand', 'name' => "Marco's Home"],
+                'offers' => [
+                    '@type' => 'AggregateOffer',
+                    'url' => $canonical,
+                    'priceCurrency' => 'KWD',
+                    'lowPrice' => '85',
+                    'highPrice' => '270',
+                    'offerCount' => '5',
+                    'availability' => 'https://schema.org/InStock',
+                ],
+            ],
+            ['@type' => 'FAQPage', '@id' => $canonical . '#faq', 'mainEntity' => $faq],
+            [
+                '@type' => 'BreadcrumbList',
+                '@id' => $canonical . '#breadcrumb',
+                'itemListElement' => [
+                    ['@type' => 'ListItem', 'position' => 1, 'name' => 'الرئيسية', 'item' => home_url('/')],
+                    ['@type' => 'ListItem', 'position' => 2, 'name' => 'جهاز Fire Blaze', 'item' => $canonical],
+                ],
+            ],
+        ],
+    ];
+    return '<script type="application/ld+json" id="mh-fire-schema">'
+        . wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        . '</script>' . "\n";
+}
+
 function mh_control_finish_head_schema_cleanup(): void {
     $head = (string) ob_get_clean();
     $head = (string) preg_replace(
@@ -2906,6 +2990,7 @@ function mh_control_finish_head_schema_cleanup(): void {
     echo mh_control_local_business_schema(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     echo mh_control_special_page_schema($seo); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     echo mh_control_services_structured_data(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    echo mh_control_fire_structured_data(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 }
 add_action('wp_head', 'mh_control_finish_head_schema_cleanup', 999999);
 
