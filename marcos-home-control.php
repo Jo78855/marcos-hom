@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.12.0
+ * Version: 1.12.1
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.12.0');
+define('MH_CONTROL_VERSION', '1.12.1');
 define('MH_CONTROL_SNAP_PIXEL_ID', '2770b368-fa3d-49f1-bf4e-685b62c10ecf');
 define('MH_CONTROL_META_PIXEL_ID', '761400161961314');
 define('MH_CONTROL_LEADS_DB_VERSION', '1.0');
@@ -707,6 +707,10 @@ function mh_control_homepage_markup(): string {
                     <a class="mh-card mh-card--wide" href="https://marcohom.com/product-category/%d9%86%d9%85%d8%a7%d8%b0%d8%ac-%d9%88%d8%aa%d8%b5%d9%85%d9%8a%d9%85%d8%a7%d8%aa/?service=tv-wall">
                         <img src="https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM-2.jpeg" alt="خلفيات شاشة وتصميمات ديكور من ماركوز هوم">
                         <span class="mh-card__shade"></span><span class="mh-card__text"><b>خلفيات الشاشة والديكور</b><small>تبدأ من 98 د.ك شامل التوريد والتركيب</small></span>
+                    </a>
+                    <a class="mh-card mh-card--wide" href="<?php echo esc_url(home_url('/design-198/')); ?>">
+                        <img src="<?php echo esc_url(mh_control_design_198_asset('design-198-beige-wood.webp')); ?>" alt="تصميم 198 الخشب الهرمي من ماركوز هوم">
+                        <span class="mh-card__shade"></span><span class="mh-card__text"><b>تصميم 198 — الخشب الهرمي</b><small>جديد — 3 ألوان وحاسبة سعر فورية</small></span>
                     </a>
                     <a class="mh-card" href="https://marcohom.com/coffee-corner/">
                         <img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة من ماركوز هوم">
