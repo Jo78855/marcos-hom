@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.11.0
+ * Version: 1.12.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.11.0');
+define('MH_CONTROL_VERSION', '1.12.0');
 define('MH_CONTROL_SNAP_PIXEL_ID', '2770b368-fa3d-49f1-bf4e-685b62c10ecf');
 define('MH_CONTROL_META_PIXEL_ID', '761400161961314');
 define('MH_CONTROL_LEADS_DB_VERSION', '1.0');
@@ -515,7 +515,7 @@ function mh_control_quote_form(): void {
 add_action('wp_footer', 'mh_control_quote_form', 996);
 
 function mh_control_ad_tracking_script(): void {
-    $tracked_paths = ['/fire-blaze/', '/tv-tables/', '/services/', '/coffee-corner/'];
+    $tracked_paths = ['/fire-blaze/', '/tv-tables/', '/design-198/', '/services/', '/coffee-corner/'];
     if (!in_array(mh_control_request_path(), $tracked_paths, true)) return;
     ?>
     <script id="mh-ad-tracking">
@@ -557,6 +557,12 @@ function mh_control_snap_pixel_script(): void {
             'price' => 40.00,
             'currency' => 'KWD',
         ],
+        '/design-198/' => [
+            'item_ids' => ['design-198'],
+            'item_category' => 'TV Wall Design',
+            'price' => 173.00,
+            'currency' => 'KWD',
+        ],
     ];
     $tracked_paths = array_merge(array_keys($products), ['/services/', '/coffee-corner/']);
     if (!in_array($path, $tracked_paths, true)) return;
@@ -581,7 +587,7 @@ function mh_control_snap_pixel_script(): void {
     document.addEventListener('click',function(event){
         var target=event.target;
         var link=target&&target.closest?target.closest('a[href*="wa.me/"]'):null;
-        if(link){snaptr('track','START_CHECKOUT',mhSnapProduct);}
+        if(link && !link.matches('#mh198-whatsapp,#mh198-mobile-whatsapp')){snaptr('track','START_CHECKOUT',mhSnapProduct);}
     },true);
     <?php endif; ?>
     </script>
@@ -606,6 +612,14 @@ function mh_control_meta_pixel_script(): void {
             'content_category' => 'TV Tables',
             'content_type' => 'product',
             'value' => 40.00,
+            'currency' => 'KWD',
+        ],
+        '/design-198/' => [
+            'content_ids' => ['design-198'],
+            'content_name' => 'Design 198 Pyramid Wood',
+            'content_category' => 'TV Wall Design',
+            'content_type' => 'product',
+            'value' => 173.00,
             'currency' => 'KWD',
         ],
     ];
@@ -636,7 +650,7 @@ function mh_control_meta_pixel_script(): void {
     document.addEventListener('click',function(event){
         var target=event.target;
         var link=target&&target.closest?target.closest('a[href*="wa.me/"]'):null;
-        if(link){fbq('track','Contact',mhMetaContact);}
+        if(link && !link.matches('#mh198-whatsapp,#mh198-mobile-whatsapp')){fbq('track','Contact',mhMetaContact);}
     },true);
     </script>
     <?php
@@ -2202,6 +2216,176 @@ add_action('wp_footer', 'mh_control_parquet_script', 103);
 
 
 /**
+ * Design 198 — The Pyramid Wood advertising and sales page.
+ */
+function mh_control_is_design_198_page(): bool {
+    return mh_control_request_path() === '/design-198/';
+}
+
+function mh_control_design_198_asset(string $name): string {
+    return plugins_url('assets/design-198/' . ltrim($name, '/'), __FILE__);
+}
+
+function mh_control_design_198_markup(): string {
+    $beige = mh_control_design_198_asset('design-198-beige-wood.webp');
+    $white = mh_control_design_198_asset('design-198-white.webp');
+    $charcoal = mh_control_design_198_asset('design-198-charcoal.webp');
+    $dimensions = mh_control_design_198_asset('design-198-dimensions.webp');
+    ob_start();
+    ?>
+    <main class="mh198" dir="rtl" data-design="198">
+        <section class="mh198-hero">
+            <div class="mh198-shell mh198-hero__grid">
+                <div class="mh198-hero__copy">
+                    <span class="mh198-kicker">تنفيذ داخل الكويت</span>
+                    <h1>تصميم 198<br><em>الخشب الهرمي</em></h1>
+                    <p>خلفية شاشة متكاملة بتكوين هندسي، طاولة معلّقة وكابينة أرفف بإضاءة داخلية. اختَر مساحة الحائط ومقاس الطاولة وشاهد السعر المبدئي فورًا.</p>
+                    <div class="mh198-badges"><span>طاولة قياسية 3 م</span><span>ارتفاع كلي 2.90 م</span><span>عمق 32 سم</span></div>
+                    <a class="mh198-btn mh198-btn--primary" href="#mh198-calculator">احسب سعر تصميمك</a>
+                </div>
+                <figure class="mh198-hero__visual">
+                    <img id="mh198-main-image" src="<?php echo esc_url($beige); ?>" alt="تصميم 198 الخشب الهرمي باللون البيج الخشبي من ماركوز هوم" width="1440" height="1080" fetchpriority="high">
+                    <figcaption id="mh198-main-caption">بيج خشبي — الاختيار الافتراضي</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="mh198-gallery" aria-label="صور تصميم 198">
+            <div class="mh198-shell">
+                <div class="mh198-heading"><span class="mh198-kicker mh198-kicker--blue">الألوان والمقاسات</span><h2>شاهد التصميم الحقيقي قبل الاختيار</h2><p>اضغط على اللون لتحديث الصورة الرئيسية مباشرة.</p></div>
+                <div class="mh198-gallery__grid">
+                    <button type="button" class="mh198-thumb is-active" data-mh198-color="بيج خشبي" data-mh198-image="<?php echo esc_url($beige); ?>" aria-pressed="true"><img src="<?php echo esc_url($beige); ?>" alt="تصميم 198 باللون البيج الخشبي" loading="lazy"><span>بيج خشبي</span></button>
+                    <button type="button" class="mh198-thumb" data-mh198-color="أبيض" data-mh198-image="<?php echo esc_url($white); ?>" aria-pressed="false"><img src="<?php echo esc_url($white); ?>" alt="تصميم 198 باللون الأبيض" loading="lazy"><span>أبيض</span></button>
+                    <button type="button" class="mh198-thumb" data-mh198-color="رمادي غامق" data-mh198-image="<?php echo esc_url($charcoal); ?>" aria-pressed="false"><img src="<?php echo esc_url($charcoal); ?>" alt="تصميم 198 باللون الرمادي الغامق" loading="lazy"><span>رمادي غامق</span></button>
+                    <button type="button" class="mh198-thumb mh198-thumb--dimensions" data-mh198-color="المقاسات" data-mh198-image="<?php echo esc_url($dimensions); ?>" aria-pressed="false"><img src="<?php echo esc_url($dimensions); ?>" alt="مقاسات تصميم 198 الخشب الهرمي" loading="lazy"><span>صورة المقاسات</span></button>
+                </div>
+            </div>
+        </section>
+
+        <section class="mh198-calculator" id="mh198-calculator">
+            <div class="mh198-shell mh198-calculator__grid">
+                <div class="mh198-form">
+                    <span class="mh198-kicker mh198-kicker--blue">حاسبة السعر المبدئي</span>
+                    <h2>كوّن تصميمك في 3 خطوات</h2>
+                    <fieldset><legend><b>1</b> اختر عرض الحائط</legend><div class="mh198-options mh198-options--walls">
+                        <button type="button" class="is-active" data-mh198-wall="3 إلى أقل من 3.5 متر" data-mh198-wall-min="3" data-mh198-wall-max="3.49" data-mh198-wall-price="173" aria-pressed="true"><strong>3 — أقل من 3.5 م</strong><span>173 د.ك</span></button>
+                        <button type="button" data-mh198-wall="3.5 إلى 4.5 متر" data-mh198-wall-min="3.5" data-mh198-wall-max="4.5" data-mh198-wall-price="198" aria-pressed="false"><strong>3.5 — 4.5 م</strong><span>198 د.ك</span></button>
+                        <button type="button" data-mh198-wall="4.60 إلى 5.5 متر" data-mh198-wall-min="4.6" data-mh198-wall-max="5.5" data-mh198-wall-price="218" aria-pressed="false"><strong>4.60 — 5.5 م</strong><span>218 د.ك</span></button>
+                        <button type="button" data-mh198-wall="5.60 إلى 7.5 متر" data-mh198-wall-min="5.6" data-mh198-wall-max="7.5" data-mh198-wall-price="238" aria-pressed="false"><strong>5.60 — 7.5 م</strong><span>238 د.ك</span></button>
+                        <button type="button" data-mh198-wall="مقاس خاص: أقل من 3 أو أكثر من 7.5 متر" data-mh198-wall-min="0" data-mh198-wall-max="0" data-mh198-wall-price="0" data-mh198-custom="1" aria-pressed="false"><strong>مقاس خاص</strong><span>يحتاج مراجعة</span></button>
+                    </div></fieldset>
+
+                    <fieldset><legend><b>2</b> اختر عرض الطاولة</legend><div class="mh198-options mh198-options--tables">
+                        <button type="button" data-mh198-table="2" data-mh198-adjustment="-30" aria-pressed="false"><strong>2 متر</strong><span>خصم 30 د.ك</span></button>
+                        <button type="button" data-mh198-table="2.5" data-mh198-adjustment="-15" aria-pressed="false"><strong>2.5 متر</strong><span>خصم 15 د.ك</span></button>
+                        <button type="button" class="is-active" data-mh198-table="3" data-mh198-adjustment="0" aria-pressed="true"><strong>3 متر</strong><span>مشمولة</span></button>
+                        <button type="button" data-mh198-table="3.5" data-mh198-adjustment="15" aria-pressed="false"><strong>3.5 متر</strong><span>زيادة 15 د.ك</span></button>
+                        <button type="button" data-mh198-table="4" data-mh198-adjustment="25" aria-pressed="false"><strong>4 متر</strong><span>زيادة 25 د.ك</span></button>
+                        <button type="button" data-mh198-table="4.5" data-mh198-adjustment="40" aria-pressed="false"><strong>4.5 متر</strong><span>زيادة 40 د.ك</span></button>
+                        <button type="button" data-mh198-table="5" data-mh198-adjustment="50" aria-pressed="false"><strong>5 متر</strong><span>زيادة 50 د.ك</span></button>
+                    </div></fieldset>
+
+                    <fieldset><legend><b>3</b> اختر اللون</legend><div class="mh198-colors">
+                        <button type="button" class="is-active" data-mh198-color-choice="بيج خشبي" data-mh198-color-image="<?php echo esc_url($beige); ?>" aria-pressed="true"><i style="--mh198-swatch:#c9a87c"></i><span>بيج خشبي</span></button>
+                        <button type="button" data-mh198-color-choice="أبيض" data-mh198-color-image="<?php echo esc_url($white); ?>" aria-pressed="false"><i style="--mh198-swatch:#f4f4f1"></i><span>أبيض</span></button>
+                        <button type="button" data-mh198-color-choice="رمادي غامق" data-mh198-color-image="<?php echo esc_url($charcoal); ?>" aria-pressed="false"><i style="--mh198-swatch:#3e434a"></i><span>رمادي غامق</span></button>
+                    </div></fieldset>
+                </div>
+
+                <aside class="mh198-summary" aria-live="polite">
+                    <span>الإجمالي المبدئي</span>
+                    <strong id="mh198-total">173 <small>د.ك</small></strong>
+                    <div id="mh198-special" class="mh198-special" hidden>مقاس خاص — نراجع الصورة والمقاس ونرسل لك السعر.</div>
+                    <ul>
+                        <li><span>فئة الحائط</span><b id="mh198-wall-summary">3 إلى أقل من 3.5 متر</b></li>
+                        <li><span>سعر الحائط</span><b id="mh198-wall-price">173 د.ك</b></li>
+                        <li><span>عرض الطاولة</span><b id="mh198-table-summary">3 متر</b></li>
+                        <li><span>تعديل الطاولة</span><b id="mh198-adjustment">بدون تعديل</b></li>
+                        <li><span>اللون</span><b id="mh198-color-summary">بيج خشبي</b></li>
+                    </ul>
+                    <div id="mh198-warning" class="mh198-warning" hidden>تنبيه: الطاولة المختارة أعرض من الحد الأعلى لفئة الحائط؛ يلزم تأكيد المقاس قبل التنفيذ.</div>
+                    <a id="mh198-whatsapp" class="mh198-btn mh198-btn--whatsapp" href="https://wa.me/96550204320" target="_blank" rel="noopener">أرسل الاختيار على واتساب</a>
+                    <p>السعر مبدئي ويُعتمد بعد مراجعة صورة الحائط والمقاسات وموقع التنفيذ داخل الكويت.</p>
+                </aside>
+            </div>
+        </section>
+
+        <section class="mh198-specs"><div class="mh198-shell"><div class="mh198-heading"><span class="mh198-kicker mh198-kicker--blue">المواصفات القياسية</span><h2>تفاصيل واضحة قبل التنفيذ</h2></div><div class="mh198-specs__grid">
+            <div><strong>3 م</strong><h3>الطاولة المعلّقة</h3><p>المقاس القياسي المشمول في سعر الشريحة.</p></div>
+            <div><strong>2 م</strong><h3>كابينة الأرفف</h3><p>مع إضاءة داخلية وتكوين جانبي عملي.</p></div>
+            <div><strong>2 × 1.20 م</strong><h3>مساحة التلفزيون</h3><p>عرض مترين وارتفاع 1.20 متر.</p></div>
+            <div><strong>2.90 م</strong><h3>الارتفاع الكلي</h3><p>مقاس اللوح 1.20 × 2.90 متر.</p></div>
+            <div><strong>32 سم</strong><h3>عمق الطاولة</h3><p>عمق عملي بتصميم معلّق ونظيف.</p></div>
+            <div><strong>الكويت</strong><h3>نطاق التنفيذ</h3><p>مراجعة المقاس والتجهيز والتركيب قبل الاعتماد.</p></div>
+        </div></div></section>
+        <a id="mh198-mobile-whatsapp" class="mh198-mobile-whatsapp" href="https://wa.me/96550204320" target="_blank" rel="noopener">اطلب تصميم 198 على واتساب</a>
+    </main>
+    <?php
+    return (string) ob_get_clean();
+}
+
+function mh_control_render_design_198_page(): void {
+    if (!mh_control_is_design_198_page()) return;
+    mh_control_prepare_virtual_page();
+    get_header();
+    echo mh_control_design_198_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    get_footer();
+    exit;
+}
+add_action('template_redirect', 'mh_control_render_design_198_page', 22);
+
+function mh_control_design_198_title(string $title): string {
+    return mh_control_is_design_198_page() ? 'تصميم 198 الخشب الهرمي | خلفية شاشة في الكويت — ماركوز هوم' : $title;
+}
+add_filter('pre_get_document_title', 'mh_control_design_198_title', 128);
+
+function mh_control_design_198_head(): void {
+    if (!mh_control_is_design_198_page()) return;
+    ?>
+    <style id="mh-design-198-styles">
+    :root{--mh198-blue:#1266d6;--mh198-navy:#071a33;--mh198-ink:#14263b;--mh198-soft:#f1f5f9;--mh198-line:#dce5ee;--mh198-green:#20b95a;--mh198-gold:#d6aa62}.mh198{font-family:Tahoma,Arial,sans-serif;color:var(--mh198-ink);background:#fff;overflow:hidden}.mh198 *{box-sizing:border-box}.mh198-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}.mh198-hero{padding:74px 0;background:linear-gradient(135deg,#f8fafc,#e7eef6)}.mh198-hero__grid{display:grid;grid-template-columns:.82fr 1.18fr;gap:54px;align-items:center}.mh198-kicker{display:inline-flex;align-items:center;gap:10px;color:#60738a;font-size:14px;font-weight:900;margin-bottom:15px}.mh198-kicker:before{content:"";width:34px;height:2px;background:var(--mh198-gold)}.mh198-kicker--blue{color:var(--mh198-blue)}.mh198-hero h1{font-size:clamp(44px,6vw,74px);line-height:1.08;margin:0 0 20px;color:var(--mh198-navy);font-weight:900}.mh198-hero h1 em{font-style:normal;color:var(--mh198-blue)}.mh198-hero p{font-size:18px;line-height:1.9;color:#617389;margin:0 0 24px}.mh198-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:27px}.mh198-badges span{background:#fff;border:1px solid var(--mh198-line);border-radius:999px;padding:9px 13px;font-size:12px;font-weight:800}.mh198-btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:12px 23px;border-radius:9px;text-decoration:none!important;font-weight:900}.mh198-btn--primary{background:var(--mh198-navy);color:#fff!important}.mh198-btn--whatsapp{width:100%;background:var(--mh198-green);color:#fff!important}.mh198-hero__visual{margin:0;border-radius:20px;overflow:hidden;background:#e6ebef;box-shadow:0 24px 55px rgba(7,26,51,.16);position:relative}.mh198-hero__visual img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.mh198-hero__visual figcaption{position:absolute;inset-inline:18px;bottom:16px;background:rgba(7,26,51,.88);color:#fff;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800}.mh198-gallery{padding:86px 0}.mh198-heading{text-align:center;max-width:750px;margin:0 auto 40px}.mh198-heading h2,.mh198-form h2{font-size:clamp(32px,5vw,50px);color:var(--mh198-navy);line-height:1.2;margin:0 0 13px}.mh198-heading p{color:#687a8e;margin:0}.mh198-gallery__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.mh198-thumb{border:1px solid var(--mh198-line);background:#fff;border-radius:14px;padding:0;overflow:hidden;cursor:pointer;font:800 13px Tahoma,Arial;color:var(--mh198-navy);text-align:right}.mh198-thumb img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.mh198-thumb span{display:block;padding:13px 15px}.mh198-thumb.is-active{outline:3px solid var(--mh198-blue);outline-offset:2px}.mh198-calculator{padding:88px 0;background:var(--mh198-soft)}.mh198-calculator__grid{display:grid;grid-template-columns:1.25fr .75fr;gap:36px;align-items:start}.mh198-form fieldset{border:0;padding:0;margin:0 0 30px}.mh198-form legend{font-size:17px;font-weight:900;color:var(--mh198-navy);margin-bottom:13px}.mh198-form legend b{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--mh198-blue);color:#fff;margin-left:7px}.mh198-options{display:grid;gap:10px}.mh198-options--walls{grid-template-columns:repeat(2,1fr)}.mh198-options--tables{grid-template-columns:repeat(4,1fr)}.mh198-options button,.mh198-colors button{border:1px solid var(--mh198-line);background:#fff;border-radius:11px;cursor:pointer;font:inherit;color:#44586e}.mh198-options button{padding:16px 13px;text-align:right}.mh198-options strong,.mh198-options span{display:block}.mh198-options strong{font-size:13px;color:var(--mh198-navy)}.mh198-options span{font-size:11px;margin-top:6px}.mh198-options button.is-active,.mh198-colors button.is-active{outline:2px solid var(--mh198-blue);outline-offset:1px;background:#f6f9ff}.mh198-colors{display:flex;gap:10px;flex-wrap:wrap}.mh198-colors button{display:flex;align-items:center;gap:8px;padding:10px 14px;font-weight:800}.mh198-colors i{width:27px;height:27px;border-radius:50%;background:var(--mh198-swatch);border:1px solid rgba(0,0,0,.16)}.mh198-summary{position:sticky;top:24px;background:var(--mh198-navy);color:#fff;border-radius:18px;padding:30px;box-shadow:0 20px 50px rgba(7,26,51,.18)}.mh198-summary>span{color:#b1c0d0;font-size:13px}.mh198-summary>strong{display:block;font-size:56px;line-height:1;margin:12px 0 20px}.mh198-summary>strong small{font-size:17px}.mh198-summary ul{list-style:none;padding:0;margin:0 0 20px;border-block:1px solid rgba(255,255,255,.13)}.mh198-summary li{display:flex;justify-content:space-between;gap:12px;padding:11px 0;font-size:12px;color:#aebed0}.mh198-summary li+li{border-top:1px solid rgba(255,255,255,.08)}.mh198-summary li b{color:#fff;text-align:left}.mh198-warning,.mh198-special{background:#fff3cd;color:#593f00;border-radius:9px;padding:12px;font-size:12px;line-height:1.65;margin-bottom:16px}.mh198-special{background:#e6f1ff;color:#0b417e}.mh198-summary>p{color:#98aabd;font-size:11px;line-height:1.7;text-align:center;margin:13px 0 0}.mh198-specs{padding:88px 0}.mh198-specs__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.mh198-specs__grid>div{border:1px solid var(--mh198-line);border-radius:15px;padding:25px;background:#fff}.mh198-specs strong{font-size:27px;color:var(--mh198-blue)}.mh198-specs h3{color:var(--mh198-navy);margin:10px 0 7px}.mh198-specs p{color:#6a7c90;font-size:13px;line-height:1.7;margin:0}.mh198-mobile-whatsapp{display:none}
+    @media(max-width:950px){.mh198-hero__grid,.mh198-calculator__grid{grid-template-columns:1fr}.mh198-summary{position:static}.mh198-options--tables{grid-template-columns:repeat(3,1fr)}.mh198-gallery__grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:600px){.mh198-shell{width:min(100% - 28px,1180px)}.mh198-hero{padding:50px 0}.mh198-hero h1{font-size:42px}.mh198-hero p{font-size:15px}.mh198-gallery,.mh198-calculator,.mh198-specs{padding:60px 0}.mh198-gallery__grid{grid-template-columns:1fr 1fr;gap:10px}.mh198-options--walls,.mh198-options--tables{grid-template-columns:1fr 1fr}.mh198-specs__grid{grid-template-columns:1fr}.mh198-mobile-whatsapp{display:flex;position:fixed;z-index:9999;left:12px;right:12px;bottom:10px;min-height:54px;align-items:center;justify-content:center;border-radius:10px;background:var(--mh198-green);color:#fff!important;text-decoration:none!important;font-weight:900;box-shadow:0 14px 35px rgba(0,0,0,.28)}body:has(.mh198){padding-bottom:72px}}
+    </style>
+    <?php
+}
+add_action('wp_head', 'mh_control_design_198_head', 109);
+
+function mh_control_design_198_script(): void {
+    if (!mh_control_is_design_198_page()) return;
+    ?>
+    <script id="mh-design-198-script">
+    document.addEventListener('DOMContentLoaded',function(){
+        var root=document.querySelector('.mh198');if(!root)return;
+        var state={wall:'3 إلى أقل من 3.5 متر',wallMin:3,wallMax:3.49,wallPrice:173,custom:false,table:3,adjustment:0,color:'بيج خشبي'};
+        var main=document.getElementById('mh198-main-image'),caption=document.getElementById('mh198-main-caption');
+        var wallSummary=document.getElementById('mh198-wall-summary'),wallPrice=document.getElementById('mh198-wall-price'),tableSummary=document.getElementById('mh198-table-summary'),adjustment=document.getElementById('mh198-adjustment'),colorSummary=document.getElementById('mh198-color-summary'),total=document.getElementById('mh198-total'),warning=document.getElementById('mh198-warning'),special=document.getElementById('mh198-special');
+        var wa=document.getElementById('mh198-whatsapp'),mobileWa=document.getElementById('mh198-mobile-whatsapp');
+        function campaign(){try{return JSON.parse(localStorage.getItem('mh_campaign_params')||'{}');}catch(e){return {};}}
+        function adjustmentLabel(){return state.adjustment<0?'خصم '+Math.abs(state.adjustment)+' د.ك':state.adjustment>0?'زيادة '+state.adjustment+' د.ك':'بدون تعديل';}
+        function update(){
+            var sum=state.wallPrice+state.adjustment,isTooWide=!state.custom&&state.table>state.wallMax,track=campaign();
+            wallSummary.textContent=state.wall;wallPrice.textContent=state.custom?'تسعير خاص':state.wallPrice+' د.ك';tableSummary.textContent=state.table+' متر';adjustment.textContent=adjustmentLabel();colorSummary.textContent=state.color;
+            total.innerHTML=state.custom?'بعد المراجعة':sum+' <small>د.ك</small>';special.hidden=!state.custom;warning.hidden=!isTooWide;
+            var lines=['مرحباً ماركوز هوم، أريد الاستفسار عن تصميم 198 — الخشب الهرمي.','اللون: '+state.color,'عرض الحائط: '+state.wall,'عرض الطاولة: '+state.table+' متر','فئة المقاس: '+state.wall,'سعر فئة الحائط: '+(state.custom?'يحتاج مراجعة':state.wallPrice+' د.ك'),'تعديل الطاولة: '+adjustmentLabel(),'الإجمالي المبدئي: '+(state.custom?'تسعير خاص بعد المراجعة':sum+' د.ك'),'التنفيذ: داخل الكويت','مصدر الإعلان: '+(track.utm_source||'direct'),'وسيط الحملة: '+(track.utm_medium||'—'),'اسم الحملة: '+(track.utm_campaign||'—'),'محتوى الإعلان: '+(track.utm_content||'—'),'كلمة الإعلان: '+(track.utm_term||'—'),'fbclid: '+(track.fbclid||'—')];
+            if(isTooWide)lines.push('تنبيه المقاس: الطاولة أعرض من فئة الحائط المختارة وتحتاج تأكيد.');
+            var href='https://wa.me/96550204320?text='+encodeURIComponent(lines.join('\n'));wa.href=href;mobileWa.href=href;
+        }
+        function activate(group,button){root.querySelectorAll(group).forEach(function(b){b.classList.remove('is-active');b.setAttribute('aria-pressed','false');});button.classList.add('is-active');button.setAttribute('aria-pressed','true');}
+        root.querySelectorAll('[data-mh198-wall]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-wall]',button);state.wall=button.dataset.mh198Wall;state.wallMin=Number(button.dataset.mh198WallMin);state.wallMax=Number(button.dataset.mh198WallMax);state.wallPrice=Number(button.dataset.mh198WallPrice);state.custom=button.dataset.mh198Custom==='1';update();});});
+        root.querySelectorAll('[data-mh198-table]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-table]',button);state.table=Number(button.dataset.mh198Table);state.adjustment=Number(button.dataset.mh198Adjustment);update();});});
+        root.querySelectorAll('[data-mh198-color-choice]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-color-choice]',button);state.color=button.dataset.mh198ColorChoice;main.src=button.dataset.mh198ColorImage;main.alt='تصميم 198 الخشب الهرمي باللون '+state.color;caption.textContent=state.color;root.querySelectorAll('[data-mh198-color]').forEach(function(b){b.classList.toggle('is-active',b.dataset.mh198Color===state.color);b.setAttribute('aria-pressed',b.dataset.mh198Color===state.color?'true':'false');});update();});});
+        root.querySelectorAll('[data-mh198-color]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-color]',button);main.src=button.dataset.mh198Image;main.alt=button.querySelector('img').alt;caption.textContent=button.dataset.mh198Color;if(button.dataset.mh198Color!=='المقاسات'){state.color=button.dataset.mh198Color;root.querySelectorAll('[data-mh198-color-choice]').forEach(function(b){b.classList.toggle('is-active',b.dataset.mh198ColorChoice===state.color);b.setAttribute('aria-pressed',b.dataset.mh198ColorChoice===state.color?'true':'false');});update();}});});
+        [wa,mobileWa].forEach(function(link){link.addEventListener('click',function(){if(typeof window.fbq==='function')window.fbq('track','Contact',{content_ids:['design-198'],content_name:'Design 198 Pyramid Wood'});if(typeof window.snaptr==='function')window.snaptr('track','START_CHECKOUT',{item_ids:['design-198'],item_category:'TV Wall Design',price:state.custom?0:state.wallPrice+state.adjustment,currency:'KWD'});});});
+        update();
+    });
+    </script>
+    <?php
+}
+add_action('wp_footer', 'mh_control_design_198_script', 105);
+
+
+/**
  * TV wall backgrounds and integrated decor — roadmap step 2, product 6 of 6.
  */
 function mh_control_is_tv_wall_archive(): bool {
@@ -2295,6 +2479,10 @@ function mh_control_tv_wall_markup(): string {
         <section class="mhtw-gallery-section">
             <div class="mhtw-shell">
                 <div class="mhtw-heading"><span class="mhtw-eyebrow mhtw-eyebrow--blue">تصميمات وأفكار</span><h2>اختار الشكل الأقرب لمساحتك</h2><p>أرسل لنا صورة الحائط وسنرشح لك التكوين والمقاسات الأنسب.</p></div>
+                <a class="mhtw-featured-198" href="<?php echo esc_url(home_url('/design-198/')); ?>">
+                    <img src="<?php echo esc_url(mh_control_design_198_asset('design-198-beige-wood.webp')); ?>" alt="تصميم 198 الخشب الهرمي باللون البيج الخشبي" loading="lazy">
+                    <span><small>جديد — حاسبة سعر فورية</small><strong>تصميم 198 — الخشب الهرمي</strong><em>ثلاثة ألوان، مقاسات مرنة وتنفيذ داخل الكويت</em><b>شاهد التصميم واحسب السعر</b></span>
+                </a>
                 <div class="mhtw-gallery">
                     <figure class="mhtw-gallery__tall"><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0012-580x879.jpg" alt="خلفية شاشة خشبية مع طاولة معلقة" loading="lazy"></figure>
                     <figure><img src="https://marcohom.com/wp-content/uploads/2025/11/Generated-Image-November-04-2025-9_02PM-580x387.png" alt="تصميم خلفية شاشة مودرن" loading="lazy"></figure>
@@ -2354,9 +2542,10 @@ function mh_control_tv_wall_head(): void {
     .mhtw-builder{padding:88px 0}.mhtw-builder__grid{display:grid;grid-template-columns:1.22fr .78fr;gap:38px;align-items:start}.mhtw-builder h2,.mhtw-heading h2,.mhtw-model h2{font-size:clamp(34px,5vw,52px);color:var(--mhtw-navy);margin:0 0 30px}.mhtw-measures{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:27px}.mhtw-measures label span{display:block;font-size:13px;font-weight:800;margin-bottom:8px}.mhtw-measures input{width:100%;height:57px;border:1px solid #dbe3eb;border-radius:11px;padding:0 15px;font:900 18px Tahoma,Arial;color:var(--mhtw-navy)}.mhtw-builder fieldset{border:0;padding:0;margin:0 0 27px}.mhtw-builder legend{font-size:16px;font-weight:900;color:var(--mhtw-navy);margin-bottom:12px}.mhtw-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.mhtw-option,.mhtw-chips button,.mhtw-colors button{font:inherit;border:1px solid #dce4ec;background:#fff;border-radius:11px;cursor:pointer;color:#43566a}.mhtw-option{padding:17px 13px;text-align:right}.mhtw-option b,.mhtw-option small{display:block}.mhtw-option small{font-size:11px;line-height:1.6;color:#718195;margin-top:5px}.mhtw-chips,.mhtw-colors{display:flex;gap:9px;flex-wrap:wrap}.mhtw-chips button{padding:11px 17px;font-weight:800}.mhtw-colors button{padding:9px 14px;display:flex;align-items:center;gap:7px;font-weight:800}.mhtw-colors i{width:23px;height:23px;border-radius:50%;background:var(--sw);border:1px solid rgba(0,0,0,.15)}.mhtw-option.is-active,.mhtw-chips button.is-active,.mhtw-colors button.is-active{outline:2px solid var(--mhtw-blue);outline-offset:1px;background:#f5f9ff}
     .mhtw-summary{position:sticky;top:25px;border-radius:18px;padding:31px;background:var(--mhtw-navy);color:#fff;box-shadow:0 20px 45px rgba(7,26,51,.18)}.mhtw-summary>span{color:#acbdcf;font-size:13px}.mhtw-summary>strong{display:block;font-size:61px;line-height:1;margin:12px 0 7px}.mhtw-summary>strong small{font-size:17px}.mhtw-summary>em{display:block;font-style:normal;color:#d6e2ef;font-size:12px;margin-bottom:22px}.mhtw-summary ul{list-style:none;padding:0;margin:0 0 23px;border-block:1px solid rgba(255,255,255,.13)}.mhtw-summary li{display:flex;justify-content:space-between;gap:14px;padding:11px 0;color:#aebed0;font-size:12px}.mhtw-summary li+li{border-top:1px solid rgba(255,255,255,.09)}.mhtw-summary li b{color:#fff}.mhtw-summary>p{text-align:center;color:#98aabd;font-size:11px;line-height:1.6;margin:13px 0 0}
     .mhtw-model{padding:88px 0;background:var(--mhtw-soft)}.mhtw-model__grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:45px;align-items:center}.mhtw-model p{color:#687a8d;line-height:1.9}.mhtw-model ul{list-style:none;padding:0;margin:25px 0 0}.mhtw-model li{padding:11px 0;border-bottom:1px solid #d9e2ea;color:#526478}.mhtw-model figure{margin:0;border-radius:18px;overflow:hidden;box-shadow:0 20px 55px rgba(7,26,51,.13)}.mhtw-model img{width:100%;height:440px;object-fit:cover;display:block}
+    .mhtw-featured-198{display:grid;grid-template-columns:1.15fr .85fr;align-items:center;gap:0;overflow:hidden;margin:0 0 25px;border:2px solid var(--mhtw-blue);border-radius:18px;background:#f5f9ff;text-decoration:none!important}.mhtw-featured-198>img{width:100%;height:390px;object-fit:cover;display:block}.mhtw-featured-198>span{display:block;padding:35px}.mhtw-featured-198 small,.mhtw-featured-198 strong,.mhtw-featured-198 em,.mhtw-featured-198 b{display:block}.mhtw-featured-198 small{color:var(--mhtw-blue);font-weight:900}.mhtw-featured-198 strong{font-size:30px;line-height:1.3;color:var(--mhtw-navy);margin:10px 0}.mhtw-featured-198 em{font-style:normal;color:#66788c;line-height:1.7}.mhtw-featured-198 b{margin-top:20px;color:var(--mhtw-blue)}
     .mhtw-gallery-section{padding:90px 0}.mhtw-heading{text-align:center;max-width:760px;margin:0 auto 42px}.mhtw-heading p{color:#68798e;line-height:1.8}.mhtw-gallery{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:285px;gap:15px}.mhtw-gallery figure{margin:0;border-radius:15px;overflow:hidden;background:#eee}.mhtw-gallery__tall{grid-row:span 2}.mhtw-gallery img{width:100%;height:100%;object-fit:cover;display:block;transition:.4s}.mhtw-gallery figure:hover img{transform:scale(1.03)}
     .mhtw-steps{padding:88px 0;background:var(--mhtw-navy);color:#fff}.mhtw-heading--light h2{color:#fff}.mhtw-steps__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.mhtw-steps__grid>div{padding:28px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(255,255,255,.04)}.mhtw-steps__grid b{color:var(--mhtw-gold)}.mhtw-steps__grid h3{color:#fff;font-size:20px;margin:13px 0 8px}.mhtw-steps__grid p{margin:0;color:#aebed0}.mhtw-cta{padding:70px 0;background:#eaf1f7}.mhtw-cta__box{display:flex;align-items:center;justify-content:space-between;gap:28px;background:#fff;padding:44px 50px;border-radius:18px;box-shadow:0 18px 50px rgba(7,26,51,.09)}.mhtw-cta h2{font-size:clamp(29px,4vw,43px);margin:0 0 10px;color:var(--mhtw-navy)}.mhtw-cta p{margin:0;color:#68798e}.mhtw-mobile-order{display:none}
-    @media(max-width:900px){.mhtw-builder__grid,.mhtw-model__grid{grid-template-columns:1fr}.mhtw-summary{position:static}.mhtw-options{grid-template-columns:1fr}.mhtw-steps__grid{grid-template-columns:1fr}.mhtw-cta__box{align-items:flex-start;flex-direction:column}}
+    @media(max-width:900px){.mhtw-builder__grid,.mhtw-model__grid,.mhtw-featured-198{grid-template-columns:1fr}.mhtw-summary{position:static}.mhtw-options{grid-template-columns:1fr}.mhtw-steps__grid{grid-template-columns:1fr}.mhtw-cta__box{align-items:flex-start;flex-direction:column}}
     @media(max-width:600px){.mhtw-shell{width:min(100% - 28px,1180px)}.mhtw-hero{min-height:610px;background-position:35% center}.mhtw-hero__content{padding-block:60px}.mhtw-hero h1{font-size:41px}.mhtw-builder,.mhtw-model,.mhtw-gallery-section,.mhtw-steps{padding:64px 0}.mhtw-measures{grid-template-columns:1fr}.mhtw-gallery{grid-template-columns:1fr;grid-auto-rows:290px}.mhtw-gallery__tall{grid-row:auto}.mhtw-model img{height:330px}.mhtw-trust__grid{grid-template-columns:1fr}.mhtw-trust__grid>div{border-inline-start:0;border-bottom:1px solid rgba(255,255,255,.11);padding:18px}.mhtw-cta{padding:48px 0 90px}.mhtw-cta__box{padding:30px 24px}.mhtw-mobile-order{display:flex;position:fixed;z-index:9999;left:14px;right:14px;bottom:12px;min-height:52px;align-items:center;justify-content:center;border-radius:10px;background:var(--mhtw-green);color:#fff!important;font-weight:900;text-decoration:none!important;box-shadow:0 12px 32px rgba(0,0,0,.25)}}
     </style>
     <?php
@@ -2796,6 +2985,29 @@ function mh_control_global_header_script(): void {
 }
 add_action('wp_footer', 'mh_control_global_header_script', 220);
 
+/**
+ * Preserve advertising attribution while visitors move between Marco's Home pages.
+ */
+function mh_control_campaign_attribution_script(): void {
+    if (is_admin()) return;
+    ?>
+    <script id="mh-campaign-attribution">
+    (function(){
+        var keys=['utm_source','utm_medium','utm_campaign','utm_content','utm_term','fbclid'],params=new URLSearchParams(location.search),stored={};
+        try{stored=JSON.parse(localStorage.getItem('mh_campaign_params')||'{}');}catch(e){stored={};}
+        keys.forEach(function(key){var value=params.get(key);if(value)stored[key]=value;});
+        if(Object.keys(stored).length){try{localStorage.setItem('mh_campaign_params',JSON.stringify(stored));}catch(e){}}
+        document.addEventListener('DOMContentLoaded',function(){
+            document.querySelectorAll('a[href]').forEach(function(link){
+                try{var url=new URL(link.href,location.href);if(url.hostname!==location.hostname||url.protocol.indexOf('http')!==0)return;keys.forEach(function(key){if(stored[key]&&!url.searchParams.has(key))url.searchParams.set(key,stored[key]);});link.href=url.toString();}catch(e){}
+            });
+        });
+    }());
+    </script>
+    <?php
+}
+add_action('wp_head', 'mh_control_campaign_attribution_script', 3);
+
 
 function mh_control_refresh_site_cache_once(): void {
     if (get_option('mh_global_cache_version') === '1.1.1') return;
@@ -3124,7 +3336,7 @@ function mh_control_render_custom_sitemap(): void {
     if (mh_control_request_path() !== '/snap-ready-pages/') return;
     $urls = [
         home_url('/'), home_url('/services/'), home_url('/portfolio/'), home_url('/about/'), home_url('/contact/'),
-        home_url('/tv-tables/'), home_url('/coffee-corner/'),
+        home_url('/tv-tables/'), home_url('/design-198/'), home_url('/coffee-corner/'),
         home_url('/product-category/نماذج-وتصميمات/'),
         home_url('/product/باركية-خشب-k9188/'), home_url('/product/قاطع-الاعمدة/'), home_url('/fire-blaze/'),
         home_url('/privacy-policy/'), home_url('/terms-and-conditions/'), home_url('/shipping-and-installation/'), home_url('/returns-and-refunds/'),
@@ -3169,7 +3381,7 @@ function mh_control_add_custom_sitemap_index(array $indexes): array {
     $indexes[] = [
         'loc' => home_url('/snap-ready-pages/'),
         'lastmod' => gmdate('c', (int) filemtime(__FILE__)),
-        'count' => 15,
+        'count' => 16,
     ];
     return $indexes;
 }
@@ -3187,6 +3399,7 @@ function mh_control_is_lightweight_page(): bool {
         || mh_control_is_wpc_divider_page()
         || mh_control_is_parquet_page()
         || mh_control_is_tv_wall_archive()
+        || mh_control_is_design_198_page()
         || mh_control_is_about_page()
         || mh_control_is_services_page()
         || mh_control_is_trust_page()
@@ -3247,6 +3460,8 @@ function mh_control_preload_hero_image(): void {
         $image = 'https://marcohom.com/wp-content/uploads/2025/09/WhatsApp-Image-2025-09-28-at-4.31.20-PM-2.jpeg';
     } elseif (mh_control_is_trust_page()) {
         $image = 'https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0011.jpg';
+    } elseif (mh_control_is_design_198_page()) {
+        $image = mh_control_design_198_asset('design-198-beige-wood.webp');
     }
     if ($image !== '') {
         printf(
@@ -3348,6 +3563,15 @@ function mh_control_ad_page_seo_data(): array {
             'title' => 'طاولات TV معلقة من ماركوز هوم | تبدأ من 40 د.ك',
             'description' => 'طاولات تلفزيون معلقة بمقاس 1.5 أو 2 متر، ارتفاع 25 سم وعمق 32 سم وسبعة ألوان. تبدأ من 40 د.ك، والتركيب داخل الكويت 10 د.ك.',
             'image' => 'https://marcohom.com/wp-content/plugins/marcos-home-control/assets/tables/table-wall-unit-white.webp',
+            'type' => 'product',
+        ];
+    }
+    if (mh_control_is_design_198_page()) {
+        return [
+            'canonical' => home_url('/design-198/'),
+            'title' => 'تصميم 198 الخشب الهرمي | خلفية شاشة في الكويت — ماركوز هوم',
+            'description' => 'تصميم 198 الخشب الهرمي: خلفية شاشة متكاملة مع طاولة معلقة 3 متر وكابينة أرفف بإضاءة داخلية. احسب السعر حسب عرض الحائط والطاولة واللون داخل الكويت.',
+            'image' => mh_control_design_198_asset('design-198-beige-wood.webp'),
             'type' => 'product',
         ];
     }
@@ -3496,6 +3720,49 @@ function mh_control_fire_structured_data(): string {
         . '</script>' . "\n";
 }
 
+function mh_control_design_198_structured_data(): string {
+    if (!mh_control_is_design_198_page()) return '';
+    $canonical = home_url('/design-198/');
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@graph' => [
+            [
+                '@type' => 'Product',
+                '@id' => $canonical . '#product',
+                'name' => 'تصميم 198 — الخشب الهرمي',
+                'description' => 'خلفية شاشة متكاملة بتكوين هندسي وطاولة معلقة وكابينة أرفف بإضاءة داخلية، تنفذ داخل الكويت.',
+                'image' => [
+                    mh_control_design_198_asset('design-198-beige-wood.webp'),
+                    mh_control_design_198_asset('design-198-white.webp'),
+                    mh_control_design_198_asset('design-198-charcoal.webp'),
+                ],
+                'brand' => ['@type' => 'Brand', 'name' => "Marco's Home"],
+                'offers' => [
+                    '@type' => 'AggregateOffer',
+                    'url' => $canonical,
+                    'priceCurrency' => 'KWD',
+                    'lowPrice' => '143',
+                    'highPrice' => '288',
+                    'offerCount' => '28',
+                    'availability' => 'https://schema.org/InStock',
+                ],
+            ],
+            [
+                '@type' => 'BreadcrumbList',
+                '@id' => $canonical . '#breadcrumb',
+                'itemListElement' => [
+                    ['@type' => 'ListItem', 'position' => 1, 'name' => 'الرئيسية', 'item' => home_url('/')],
+                    ['@type' => 'ListItem', 'position' => 2, 'name' => 'خلفيات الشاشة', 'item' => home_url('/product-category/%d9%86%d9%85%d8%a7%d8%b0%d8%ac-%d9%88%d8%aa%d8%b5%d9%85%d9%8a%d9%85%d8%a7%d8%aa/')],
+                    ['@type' => 'ListItem', 'position' => 3, 'name' => 'تصميم 198', 'item' => $canonical],
+                ],
+            ],
+        ],
+    ];
+    return '<script type="application/ld+json" id="mh-design-198-schema">'
+        . wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        . '</script>' . "\n";
+}
+
 function mh_control_finish_head_schema_cleanup(): void {
     $head = (string) ob_get_clean();
     $head = (string) preg_replace(
@@ -3539,6 +3806,7 @@ function mh_control_finish_head_schema_cleanup(): void {
     echo mh_control_special_page_schema($seo); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     echo mh_control_services_structured_data(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     echo mh_control_fire_structured_data(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    echo mh_control_design_198_structured_data(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 }
 add_action('wp_head', 'mh_control_finish_head_schema_cleanup', 999999);
 
@@ -3547,7 +3815,7 @@ add_action('wp_head', 'mh_control_finish_head_schema_cleanup', 999999);
  * releases remain visible when visitors return through the normal URL.
  */
 function mh_control_disable_tv_console_cache(): void {
-    if (!mh_control_is_tv_console_page()) {
+    if (!mh_control_is_tv_console_page() && !mh_control_is_design_198_page() && !mh_control_is_tv_wall_archive()) {
         return;
     }
 
@@ -3565,7 +3833,7 @@ function mh_control_disable_tv_console_cache(): void {
         header('Expires: Wed, 11 Jan 1984 05:00:00 GMT', true);
         header('X-LiteSpeed-Cache-Control: no-cache', true);
     }
-    do_action('litespeed_control_set_nocache', 'Marco Home TV console gallery');
+    do_action('litespeed_control_set_nocache', 'Marco Home product gallery release');
 }
 add_action('template_redirect', 'mh_control_disable_tv_console_cache', 1);
 
@@ -3589,6 +3857,9 @@ function mh_control_purge_cache_after_deploy(): void {
     if (is_string($tv_console_url) && $tv_console_url !== '') {
         do_action('litespeed_purge_url', $tv_console_url);
     }
+
+    do_action('litespeed_purge_url', home_url('/design-198/'));
+    do_action('litespeed_purge_url', home_url('/product-category/نماذج-وتصميمات/'));
 
     if (function_exists('wp_cache_flush')) {
         wp_cache_flush();
