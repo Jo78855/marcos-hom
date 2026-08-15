@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.12.2
+ * Version: 1.12.3
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.12.2');
+define('MH_CONTROL_VERSION', '1.12.3');
 define('MH_CONTROL_SNAP_PIXEL_ID', '2770b368-fa3d-49f1-bf4e-685b62c10ecf');
 define('MH_CONTROL_META_PIXEL_ID', '761400161961314');
 define('MH_CONTROL_LEADS_DB_VERSION', '1.0');
@@ -2243,8 +2243,8 @@ function mh_control_design_198_markup(): string {
                 <div class="mh198-hero__copy">
                     <span class="mh198-kicker">تنفيذ داخل الكويت</span>
                     <h1>تصميم 198<br><em>الخشب الهرمي</em></h1>
-                    <p>خلفية شاشة متكاملة بتكوين هندسي، طاولة معلّقة وكابينة أرفف بإضاءة داخلية. اختَر مساحة الحائط ومقاس الطاولة وشاهد السعر المبدئي فورًا.</p>
-                    <div class="mh198-badges"><span>طاولة قياسية 3 م</span><span>ارتفاع كلي 2.90 م</span><span>عمق 32 سم</span></div>
+                    <p>خلفية شاشة متكاملة بتكوين هندسي، طاولة معلّقة وكابينة أرفف بإضاءة داخلية. الباقات تبدأ من <strong>130 د.ك بدون تركيب</strong> أو <strong>170 د.ك مع التركيب</strong>.</p>
+                    <div class="mh198-badges"><span>تبدأ من 130 د.ك</span><span>خيار مع أو بدون تركيب</span><span>تنفيذ داخل الكويت</span></div>
                     <a class="mh198-btn mh198-btn--primary" href="#mh198-calculator">احسب سعر تصميمك</a>
                 </div>
                 <figure class="mh198-hero__visual">
@@ -2270,23 +2270,17 @@ function mh_control_design_198_markup(): string {
             <div class="mh198-shell mh198-calculator__grid">
                 <div class="mh198-form">
                     <span class="mh198-kicker mh198-kicker--blue">حاسبة السعر المبدئي</span>
-                    <h2>كوّن تصميمك في 3 خطوات</h2>
+                    <h2>اختر باقتك في 3 خطوات</h2>
                     <fieldset><legend><b>1</b> اختر عرض الحائط</legend><div class="mh198-options mh198-options--walls">
-                        <button type="button" class="is-active" data-mh198-wall="3 إلى أقل من 3.5 متر" data-mh198-wall-min="3" data-mh198-wall-max="3.49" data-mh198-wall-price="173" aria-pressed="true"><strong>3 — أقل من 3.5 م</strong><span>173 د.ك</span></button>
-                        <button type="button" data-mh198-wall="3.5 إلى 4.5 متر" data-mh198-wall-min="3.5" data-mh198-wall-max="4.5" data-mh198-wall-price="198" aria-pressed="false"><strong>3.5 — 4.5 م</strong><span>198 د.ك</span></button>
-                        <button type="button" data-mh198-wall="4.60 إلى 5.5 متر" data-mh198-wall-min="4.6" data-mh198-wall-max="5.5" data-mh198-wall-price="218" aria-pressed="false"><strong>4.60 — 5.5 م</strong><span>218 د.ك</span></button>
-                        <button type="button" data-mh198-wall="5.60 إلى 7.5 متر" data-mh198-wall-min="5.6" data-mh198-wall-max="7.5" data-mh198-wall-price="238" aria-pressed="false"><strong>5.60 — 7.5 م</strong><span>238 د.ك</span></button>
-                        <button type="button" data-mh198-wall="مقاس خاص: أقل من 3 أو أكثر من 7.5 متر" data-mh198-wall-min="0" data-mh198-wall-max="0" data-mh198-wall-price="0" data-mh198-custom="1" aria-pressed="false"><strong>مقاس خاص</strong><span>يحتاج مراجعة</span></button>
+                        <button type="button" class="is-active" data-mh198-wall="3 إلى أقل من 3.5 متر" data-mh198-wall-min="3" data-mh198-wall-max="3.49" data-mh198-no-install="130" data-mh198-with-install="170" data-mh198-included="طاولة 2.5 متر + كابينة + 3 ألواح فوم بورد" aria-pressed="true"><strong>3 — أقل من 3.5 م</strong><span>130 بدون تركيب · 170 مع التركيب</span><small>طاولة 2.5 م + كابينة + 3 ألواح فوم بورد</small></button>
+                        <button type="button" data-mh198-wall="3.5 إلى 4.5 متر" data-mh198-wall-min="3.5" data-mh198-wall-max="4.5" data-mh198-no-install="150" data-mh198-with-install="198" data-mh198-included="طاولة 3 متر + كابينة + 4 ألواح فوم بورد" aria-pressed="false"><strong>3.5 — 4.5 م</strong><span>150 بدون تركيب · 198 مع التركيب</span><small>طاولة 3 م + كابينة + 4 ألواح فوم بورد</small></button>
+                        <button type="button" data-mh198-wall="4.60 إلى 5.5 متر" data-mh198-wall-min="4.6" data-mh198-wall-max="5.5" data-mh198-no-install="160" data-mh198-with-install="210" data-mh198-included="تفاصيل الباقة تُراجع حسب مقاس الحائط" aria-pressed="false"><strong>4.60 — 5.5 م</strong><span>160 بدون تركيب · 210 مع التركيب</span><small>تفاصيل الباقة تُراجع حسب المقاس</small></button>
+                        <button type="button" data-mh198-wall="مقاس خاص: أكثر من 5.5 متر" data-mh198-wall-min="5.51" data-mh198-wall-max="0" data-mh198-no-install="0" data-mh198-with-install="0" data-mh198-included="طلب تسعير خاص على واتساب" data-mh198-custom="1" aria-pressed="false"><strong>أكثر من 5.5 م</strong><span>اطلب حساب التكلفة</span><small>تسعير خاص عبر واتساب</small></button>
                     </div></fieldset>
 
-                    <fieldset><legend><b>2</b> اختر عرض الطاولة</legend><div class="mh198-options mh198-options--tables">
-                        <button type="button" data-mh198-table="2" data-mh198-adjustment="-30" aria-pressed="false"><strong>2 متر</strong><span>خصم 30 د.ك</span></button>
-                        <button type="button" data-mh198-table="2.5" data-mh198-adjustment="-15" aria-pressed="false"><strong>2.5 متر</strong><span>خصم 15 د.ك</span></button>
-                        <button type="button" class="is-active" data-mh198-table="3" data-mh198-adjustment="0" aria-pressed="true"><strong>3 متر</strong><span>مشمولة</span></button>
-                        <button type="button" data-mh198-table="3.5" data-mh198-adjustment="15" aria-pressed="false"><strong>3.5 متر</strong><span>زيادة 15 د.ك</span></button>
-                        <button type="button" data-mh198-table="4" data-mh198-adjustment="25" aria-pressed="false"><strong>4 متر</strong><span>زيادة 25 د.ك</span></button>
-                        <button type="button" data-mh198-table="4.5" data-mh198-adjustment="40" aria-pressed="false"><strong>4.5 متر</strong><span>زيادة 40 د.ك</span></button>
-                        <button type="button" data-mh198-table="5" data-mh198-adjustment="50" aria-pressed="false"><strong>5 متر</strong><span>زيادة 50 د.ك</span></button>
+                    <fieldset><legend><b>2</b> اختر طريقة الاستلام</legend><div class="mh198-options mh198-options--service">
+                        <button type="button" class="is-active" data-mh198-install="0" aria-pressed="true"><strong>بدون تركيب</strong><span>استلام مكونات الباقة بدون خدمة التركيب</span></button>
+                        <button type="button" data-mh198-install="1" aria-pressed="false"><strong>مع التركيب</strong><span>السعر يشمل خدمة التركيب داخل الكويت</span></button>
                     </div></fieldset>
 
                     <fieldset><legend><b>3</b> اختر اللون</legend><div class="mh198-colors">
@@ -2298,16 +2292,15 @@ function mh_control_design_198_markup(): string {
 
                 <aside class="mh198-summary" aria-live="polite">
                     <span>الإجمالي المبدئي</span>
-                    <strong id="mh198-total">173 <small>د.ك</small></strong>
+                    <strong id="mh198-total">130 <small>د.ك</small></strong>
                     <div id="mh198-special" class="mh198-special" hidden>مقاس خاص — نراجع الصورة والمقاس ونرسل لك السعر.</div>
                     <ul>
                         <li><span>فئة الحائط</span><b id="mh198-wall-summary">3 إلى أقل من 3.5 متر</b></li>
-                        <li><span>سعر الحائط</span><b id="mh198-wall-price">173 د.ك</b></li>
-                        <li><span>عرض الطاولة</span><b id="mh198-table-summary">3 متر</b></li>
-                        <li><span>تعديل الطاولة</span><b id="mh198-adjustment">بدون تعديل</b></li>
+                        <li><span>طريقة الاستلام</span><b id="mh198-service-summary">بدون تركيب</b></li>
+                        <li><span>سعر الباقة</span><b id="mh198-wall-price">130 د.ك</b></li>
+                        <li><span>تشمل الباقة</span><b id="mh198-included-summary">طاولة 2.5 متر + كابينة + 3 ألواح فوم بورد</b></li>
                         <li><span>اللون</span><b id="mh198-color-summary">بيج خشبي</b></li>
                     </ul>
-                    <div id="mh198-warning" class="mh198-warning" hidden>تنبيه: الطاولة المختارة أعرض من الحد الأعلى لفئة الحائط؛ يلزم تأكيد المقاس قبل التنفيذ.</div>
                     <a id="mh198-whatsapp" class="mh198-btn mh198-btn--whatsapp" href="https://wa.me/96550204320" target="_blank" rel="noopener">أرسل الاختيار على واتساب</a>
                     <p>السعر مبدئي ويُعتمد بعد مراجعة صورة الحائط والمقاسات وموقع التنفيذ داخل الكويت.</p>
                 </aside>
@@ -2315,7 +2308,7 @@ function mh_control_design_198_markup(): string {
         </section>
 
         <section class="mh198-specs"><div class="mh198-shell"><div class="mh198-heading"><span class="mh198-kicker mh198-kicker--blue">المواصفات القياسية</span><h2>تفاصيل واضحة قبل التنفيذ</h2></div><div class="mh198-specs__grid">
-            <div><strong>3 م</strong><h3>الطاولة المعلّقة</h3><p>المقاس القياسي المشمول في سعر الشريحة.</p></div>
+            <div><strong>2.5–3 م</strong><h3>الطاولة المعلّقة</h3><p>المقاس المشمول يختلف حسب شريحة عرض الحائط.</p></div>
             <div><strong>2 م</strong><h3>كابينة الأرفف</h3><p>مع إضاءة داخلية وتكوين جانبي عملي.</p></div>
             <div><strong>2 × 1.20 م</strong><h3>مساحة التلفزيون</h3><p>عرض مترين وارتفاع 1.20 متر.</p></div>
             <div><strong>2.90 م</strong><h3>الارتفاع الكلي</h3><p>مقاس اللوح 1.20 × 2.90 متر.</p></div>
@@ -2328,7 +2321,7 @@ function mh_control_design_198_markup(): string {
                 <div class="mh198-heading"><span class="mh198-kicker mh198-kicker--blue">معلومات واضحة قبل الطلب</span><h2 id="mh198-trust-title">اطلب من Marco's Home بثقة</h2><p>صفحة رسمية لتصميم 198 على نطاق marcohom.com، والتنفيذ داخل الكويت فقط.</p></div>
                 <div class="mh198-trust__grid">
                     <article><span class="mh198-trust__icon" aria-hidden="true">MH</span><h3>هوية النشاط</h3><strong>Marco's Home — ماركوز هوم</strong><p>تصميم وتوريد وتركيب حلول الديكور الداخلي وخلفيات الشاشات داخل الكويت.</p></article>
-                    <article><span class="mh198-trust__icon" aria-hidden="true">1</span><h3>طريقة الطلب</h3><p>اختر مقاس الحائط والطاولة واللون، ثم أرسل الاختيار على واتساب. لا يتم تحصيل أي دفعة من هذه الصفحة.</p></article>
+                    <article><span class="mh198-trust__icon" aria-hidden="true">1</span><h3>طريقة الطلب</h3><p>اختر شريحة الحائط، وحدد مع أو بدون تركيب، ثم اختر اللون وأرسل الباقة على واتساب. لا يتم تحصيل أي دفعة من هذه الصفحة.</p></article>
                     <article><span class="mh198-trust__icon" aria-hidden="true">✓</span><h3>السعر والتنفيذ</h3><p>الإجمالي المعروض مبدئي ويُعتمد بعد مراجعة صورة الموقع والمقاسات وتأكيد تفاصيل التنفيذ والتركيب.</p></article>
                 </div>
                 <div class="mh198-trust__actions">
@@ -2367,10 +2360,10 @@ function mh_control_design_198_head(): void {
     if (!mh_control_is_design_198_page()) return;
     ?>
     <style id="mh-design-198-styles">
-    :root{--mh198-blue:#1266d6;--mh198-navy:#071a33;--mh198-ink:#14263b;--mh198-soft:#f1f5f9;--mh198-line:#dce5ee;--mh198-green:#20b95a;--mh198-gold:#d6aa62}.mh198{font-family:Tahoma,Arial,sans-serif;color:var(--mh198-ink);background:#fff;overflow:hidden}.mh198 *{box-sizing:border-box}.mh198-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}.mh198-hero{padding:74px 0;background:linear-gradient(135deg,#f8fafc,#e7eef6)}.mh198-hero__grid{display:grid;grid-template-columns:.82fr 1.18fr;gap:54px;align-items:center}.mh198-kicker{display:inline-flex;align-items:center;gap:10px;color:#60738a;font-size:14px;font-weight:900;margin-bottom:15px}.mh198-kicker:before{content:"";width:34px;height:2px;background:var(--mh198-gold)}.mh198-kicker--blue{color:var(--mh198-blue)}.mh198-hero h1{font-size:clamp(44px,6vw,74px);line-height:1.08;margin:0 0 20px;color:var(--mh198-navy);font-weight:900}.mh198-hero h1 em{font-style:normal;color:var(--mh198-blue)}.mh198-hero p{font-size:18px;line-height:1.9;color:#617389;margin:0 0 24px}.mh198-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:27px}.mh198-badges span{background:#fff;border:1px solid var(--mh198-line);border-radius:999px;padding:9px 13px;font-size:12px;font-weight:800}.mh198-btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:12px 23px;border-radius:9px;text-decoration:none!important;font-weight:900}.mh198-btn--primary{background:var(--mh198-navy);color:#fff!important}.mh198-btn--whatsapp{width:100%;background:var(--mh198-green);color:#fff!important}.mh198-hero__visual{margin:0;border-radius:20px;overflow:hidden;background:#e6ebef;box-shadow:0 24px 55px rgba(7,26,51,.16);position:relative}.mh198-hero__visual img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.mh198-hero__visual figcaption{position:absolute;inset-inline:18px;bottom:16px;background:rgba(7,26,51,.88);color:#fff;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800}.mh198-gallery{padding:86px 0}.mh198-heading{text-align:center;max-width:750px;margin:0 auto 40px}.mh198-heading h2,.mh198-form h2{font-size:clamp(32px,5vw,50px);color:var(--mh198-navy);line-height:1.2;margin:0 0 13px}.mh198-heading p{color:#687a8e;margin:0}.mh198-gallery__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.mh198-thumb{border:1px solid var(--mh198-line);background:#fff;border-radius:14px;padding:0;overflow:hidden;cursor:pointer;font:800 13px Tahoma,Arial;color:var(--mh198-navy);text-align:right}.mh198-thumb img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.mh198-thumb span{display:block;padding:13px 15px}.mh198-thumb.is-active{outline:3px solid var(--mh198-blue);outline-offset:2px}.mh198-calculator{padding:88px 0;background:var(--mh198-soft)}.mh198-calculator__grid{display:grid;grid-template-columns:1.25fr .75fr;gap:36px;align-items:start}.mh198-form fieldset{border:0;padding:0;margin:0 0 30px}.mh198-form legend{font-size:17px;font-weight:900;color:var(--mh198-navy);margin-bottom:13px}.mh198-form legend b{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--mh198-blue);color:#fff;margin-left:7px}.mh198-options{display:grid;gap:10px}.mh198-options--walls{grid-template-columns:repeat(2,1fr)}.mh198-options--tables{grid-template-columns:repeat(4,1fr)}.mh198-options button,.mh198-colors button{border:1px solid var(--mh198-line);background:#fff;border-radius:11px;cursor:pointer;font:inherit;color:#44586e}.mh198-options button{padding:16px 13px;text-align:right}.mh198-options strong,.mh198-options span{display:block}.mh198-options strong{font-size:13px;color:var(--mh198-navy)}.mh198-options span{font-size:11px;margin-top:6px}.mh198-options button.is-active,.mh198-colors button.is-active{outline:2px solid var(--mh198-blue);outline-offset:1px;background:#f6f9ff}.mh198-colors{display:flex;gap:10px;flex-wrap:wrap}.mh198-colors button{display:flex;align-items:center;gap:8px;padding:10px 14px;font-weight:800}.mh198-colors i{width:27px;height:27px;border-radius:50%;background:var(--mh198-swatch);border:1px solid rgba(0,0,0,.16)}.mh198-summary{position:sticky;top:24px;background:var(--mh198-navy);color:#fff;border-radius:18px;padding:30px;box-shadow:0 20px 50px rgba(7,26,51,.18)}.mh198-summary>span{color:#b1c0d0;font-size:13px}.mh198-summary>strong{display:block;font-size:56px;line-height:1;margin:12px 0 20px}.mh198-summary>strong small{font-size:17px}.mh198-summary ul{list-style:none;padding:0;margin:0 0 20px;border-block:1px solid rgba(255,255,255,.13)}.mh198-summary li{display:flex;justify-content:space-between;gap:12px;padding:11px 0;font-size:12px;color:#aebed0}.mh198-summary li+li{border-top:1px solid rgba(255,255,255,.08)}.mh198-summary li b{color:#fff;text-align:left}.mh198-warning,.mh198-special{background:#fff3cd;color:#593f00;border-radius:9px;padding:12px;font-size:12px;line-height:1.65;margin-bottom:16px}.mh198-special{background:#e6f1ff;color:#0b417e}.mh198-summary>p{color:#98aabd;font-size:11px;line-height:1.7;text-align:center;margin:13px 0 0}.mh198-specs{padding:88px 0}.mh198-specs__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.mh198-specs__grid>div{border:1px solid var(--mh198-line);border-radius:15px;padding:25px;background:#fff}.mh198-specs strong{font-size:27px;color:var(--mh198-blue)}.mh198-specs h3{color:var(--mh198-navy);margin:10px 0 7px}.mh198-specs p{color:#6a7c90;font-size:13px;line-height:1.7;margin:0}.mh198-mobile-whatsapp{display:none}
+    :root{--mh198-blue:#1266d6;--mh198-navy:#071a33;--mh198-ink:#14263b;--mh198-soft:#f1f5f9;--mh198-line:#dce5ee;--mh198-green:#20b95a;--mh198-gold:#d6aa62}.mh198{font-family:Tahoma,Arial,sans-serif;color:var(--mh198-ink);background:#fff;overflow:hidden}.mh198 *{box-sizing:border-box}.mh198-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}.mh198-hero{padding:74px 0;background:linear-gradient(135deg,#f8fafc,#e7eef6)}.mh198-hero__grid{display:grid;grid-template-columns:.82fr 1.18fr;gap:54px;align-items:center}.mh198-kicker{display:inline-flex;align-items:center;gap:10px;color:#60738a;font-size:14px;font-weight:900;margin-bottom:15px}.mh198-kicker:before{content:"";width:34px;height:2px;background:var(--mh198-gold)}.mh198-kicker--blue{color:var(--mh198-blue)}.mh198-hero h1{font-size:clamp(44px,6vw,74px);line-height:1.08;margin:0 0 20px;color:var(--mh198-navy);font-weight:900}.mh198-hero h1 em{font-style:normal;color:var(--mh198-blue)}.mh198-hero p{font-size:18px;line-height:1.9;color:#617389;margin:0 0 24px}.mh198-hero p strong{color:var(--mh198-navy)}.mh198-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:27px}.mh198-badges span{background:#fff;border:1px solid var(--mh198-line);border-radius:999px;padding:9px 13px;font-size:12px;font-weight:800}.mh198-btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:12px 23px;border-radius:9px;text-decoration:none!important;font-weight:900}.mh198-btn--primary{background:var(--mh198-navy);color:#fff!important}.mh198-btn--whatsapp{width:100%;background:var(--mh198-green);color:#fff!important}.mh198-hero__visual{margin:0;border-radius:20px;overflow:hidden;background:#e6ebef;box-shadow:0 24px 55px rgba(7,26,51,.16);position:relative}.mh198-hero__visual img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.mh198-hero__visual figcaption{position:absolute;inset-inline:18px;bottom:16px;background:rgba(7,26,51,.88);color:#fff;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800}.mh198-gallery{padding:86px 0}.mh198-heading{text-align:center;max-width:750px;margin:0 auto 40px}.mh198-heading h2,.mh198-form h2{font-size:clamp(32px,5vw,50px);color:var(--mh198-navy);line-height:1.2;margin:0 0 13px}.mh198-heading p{color:#687a8e;margin:0}.mh198-gallery__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.mh198-thumb{border:1px solid var(--mh198-line);background:#fff;border-radius:14px;padding:0;overflow:hidden;cursor:pointer;font:800 13px Tahoma,Arial;color:var(--mh198-navy);text-align:right}.mh198-thumb img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.mh198-thumb span{display:block;padding:13px 15px}.mh198-thumb.is-active{outline:3px solid var(--mh198-blue);outline-offset:2px}.mh198-calculator{padding:88px 0;background:var(--mh198-soft)}.mh198-calculator__grid{display:grid;grid-template-columns:1.25fr .75fr;gap:36px;align-items:start}.mh198-form fieldset{border:0;padding:0;margin:0 0 30px}.mh198-form legend{font-size:17px;font-weight:900;color:var(--mh198-navy);margin-bottom:13px}.mh198-form legend b{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--mh198-blue);color:#fff;margin-left:7px}.mh198-options{display:grid;gap:10px}.mh198-options--walls,.mh198-options--service{grid-template-columns:repeat(2,1fr)}.mh198-options button,.mh198-colors button{border:1px solid var(--mh198-line);background:#fff;border-radius:11px;cursor:pointer;font:inherit;color:#44586e}.mh198-options button{padding:16px 13px;text-align:right}.mh198-options strong,.mh198-options span,.mh198-options small{display:block}.mh198-options strong{font-size:13px;color:var(--mh198-navy)}.mh198-options span{font-size:12px;font-weight:900;color:var(--mh198-blue);margin-top:7px}.mh198-options small{font-size:10px;line-height:1.6;color:#6b7d91;margin-top:6px}.mh198-options button.is-active,.mh198-colors button.is-active{outline:2px solid var(--mh198-blue);outline-offset:1px;background:#f6f9ff}.mh198-colors{display:flex;gap:10px;flex-wrap:wrap}.mh198-colors button{display:flex;align-items:center;gap:8px;padding:10px 14px;font-weight:800}.mh198-colors i{width:27px;height:27px;border-radius:50%;background:var(--mh198-swatch);border:1px solid rgba(0,0,0,.16)}.mh198-summary{position:sticky;top:24px;background:var(--mh198-navy);color:#fff;border-radius:18px;padding:30px;box-shadow:0 20px 50px rgba(7,26,51,.18)}.mh198-summary>span{color:#b1c0d0;font-size:13px}.mh198-summary>strong{display:block;font-size:56px;line-height:1;margin:12px 0 20px}.mh198-summary>strong small{font-size:17px}.mh198-summary ul{list-style:none;padding:0;margin:0 0 20px;border-block:1px solid rgba(255,255,255,.13)}.mh198-summary li{display:flex;justify-content:space-between;gap:12px;padding:11px 0;font-size:12px;color:#aebed0}.mh198-summary li+li{border-top:1px solid rgba(255,255,255,.08)}.mh198-summary li b{color:#fff;text-align:left;max-width:65%}.mh198-special{background:#e6f1ff;color:#0b417e;border-radius:9px;padding:12px;font-size:12px;line-height:1.65;margin-bottom:16px}.mh198-summary>p{color:#98aabd;font-size:11px;line-height:1.7;text-align:center;margin:13px 0 0}.mh198-specs{padding:88px 0}.mh198-specs__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.mh198-specs__grid>div{border:1px solid var(--mh198-line);border-radius:15px;padding:25px;background:#fff}.mh198-specs strong{font-size:27px;color:var(--mh198-blue)}.mh198-specs h3{color:var(--mh198-navy);margin:10px 0 7px}.mh198-specs p{color:#6a7c90;font-size:13px;line-height:1.7;margin:0}.mh198-mobile-whatsapp{display:none}
     .mh198-trust{padding:88px 0;background:#f1f5f9;border-top:1px solid var(--mh198-line)}.mh198-trust__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.mh198-trust__grid article{background:#fff;border:1px solid var(--mh198-line);border-radius:15px;padding:25px}.mh198-trust__grid h3{color:var(--mh198-navy);margin:12px 0 8px}.mh198-trust__grid strong{display:block;color:var(--mh198-blue);font-size:14px;margin-bottom:8px}.mh198-trust__grid p{color:#63758a;font-size:13px;line-height:1.8;margin:0}.mh198-trust__icon{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--mh198-navy);color:#fff;font-weight:900}.mh198-trust__actions{display:flex;justify-content:center;gap:10px 18px;flex-wrap:wrap;margin-top:24px}.mh198-trust__actions a{color:var(--mh198-blue)!important;font-size:12px;font-weight:900;text-decoration:none!important;border-bottom:1px solid currentColor;padding-bottom:2px}
-    @media(max-width:950px){.mh198-hero__grid,.mh198-calculator__grid{grid-template-columns:1fr}.mh198-summary{position:static}.mh198-options--tables{grid-template-columns:repeat(3,1fr)}.mh198-gallery__grid{grid-template-columns:repeat(2,1fr)}.mh198-trust__grid{grid-template-columns:1fr}}
-    @media(max-width:600px){.mh198-shell{width:min(100% - 28px,1180px)}.mh198-hero{padding:50px 0}.mh198-hero h1{font-size:42px}.mh198-hero p{font-size:15px}.mh198-gallery,.mh198-calculator,.mh198-specs,.mh198-trust{padding:60px 0}.mh198-gallery__grid{grid-template-columns:1fr 1fr;gap:10px}.mh198-options--walls,.mh198-options--tables{grid-template-columns:1fr 1fr}.mh198-specs__grid{grid-template-columns:1fr}.mh198-trust__actions{align-items:stretch;flex-direction:column;text-align:center}.mh198-mobile-whatsapp{display:flex;position:fixed;z-index:9999;left:12px;right:12px;bottom:10px;min-height:54px;align-items:center;justify-content:center;border-radius:10px;background:var(--mh198-green);color:#fff!important;text-decoration:none!important;font-weight:900;box-shadow:0 14px 35px rgba(0,0,0,.28)}body:has(.mh198){padding-bottom:72px}}
+    @media(max-width:950px){.mh198-hero__grid,.mh198-calculator__grid{grid-template-columns:1fr}.mh198-summary{position:static}.mh198-gallery__grid{grid-template-columns:repeat(2,1fr)}.mh198-trust__grid{grid-template-columns:1fr}}
+    @media(max-width:600px){.mh198-shell{width:min(100% - 28px,1180px)}.mh198-hero{padding:50px 0}.mh198-hero h1{font-size:42px}.mh198-hero p{font-size:15px}.mh198-gallery,.mh198-calculator,.mh198-specs,.mh198-trust{padding:60px 0}.mh198-gallery__grid{grid-template-columns:1fr 1fr;gap:10px}.mh198-options--walls,.mh198-options--service{grid-template-columns:1fr}.mh198-specs__grid{grid-template-columns:1fr}.mh198-trust__actions{align-items:stretch;flex-direction:column;text-align:center}.mh198-mobile-whatsapp{display:flex;position:fixed;z-index:9999;left:12px;right:12px;bottom:10px;min-height:54px;align-items:center;justify-content:center;border-radius:10px;background:var(--mh198-green);color:#fff!important;text-decoration:none!important;font-weight:900;box-shadow:0 14px 35px rgba(0,0,0,.28)}body:has(.mh198){padding-bottom:72px}}
     </style>
     <?php
 }
@@ -2382,26 +2375,26 @@ function mh_control_design_198_script(): void {
     <script id="mh-design-198-script">
     document.addEventListener('DOMContentLoaded',function(){
         var root=document.querySelector('.mh198');if(!root)return;
-        var state={wall:'3 إلى أقل من 3.5 متر',wallMin:3,wallMax:3.49,wallPrice:173,custom:false,table:3,adjustment:0,color:'بيج خشبي'};
+        var state={wall:'3 إلى أقل من 3.5 متر',wallMin:3,wallMax:3.49,noInstall:130,withInstall:170,included:'طاولة 2.5 متر + كابينة + 3 ألواح فوم بورد',install:false,custom:false,color:'بيج خشبي'};
         var main=document.getElementById('mh198-main-image'),caption=document.getElementById('mh198-main-caption');
-        var wallSummary=document.getElementById('mh198-wall-summary'),wallPrice=document.getElementById('mh198-wall-price'),tableSummary=document.getElementById('mh198-table-summary'),adjustment=document.getElementById('mh198-adjustment'),colorSummary=document.getElementById('mh198-color-summary'),total=document.getElementById('mh198-total'),warning=document.getElementById('mh198-warning'),special=document.getElementById('mh198-special');
+        var wallSummary=document.getElementById('mh198-wall-summary'),wallPrice=document.getElementById('mh198-wall-price'),serviceSummary=document.getElementById('mh198-service-summary'),includedSummary=document.getElementById('mh198-included-summary'),colorSummary=document.getElementById('mh198-color-summary'),total=document.getElementById('mh198-total'),special=document.getElementById('mh198-special');
         var wa=document.getElementById('mh198-whatsapp'),mobileWa=document.getElementById('mh198-mobile-whatsapp');
         function campaign(){try{return JSON.parse(localStorage.getItem('mh_campaign_params')||'{}');}catch(e){return {};}}
-        function adjustmentLabel(){return state.adjustment<0?'خصم '+Math.abs(state.adjustment)+' د.ك':state.adjustment>0?'زيادة '+state.adjustment+' د.ك':'بدون تعديل';}
+        function selectedPrice(){return state.install?state.withInstall:state.noInstall;}
+        function serviceLabel(){return state.install?'مع التركيب':'بدون تركيب';}
         function update(){
-            var sum=state.wallPrice+state.adjustment,isTooWide=!state.custom&&state.table>state.wallMax,track=campaign();
-            wallSummary.textContent=state.wall;wallPrice.textContent=state.custom?'تسعير خاص':state.wallPrice+' د.ك';tableSummary.textContent=state.table+' متر';adjustment.textContent=adjustmentLabel();colorSummary.textContent=state.color;
-            total.innerHTML=state.custom?'بعد المراجعة':sum+' <small>د.ك</small>';special.hidden=!state.custom;warning.hidden=!isTooWide;
-            var lines=['مرحباً ماركوز هوم، أريد الاستفسار عن تصميم 198 — الخشب الهرمي.','اللون: '+state.color,'عرض الحائط: '+state.wall,'عرض الطاولة: '+state.table+' متر','فئة المقاس: '+state.wall,'سعر فئة الحائط: '+(state.custom?'يحتاج مراجعة':state.wallPrice+' د.ك'),'تعديل الطاولة: '+adjustmentLabel(),'الإجمالي المبدئي: '+(state.custom?'تسعير خاص بعد المراجعة':sum+' د.ك'),'التنفيذ: داخل الكويت','مصدر الإعلان: '+(track.utm_source||'direct'),'وسيط الحملة: '+(track.utm_medium||'—'),'اسم الحملة: '+(track.utm_campaign||'—'),'محتوى الإعلان: '+(track.utm_content||'—'),'كلمة الإعلان: '+(track.utm_term||'—'),'fbclid: '+(track.fbclid||'—')];
-            if(isTooWide)lines.push('تنبيه المقاس: الطاولة أعرض من فئة الحائط المختارة وتحتاج تأكيد.');
+            var price=selectedPrice(),track=campaign();
+            wallSummary.textContent=state.wall;serviceSummary.textContent=serviceLabel();wallPrice.textContent=state.custom?'تسعير خاص':price+' د.ك';includedSummary.textContent=state.included;colorSummary.textContent=state.color;
+            total.innerHTML=state.custom?'حسب الطلب':price+' <small>د.ك</small>';special.hidden=!state.custom;
+            var lines=['مرحباً ماركوز هوم، أريد الاستفسار عن تصميم 198 — الخشب الهرمي.','اللون: '+state.color,'فئة الحائط: '+state.wall,'طريقة الاستلام: '+serviceLabel(),'تشمل الباقة: '+state.included,'سعر الباقة: '+(state.custom?'يحتاج حساب تكلفة ومراجعة':price+' د.ك'),'الإجمالي المبدئي: '+(state.custom?'تسعير خاص عبر واتساب':price+' د.ك'),'التنفيذ: داخل الكويت','مصدر الإعلان: '+(track.utm_source||'direct'),'وسيط الحملة: '+(track.utm_medium||'—'),'اسم الحملة: '+(track.utm_campaign||'—'),'محتوى الإعلان: '+(track.utm_content||'—'),'كلمة الإعلان: '+(track.utm_term||'—'),'fbclid: '+(track.fbclid||'—')];
             var href='https://wa.me/96550204320?text='+encodeURIComponent(lines.join('\n'));wa.href=href;mobileWa.href=href;
         }
         function activate(group,button){root.querySelectorAll(group).forEach(function(b){b.classList.remove('is-active');b.setAttribute('aria-pressed','false');});button.classList.add('is-active');button.setAttribute('aria-pressed','true');}
-        root.querySelectorAll('[data-mh198-wall]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-wall]',button);state.wall=button.dataset.mh198Wall;state.wallMin=Number(button.dataset.mh198WallMin);state.wallMax=Number(button.dataset.mh198WallMax);state.wallPrice=Number(button.dataset.mh198WallPrice);state.custom=button.dataset.mh198Custom==='1';update();});});
-        root.querySelectorAll('[data-mh198-table]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-table]',button);state.table=Number(button.dataset.mh198Table);state.adjustment=Number(button.dataset.mh198Adjustment);update();});});
+        root.querySelectorAll('[data-mh198-wall]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-wall]',button);state.wall=button.dataset.mh198Wall;state.wallMin=Number(button.dataset.mh198WallMin);state.wallMax=Number(button.dataset.mh198WallMax);state.noInstall=Number(button.dataset.mh198NoInstall);state.withInstall=Number(button.dataset.mh198WithInstall);state.included=button.dataset.mh198Included;state.custom=button.dataset.mh198Custom==='1';update();});});
+        root.querySelectorAll('[data-mh198-install]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-install]',button);state.install=button.dataset.mh198Install==='1';update();});});
         root.querySelectorAll('[data-mh198-color-choice]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-color-choice]',button);state.color=button.dataset.mh198ColorChoice;main.src=button.dataset.mh198ColorImage;main.alt='تصميم 198 الخشب الهرمي باللون '+state.color;caption.textContent=state.color;root.querySelectorAll('[data-mh198-color]').forEach(function(b){b.classList.toggle('is-active',b.dataset.mh198Color===state.color);b.setAttribute('aria-pressed',b.dataset.mh198Color===state.color?'true':'false');});update();});});
         root.querySelectorAll('[data-mh198-color]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-color]',button);main.src=button.dataset.mh198Image;main.alt=button.querySelector('img').alt;caption.textContent=button.dataset.mh198Color;if(button.dataset.mh198Color!=='المقاسات'){state.color=button.dataset.mh198Color;root.querySelectorAll('[data-mh198-color-choice]').forEach(function(b){b.classList.toggle('is-active',b.dataset.mh198ColorChoice===state.color);b.setAttribute('aria-pressed',b.dataset.mh198ColorChoice===state.color?'true':'false');});update();}});});
-        [wa,mobileWa].forEach(function(link){link.addEventListener('click',function(){if(typeof window.fbq==='function')window.fbq('track','Contact',{content_ids:['design-198'],content_name:'Design 198 Pyramid Wood'});if(typeof window.snaptr==='function')window.snaptr('track','START_CHECKOUT',{item_ids:['design-198'],item_category:'TV Wall Design',price:state.custom?0:state.wallPrice+state.adjustment,currency:'KWD'});});});
+        [wa,mobileWa].forEach(function(link){link.addEventListener('click',function(){if(typeof window.fbq==='function')window.fbq('track','Contact',{content_ids:['design-198'],content_name:'Design 198 Pyramid Wood'});if(typeof window.snaptr==='function')window.snaptr('track','START_CHECKOUT',{item_ids:['design-198'],item_category:'TV Wall Design',price:state.custom?0:selectedPrice(),currency:'KWD'});});});
         update();
     });
     </script>
@@ -3595,7 +3588,7 @@ function mh_control_ad_page_seo_data(): array {
         return [
             'canonical' => home_url('/design-198/'),
             'title' => 'تصميم 198 الخشب الهرمي | خلفية شاشة في الكويت — ماركوز هوم',
-            'description' => 'تصميم 198 الخشب الهرمي: خلفية شاشة متكاملة مع طاولة معلقة 3 متر وكابينة أرفف بإضاءة داخلية. احسب السعر حسب عرض الحائط والطاولة واللون داخل الكويت.',
+            'description' => 'تصميم 198 الخشب الهرمي بخلفية شاشة وطاولة معلقة وكابينة أرفف. ثلاث شرائح للحائط تبدأ من 130 د.ك بدون تركيب أو 170 د.ك مع التركيب داخل الكويت.',
             'image' => mh_control_design_198_asset('design-198-beige-wood.webp'),
             'type' => 'product',
         ];
@@ -3755,7 +3748,7 @@ function mh_control_design_198_structured_data(): string {
                 '@type' => 'Product',
                 '@id' => $canonical . '#product',
                 'name' => 'تصميم 198 — الخشب الهرمي',
-                'description' => 'خلفية شاشة متكاملة بتكوين هندسي وطاولة معلقة وكابينة أرفف بإضاءة داخلية، تنفذ داخل الكويت.',
+                    'description' => 'خلفية شاشة متكاملة بتكوين هندسي وطاولة معلقة وكابينة أرفف بإضاءة داخلية، مع خيارات سعر منفصلة بدون تركيب ومع التركيب داخل الكويت.',
                 'image' => [
                     mh_control_design_198_asset('design-198-beige-wood.webp'),
                     mh_control_design_198_asset('design-198-white.webp'),
@@ -3766,9 +3759,9 @@ function mh_control_design_198_structured_data(): string {
                     '@type' => 'AggregateOffer',
                     'url' => $canonical,
                     'priceCurrency' => 'KWD',
-                    'lowPrice' => '143',
-                    'highPrice' => '288',
-                    'offerCount' => '28',
+                    'lowPrice' => '130',
+                    'highPrice' => '210',
+                    'offerCount' => '6',
                     'availability' => 'https://schema.org/InStock',
                 ],
             ],
