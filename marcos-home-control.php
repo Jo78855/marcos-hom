@@ -16,7 +16,9 @@ if (!defined('ABSPATH')) {
 define('MH_CONTROL_VERSION', '1.13.0');
 define('MH_CONTROL_SNAP_PIXEL_ID', '2770b368-fa3d-49f1-bf4e-685b62c10ecf');
 define('MH_CONTROL_META_PIXEL_ID', '761400161961314');
-define('MH_CONTROL_LEADS_DB_VERSION', '1.0');\n\nrequire_once __DIR__ . '/includes/operations.php';
+define('MH_CONTROL_LEADS_DB_VERSION', '1.0');
+
+require_once __DIR__ . '/includes/operations.php';
 
 function mh_control_google_maps_url(): string {
     return 'https://maps.app.goo.gl/GMPEmTXtd66YkdpY6?g_st=iwb';
