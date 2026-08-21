@@ -1,0 +1,283 @@
+<?php
+/**
+ * Marco's Home operations foundation.
+ *
+ * WordPress remains the public marketing site and owns the operational records.
+ * This module adds a unified admin dashboard plus installable customer/team shells.
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+define('MH_OPS_DB_VERSION', '1.0.0');
+
+function mh_ops_table(string $name): string {
+    global $wpdb;
+    return $wpdb->prefix . 'mh_' . $name;
+}
+
+function mh_ops_install_schema(): void {
+    if ((string) get_option('mh_ops_db_version', '') === MH_OPS_DB_VERSION) {
+        return;
+    }
+
+    global $wpdb;
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    $charset = $wpdb->get_charset_collate();
+    $customers = mh_ops_table('customers');
+    $orders = mh_ops_table('orders');
+
+    dbDelta("CREATE TABLE {$customers} (
+        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+        created_at datetime NOT NULL,
+        updated_at datetime NOT NULL,
+        name varchar(120) NOT NULL,
+        phone varchar(24) NOT NULL,
+        area varchar(120) NOT NULL DEFAULT '',
+        address text NOT NULL,
+        notes text NOT NULL,
+        PRIMARY KEY (id),
+        UNIQUE KEY phone (phone),
+        KEY created_at (created_at)
+    ) {$charset};");
+
+    dbDelta("CREATE TABLE {$orders} (
+        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+        created_at datetime NOT NULL,
+        updated_at datetime NOT NULL,
+        order_code varchar(24) NOT NULL,
+        customer_id bigint(20) unsigned NOT NULL,
+        lead_id bigint(20) unsigned NOT NULL DEFAULT 0,
+        product varchar(100) NOT NULL,
+        design varchar(120) NOT NULL DEFAULT '',
+        wall_width decimal(8,2) NOT NULL DEFAULT 0,
+        table_width decimal(8,2) NOT NULL DEFAULT 0,
+        color varchar(80) NOT NULL DEFAULT '',
+        installation varchar(30) NOT NULL DEFAULT '',
+        total decimal(10,3) NOT NULL DEFAULT 0,
+        deposit decimal(10,3) NOT NULL DEFAULT 0,
+        balance decimal(10,3) NOT NULL DEFAULT 0,
+        source varchar(80) NOT NULL DEFAULT 'direct',
+        medium varchar(80) NOT NULL DEFAULT '',
+        campaign varchar(120) NOT NULL DEFAULT '',
+        status varchar(40) NOT NULL DEFAULT 'new',
+        technician_id bigint(20) unsigned NOT NULL DEFAULT 0,
+        scheduled_at datetime NULL,
+        completed_at datetime NULL,
+        notes text NOT NULL,
+        PRIMARY KEY (id),
+        UNIQUE KEY order_code (order_code),
+        KEY customer_id (customer_id),
+        KEY status (status),
+        KEY scheduled_at (scheduled_at),
+        KEY technician_id (technician_id)
+    ) {$charset};");
+
+    add_role('mh_technician', 'فني ماركوز هوم', [
+        'read' => true,
+        'mh_view_assigned_jobs' => true,
+        'mh_update_assigned_jobs' => true,
+    ]);
+    update_option('mh_ops_db_version', MH_OPS_DB_VERSION, false);
+}
+add_action('plugins_loaded', 'mh_ops_install_schema', 30);
+
+function mh_ops_statuses(): array {
+    return [
+        'new' => 'طلب جديد',
+        'contacted' => 'تم التواصل',
+        'survey' => 'معاينة',
+        'quoted' => 'عرض سعر',
+        'confirmed' => 'تم التأكيد',
+        'preparing' => 'جاري التجهيز',
+        'scheduled' => 'محدد للتركيب',
+        'completed' => 'تم التنفيذ',
+        'collected' => 'تم التحصيل',
+        'cancelled' => 'ملغي',
+    ];
+}
+
+function mh_ops_menu(): void {
+    add_menu_page(
+        'إدارة ماركوز هوم',
+        'ماركوز هوم',
+        'manage_options',
+        'mh-operations',
+        'mh_ops_render_dashboard',
+        'dashicons-admin-home',
+        3
+    );
+    add_submenu_page('mh-operations', 'لوحة التشغيل', 'لوحة التشغيل', 'manage_options', 'mh-operations', 'mh_ops_render_dashboard');
+    add_submenu_page('mh-operations', 'الطلبات', 'الطلبات', 'manage_options', 'mh-orders', 'mh_ops_render_orders');
+    add_submenu_page('mh-operations', 'العملاء', 'العملاء', 'manage_options', 'mh-customers', 'mh_ops_render_customers');
+    add_submenu_page('mh-operations', 'التركيبات', 'التركيبات', 'manage_options', 'mh-installations', 'mh_ops_render_installations');
+}
+add_action('admin_menu', 'mh_ops_menu');
+
+function mh_ops_admin_header(string $title, string $subtitle): void {
+    ?>
+    <div class="wrap mhops" dir="rtl">
+        <div class="mhops-title"><div><h1><?php echo esc_html($title); ?></h1><p><?php echo esc_html($subtitle); ?></p></div><div class="mhops-links"><a class="button" href="<?php echo esc_url(home_url('/marcos-app/')); ?>" target="_blank">بوابة العميل</a><a class="button" href="<?php echo esc_url(home_url('/marcos-team/')); ?>" target="_blank">بوابة الفني</a></div></div>
+    <?php
+}
+
+function mh_ops_admin_footer(): void {
+    ?>
+    </div>
+    <style>
+    .mhops{max-width:1400px}.mhops-title{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:22px 0}.mhops-title h1{font-size:30px;font-weight:900}.mhops-title p{color:#646970}.mhops-links{display:flex;gap:8px}.mhops-cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin:22px 0}.mhops-card{background:#fff;border:1px solid #dcdcde;border-radius:14px;padding:22px}.mhops-card span{display:block;color:#646970;font-weight:700}.mhops-card strong{display:block;margin-top:8px;font-size:31px;color:#071a33}.mhops-panel{background:#fff;border:1px solid #dcdcde;border-radius:14px;padding:20px;margin-top:18px}.mhops-table{width:100%;border-collapse:collapse}.mhops-table th,.mhops-table td{text-align:right;padding:12px;border-bottom:1px solid #eee}.mhops-empty{text-align:center;padding:38px;color:#646970}.mhops-badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#eaf3ff;color:#0764c7;font-weight:800}@media(max-width:1000px){.mhops-cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.mhops-title{align-items:flex-start;flex-direction:column}.mhops-cards{grid-template-columns:1fr}}
+    </style>
+    <?php
+}
+
+function mh_ops_counts(): array {
+    global $wpdb;
+    $orders = mh_ops_table('orders');
+    $customers = mh_ops_table('customers');
+    $today = current_time('Y-m-d');
+    return [
+        'new' => (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$orders} WHERE status = %s", 'new')),
+        'survey' => (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$orders} WHERE status = %s", 'survey')),
+        'scheduled' => (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$orders} WHERE DATE(scheduled_at) = %s", $today)),
+        'customers' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$customers}"),
+        'balance' => (float) $wpdb->get_var("SELECT COALESCE(SUM(balance),0) FROM {$orders} WHERE status NOT IN ('collected','cancelled')"),
+    ];
+}
+
+function mh_ops_render_dashboard(): void {
+    if (!current_user_can('manage_options')) return;
+    global $wpdb;
+    $counts = mh_ops_counts();
+    $orders = $wpdb->get_results('SELECT o.*, c.name customer_name, c.phone customer_phone FROM ' . mh_ops_table('orders') . ' o LEFT JOIN ' . mh_ops_table('customers') . ' c ON c.id=o.customer_id ORDER BY o.created_at DESC LIMIT 12', ARRAY_A);
+    $statuses = mh_ops_statuses();
+    mh_ops_admin_header('لوحة تشغيل Marco’s Home', 'نظرة سريعة على الطلبات والعملاء والتركيبات والتحصيل.');
+    ?>
+    <div class="mhops-cards">
+        <div class="mhops-card"><span>طلبات جديدة</span><strong><?php echo esc_html(number_format_i18n($counts['new'])); ?></strong></div>
+        <div class="mhops-card"><span>معاينات</span><strong><?php echo esc_html(number_format_i18n($counts['survey'])); ?></strong></div>
+        <div class="mhops-card"><span>تركيبات اليوم</span><strong><?php echo esc_html(number_format_i18n($counts['scheduled'])); ?></strong></div>
+        <div class="mhops-card"><span>العملاء</span><strong><?php echo esc_html(number_format_i18n($counts['customers'])); ?></strong></div>
+        <div class="mhops-card"><span>مبالغ مستحقة</span><strong><?php echo esc_html(number_format_i18n($counts['balance'], 3)); ?> د.ك</strong></div>
+    </div>
+    <div class="mhops-panel"><h2>آخر الطلبات</h2><?php mh_ops_orders_table(is_array($orders) ? $orders : [], $statuses); ?></div>
+    <?php mh_ops_admin_footer();
+}
+
+function mh_ops_orders_table(array $orders, array $statuses): void {
+    if ($orders === []) { echo '<div class="mhops-empty">لا توجد طلبات تشغيلية بعد. ستظهر هنا عند تحويل أول طلب عميل إلى أمر شغل.</div>'; return; }
+    echo '<div style="overflow:auto"><table class="mhops-table"><thead><tr><th>الكود</th><th>العميل</th><th>المنتج</th><th>الحالة</th><th>الموعد</th><th>المتبقي</th><th>تواصل</th></tr></thead><tbody>';
+    foreach ($orders as $order) {
+        $phone = preg_replace('/\D+/', '', (string) ($order['customer_phone'] ?? ''));
+        echo '<tr><td><strong>' . esc_html((string) ($order['order_code'] ?? '')) . '</strong></td><td>' . esc_html((string) ($order['customer_name'] ?? '—')) . '</td><td>' . esc_html((string) ($order['product'] ?? '—')) . '</td><td><span class="mhops-badge">' . esc_html($statuses[(string) ($order['status'] ?? '')] ?? (string) ($order['status'] ?? '')) . '</span></td><td>' . esc_html((string) ($order['scheduled_at'] ?? '—')) . '</td><td>' . esc_html(number_format_i18n((float) ($order['balance'] ?? 0), 3)) . ' د.ك</td><td><a class="button" target="_blank" rel="noopener" href="https://wa.me/' . esc_attr($phone) . '">واتساب</a></td></tr>';
+    }
+    echo '</tbody></table></div>';
+}
+
+function mh_ops_render_orders(): void {
+    if (!current_user_can('manage_options')) return;
+    global $wpdb;
+    $orders = $wpdb->get_results('SELECT o.*, c.name customer_name, c.phone customer_phone FROM ' . mh_ops_table('orders') . ' o LEFT JOIN ' . mh_ops_table('customers') . ' c ON c.id=o.customer_id ORDER BY o.created_at DESC LIMIT 300', ARRAY_A);
+    mh_ops_admin_header('الطلبات', 'مسار موحد من الطلب الجديد حتى التنفيذ والتحصيل.');
+    echo '<div class="mhops-panel">';
+    mh_ops_orders_table(is_array($orders) ? $orders : [], mh_ops_statuses());
+    echo '</div>';
+    mh_ops_admin_footer();
+}
+
+function mh_ops_render_customers(): void {
+    if (!current_user_can('manage_options')) return;
+    global $wpdb;
+    $customers = $wpdb->get_results('SELECT c.*, COUNT(o.id) orders_count FROM ' . mh_ops_table('customers') . ' c LEFT JOIN ' . mh_ops_table('orders') . ' o ON o.customer_id=c.id GROUP BY c.id ORDER BY c.created_at DESC LIMIT 300', ARRAY_A);
+    mh_ops_admin_header('العملاء', 'ملف واحد لكل عميل يجمع بياناته وطلباته.');
+    echo '<div class="mhops-panel"><div style="overflow:auto"><table class="mhops-table"><thead><tr><th>العميل</th><th>الهاتف</th><th>المنطقة</th><th>عدد الطلبات</th><th>آخر تحديث</th></tr></thead><tbody>';
+    if (!is_array($customers) || $customers === []) echo '<tr><td colspan="5" class="mhops-empty">لا يوجد عملاء بعد.</td></tr>';
+    else foreach ($customers as $customer) echo '<tr><td><strong>' . esc_html((string) $customer['name']) . '</strong></td><td dir="ltr">' . esc_html((string) $customer['phone']) . '</td><td>' . esc_html((string) $customer['area']) . '</td><td>' . esc_html(number_format_i18n((int) $customer['orders_count'])) . '</td><td>' . esc_html((string) $customer['updated_at']) . '</td></tr>';
+    echo '</tbody></table></div></div>';
+    mh_ops_admin_footer();
+}
+
+function mh_ops_render_installations(): void {
+    if (!current_user_can('manage_options')) return;
+    global $wpdb;
+    $orders = $wpdb->get_results("SELECT o.*, c.name customer_name, c.phone customer_phone FROM " . mh_ops_table('orders') . " o LEFT JOIN " . mh_ops_table('customers') . " c ON c.id=o.customer_id WHERE o.scheduled_at IS NOT NULL ORDER BY o.scheduled_at ASC LIMIT 300", ARRAY_A);
+    mh_ops_admin_header('التركيبات', 'جدول التنفيذ والفني المسؤول وصور ما قبل وما بعد في المرحلة التالية.');
+    echo '<div class="mhops-panel">';
+    mh_ops_orders_table(is_array($orders) ? $orders : [], mh_ops_statuses());
+    echo '</div>';
+    mh_ops_admin_footer();
+}
+
+function mh_ops_is_portal(string $portal): bool {
+    return mh_control_request_path() === '/' . trim($portal, '/') . '/';
+}
+
+function mh_ops_portal_head(): void {
+    $portal = mh_ops_is_portal('marcos-team') ? 'team' : (mh_ops_is_portal('marcos-app') ? 'customer' : '');
+    if ($portal === '') return;
+    $manifest = $portal === 'team' ? '/marcos-team.webmanifest' : '/marcos-app.webmanifest';
+    echo '<link rel="manifest" href="' . esc_url(home_url($manifest)) . '"><meta name="theme-color" content="#0878d1"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">';
+}
+add_action('wp_head', 'mh_ops_portal_head', 2);
+
+function mh_ops_portal_shell(string $type): string {
+    $is_team = $type === 'team';
+    $title = $is_team ? 'تطبيق فريق Marco’s Home' : 'طلبات Marco’s Home';
+    $subtitle = $is_team ? 'شاهد التركيبات المسندة لك وحدّث حالة التنفيذ.' : 'تابع طلبك وموعد المعاينة أو التركيب من هاتفك.';
+    ob_start(); ?>
+    <main class="mhop" dir="rtl"><section class="mhop-card"><div class="mhop-logo">MH</div><span class="mhop-kicker"><?php echo $is_team ? 'بوابة الفني' : 'بوابة العميل'; ?></span><h1><?php echo esc_html($title); ?></h1><p><?php echo esc_html($subtitle); ?></p>
+    <?php if ($is_team): ?>
+        <?php if (!is_user_logged_in()): ?><a class="mhop-btn" href="<?php echo esc_url(wp_login_url(home_url('/marcos-team/'))); ?>">تسجيل دخول الفني</a>
+        <?php elseif (!current_user_can('mh_view_assigned_jobs') && !current_user_can('manage_options')): ?><div class="mhop-note">هذا الحساب غير مسجل كفني.</div>
+        <?php else: ?><div class="mhop-note">تم تجهيز البوابة. ستظهر المهام المسندة للفني هنا عند إضافة أول أمر تركيب.</div><?php endif; ?>
+    <?php else: ?>
+        <form class="mhop-form" method="post"><label>رقم الطلب<input name="order_code" inputmode="text" placeholder="مثال MH-1001" required></label><label>رقم الهاتف<input name="phone" inputmode="tel" placeholder="965XXXXXXXX" required></label><button class="mhop-btn" type="submit">متابعة الطلب</button></form>
+        <?php echo mh_ops_customer_lookup(); ?>
+    <?php endif; ?>
+    <button class="mhop-install" type="button" hidden>ثبّت التطبيق على الهاتف</button><a class="mhop-home" href="<?php echo esc_url(home_url('/')); ?>">العودة إلى موقع ماركوز هوم</a></section></main>
+    <style>body{background:#eef5fb!important}.mhop{min-height:75vh;display:grid;place-items:center;padding:36px 18px;font-family:Tahoma,Arial,sans-serif}.mhop-card{width:min(100%,560px);background:#fff;border-radius:24px;padding:38px;box-shadow:0 24px 70px rgba(7,26,51,.12);text-align:right}.mhop-logo{width:66px;height:66px;border-radius:18px;background:#071a33;color:#fff;display:grid;place-items:center;font-size:24px;font-weight:900;border-bottom:6px solid #0878d1}.mhop-kicker{display:block;color:#0878d1;font-weight:900;margin-top:24px}.mhop h1{color:#071a33;font-size:34px;margin:9px 0}.mhop p{color:#627087;line-height:1.9}.mhop-form{display:grid;gap:14px;margin:26px 0}.mhop-form label{font-weight:800;color:#071a33}.mhop-form input{display:block;width:100%;box-sizing:border-box;margin-top:7px;border:1px solid #cad5e2;border-radius:12px;padding:14px;font-size:16px}.mhop-btn,.mhop-install{display:block;width:100%;border:0;border-radius:12px;background:#0878d1;color:#fff!important;padding:14px;text-align:center;text-decoration:none;font-weight:900;font-size:17px}.mhop-install{margin-top:12px;background:#071a33}.mhop-home{display:block;text-align:center;margin-top:18px;color:#516176}.mhop-note{margin:22px 0;padding:16px;border-radius:12px;background:#eef5fb;color:#071a33;line-height:1.8}.mhop-result{margin-top:18px;padding:18px;border-radius:14px;background:#f5fbf7;border:1px solid #cce9d5}.mhop-result b{color:#071a33}</style>
+    <script>(function(){if('serviceWorker' in navigator)navigator.serviceWorker.register('<?php echo esc_url(home_url('/marcos-app-sw.js')); ?>');var prompt;var button=document.querySelector('.mhop-install');window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();prompt=e;button.hidden=false});if(button)button.addEventListener('click',function(){if(prompt){prompt.prompt();prompt=null;button.hidden=true}})})();</script>
+    <?php return (string) ob_get_clean();
+}
+
+function mh_ops_customer_lookup(): string {
+    if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') return '';
+    $code = isset($_POST['order_code']) ? sanitize_text_field(wp_unslash((string) $_POST['order_code'])) : '';
+    $phone = isset($_POST['phone']) ? preg_replace('/\D+/', '', wp_unslash((string) $_POST['phone'])) : '';
+    if ($code === '' || strlen($phone) < 8) return '<div class="mhop-note">تأكد من رقم الطلب ورقم الهاتف.</div>';
+    global $wpdb;
+    $order = $wpdb->get_row($wpdb->prepare('SELECT o.* FROM ' . mh_ops_table('orders') . ' o INNER JOIN ' . mh_ops_table('customers') . ' c ON c.id=o.customer_id WHERE o.order_code=%s AND REPLACE(REPLACE(c.phone,"+","")," ","")=%s LIMIT 1', $code, $phone), ARRAY_A);
+    if (!is_array($order)) return '<div class="mhop-note">لم نعثر على طلب مطابق. أرسل لنا على واتساب للمساعدة.</div>';
+    $status = mh_ops_statuses()[(string) $order['status']] ?? (string) $order['status'];
+    return '<div class="mhop-result"><b>حالة الطلب: ' . esc_html($status) . '</b><br>المنتج: ' . esc_html((string) $order['product']) . '<br>الموعد: ' . esc_html((string) ($order['scheduled_at'] ?: 'لم يحدد بعد')) . '</div>';
+}
+
+function mh_ops_render_portals(): void {
+    if (!mh_ops_is_portal('marcos-app') && !mh_ops_is_portal('marcos-team')) return;
+    mh_control_prepare_virtual_page();
+    get_header();
+    echo mh_ops_portal_shell(mh_ops_is_portal('marcos-team') ? 'team' : 'customer'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    get_footer();
+    exit;
+}
+add_action('template_redirect', 'mh_ops_render_portals', 18);
+
+function mh_ops_virtual_assets(): void {
+    $path = mh_control_request_path();
+    if ($path === '/marcos-app.webmanifest/' || $path === '/marcos-team.webmanifest/') {
+        $team = $path === '/marcos-team.webmanifest/';
+        nocache_headers(); header('Content-Type: application/manifest+json; charset=utf-8');
+        echo wp_json_encode(['name' => $team ? 'فني Marco’s Home' : 'طلبات Marco’s Home', 'short_name' => $team ? 'فني MH' : 'Marco’s Home', 'start_url' => home_url($team ? '/marcos-team/' : '/marcos-app/'), 'display' => 'standalone', 'background_color' => '#eef5fb', 'theme_color' => '#0878d1', 'icons' => [['src' => home_url('/marcos-app-icon.svg'), 'sizes' => 'any', 'type' => 'image/svg+xml', 'purpose' => 'any maskable']]], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); exit;
+    }
+    if ($path === '/marcos-app-icon.svg/') { header('Content-Type: image/svg+xml; charset=utf-8'); echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#071a33"/><path d="M90 230 256 95l166 135v190H90z" fill="#fff"/><path d="M150 405V218l106 86 106-86v187h-66V345l-40 33-40-33v60z" fill="#0878d1"/></svg>'; exit; }
+    if ($path === '/marcos-app-sw.js/') { header('Content-Type: application/javascript; charset=utf-8'); echo "self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(clients.claim()));"; exit; }
+}
+add_action('template_redirect', 'mh_ops_virtual_assets', 1);
+
+function mh_ops_portal_titles(string $title): string {
+    if (mh_ops_is_portal('marcos-app')) return 'متابعة طلبك | Marco’s Home';
+    if (mh_ops_is_portal('marcos-team')) return 'بوابة الفني | Marco’s Home';
+    return $title;
+}
+add_filter('pre_get_document_title', 'mh_ops_portal_titles', 130);
+
