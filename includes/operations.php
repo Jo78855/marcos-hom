@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_OPS_DB_VERSION', '1.2.0');
+define('MH_OPS_DB_VERSION', '1.3.0');
 
 function mh_ops_table(string $name): string {
     global $wpdb;
@@ -65,6 +65,8 @@ function mh_ops_install_schema(): void {
         campaign varchar(120) NOT NULL DEFAULT '',
         status varchar(40) NOT NULL DEFAULT 'new',
         technician_id bigint(20) unsigned NOT NULL DEFAULT 0,
+        technician_name varchar(120) NOT NULL DEFAULT '',
+        technician_phone varchar(24) NOT NULL DEFAULT '',
         scheduled_at datetime NULL,
         completed_at datetime NULL,
         notes text NOT NULL,
@@ -78,11 +80,9 @@ function mh_ops_install_schema(): void {
         KEY technician_id (technician_id)
     ) {$charset};");
 
-    add_role('mh_technician', 'فني ماركوز هوم', [
-        'read' => true,
-        'mh_view_assigned_jobs' => true,
-        'mh_update_assigned_jobs' => true,
-    ]);
+    // Technicians never need a WordPress account. Access is granted per job
+    // through a signed, revocable link sent by the administrator on WhatsApp.
+    if (get_role('mh_technician')) remove_role('mh_technician');
     update_option('mh_ops_db_version', MH_OPS_DB_VERSION, false);
 }
 add_action('plugins_loaded', 'mh_ops_install_schema', 30);
@@ -110,6 +110,22 @@ function mh_ops_payment_statuses(): array {
         'unpaid' => 'غير مدفوع',
         'paid' => 'مدفوع بالكامل',
     ];
+}
+
+function mh_ops_phone_digits(string $phone): string {
+    $digits = (string) preg_replace('/\D+/', '', $phone);
+    if (strlen($digits) === 8) $digits = '965' . $digits;
+    return $digits;
+}
+
+function mh_ops_job_access_key(array $order): string {
+    $payload = absint($order['id'] ?? 0) . '|' . mh_ops_phone_digits((string) ($order['technician_phone'] ?? ''));
+    return hash_hmac('sha256', $payload, wp_salt('auth'));
+}
+
+function mh_ops_job_url(array $order): string {
+    if (absint($order['id'] ?? 0) < 1 || mh_ops_phone_digits((string) ($order['technician_phone'] ?? '')) === '') return home_url('/marcos-team/');
+    return add_query_arg(['job' => absint($order['id']), 'access' => mh_ops_job_access_key($order)], home_url('/marcos-team/'));
 }
 
 function mh_ops_status_from_lead(string $status): string {
@@ -189,6 +205,8 @@ function mh_ops_sync_lead(array $lead): int {
         'payment_status' => 'unpaid',
         'paid_at' => null,
         'technician_id' => 0,
+        'technician_name' => '',
+        'technician_phone' => '',
         'scheduled_at' => null,
         'completed_at' => null,
     ];
@@ -264,7 +282,9 @@ function mh_ops_admin_save_order(): void {
         'balance' => $payment_status === 'paid' ? 0 : $total,
         'payment_status' => $payment_status,
         'paid_at' => $paid_at,
-        'technician_id' => absint($_POST['technician_id'] ?? 0),
+        'technician_id' => 0,
+        'technician_name' => sanitize_text_field((string) ($_POST['technician_name'] ?? '')),
+        'technician_phone' => sanitize_text_field((string) ($_POST['technician_phone'] ?? '')),
         'scheduled_at' => $scheduled_at,
         'notes' => sanitize_textarea_field((string) ($_POST['notes'] ?? '')),
     ], ['id' => $order_id]);
@@ -274,9 +294,8 @@ function mh_ops_admin_save_order(): void {
 add_action('admin_post_mh_ops_save_order', 'mh_ops_admin_save_order');
 
 function mh_ops_technician_update(): void {
-    if (!is_user_logged_in() || (!current_user_can('mh_update_assigned_jobs') && !current_user_can('manage_options'))) wp_die('غير مسموح.');
-    check_admin_referer('mh_ops_technician_update');
     $order_id = absint($_POST['order_id'] ?? 0);
+    $access = sanitize_text_field((string) ($_POST['access'] ?? ''));
     $status = sanitize_key((string) ($_POST['status'] ?? ''));
     $allowed = ['enroute', 'working', 'completed', 'issue'];
     if ($order_id < 1 || !in_array($status, $allowed, true)) {
@@ -284,15 +303,17 @@ function mh_ops_technician_update(): void {
         exit;
     }
     global $wpdb;
-    $order = $wpdb->get_row($wpdb->prepare('SELECT id, technician_id FROM ' . mh_ops_table('orders') . ' WHERE id=%d LIMIT 1', $order_id), ARRAY_A);
-    if (!is_array($order) || (!current_user_can('manage_options') && (int) $order['technician_id'] !== get_current_user_id())) wp_die('هذا الطلب غير مسند لك.');
+    $order = $wpdb->get_row($wpdb->prepare('SELECT id, technician_phone FROM ' . mh_ops_table('orders') . ' WHERE id=%d LIMIT 1', $order_id), ARRAY_A);
+    if (!is_array($order) || $access === '' || !hash_equals(mh_ops_job_access_key($order), $access)) wp_die('رابط المهمة غير صالح.');
+    check_admin_referer('mh_ops_job_update_' . $order_id . '_' . $access);
     $data = ['status' => $status, 'updated_at' => current_time('mysql')];
     if ($status === 'completed') $data['completed_at'] = current_time('mysql');
     $wpdb->update(mh_ops_table('orders'), $data, ['id' => $order_id]);
-    wp_safe_redirect(add_query_arg('job_updated', 1, home_url('/marcos-team/')));
+    wp_safe_redirect(add_query_arg('job_updated', 1, mh_ops_job_url($order)));
     exit;
 }
 add_action('admin_post_mh_ops_technician_update', 'mh_ops_technician_update');
+add_action('admin_post_nopriv_mh_ops_technician_update', 'mh_ops_technician_update');
 
 function mh_ops_admin_header(string $title, string $subtitle): void {
     ?>
@@ -373,7 +394,6 @@ function mh_ops_render_order_editor(int $order_id): void {
     global $wpdb;
     $order = $wpdb->get_row($wpdb->prepare('SELECT o.*, c.name customer_name, c.phone customer_phone FROM ' . mh_ops_table('orders') . ' o LEFT JOIN ' . mh_ops_table('customers') . ' c ON c.id=o.customer_id WHERE o.id=%d LIMIT 1', $order_id), ARRAY_A);
     if (!is_array($order)) return;
-    $technicians = get_users(['role' => 'mh_technician', 'orderby' => 'display_name', 'order' => 'ASC']);
     $scheduled = !empty($order['scheduled_at']) ? str_replace(' ', 'T', substr((string) $order['scheduled_at'], 0, 16)) : '';
     if (isset($_GET['updated'])) echo '<div class="notice notice-success is-dismissible"><p>تم حفظ الطلب بنجاح.</p></div>';
     ?>
@@ -383,11 +403,12 @@ function mh_ops_render_order_editor(int $order_id): void {
         <label>حالة الطلب<select name="status"><?php foreach (mh_ops_statuses() as $key => $label): ?><option value="<?php echo esc_attr($key); ?>" <?php selected((string) $order['status'], $key); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></select></label>
         <label>إجمالي السعر (د.ك)<input type="number" name="total" min="0" step="0.001" value="<?php echo esc_attr((string) $order['total']); ?>"></label>
         <label>الدفع<select name="payment_status"><?php foreach (mh_ops_payment_statuses() as $key => $label): ?><option value="<?php echo esc_attr($key); ?>" <?php selected((string) ($order['payment_status'] ?? 'unpaid'), $key); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></select></label>
-        <label>الفني<select name="technician_id"><option value="0">لم يتم التعيين</option><?php foreach ($technicians as $tech): ?><option value="<?php echo esc_attr((string) $tech->ID); ?>" <?php selected((int) $order['technician_id'], (int) $tech->ID); ?>><?php echo esc_html($tech->display_name); ?></option><?php endforeach; ?></select></label>
+        <label>اسم الفني<input type="text" name="technician_name" value="<?php echo esc_attr((string) ($order['technician_name'] ?? '')); ?>" placeholder="اسم الفني"></label>
+        <label>رقم واتساب الفني<input type="tel" name="technician_phone" value="<?php echo esc_attr((string) ($order['technician_phone'] ?? '')); ?>" placeholder="965XXXXXXXX"></label>
         <label>موعد التركيب<input type="datetime-local" name="scheduled_at" value="<?php echo esc_attr($scheduled); ?>"></label>
         <label>هاتف العميل<input type="text" value="<?php echo esc_attr((string) ($order['customer_phone'] ?? '')); ?>" readonly></label>
         <label class="wide">ملاحظات الطلب<textarea name="notes"><?php echo esc_textarea((string) $order['notes']); ?></textarea></label>
-        <div class="wide mhops-actions"><button class="button button-primary" type="submit">حفظ التعديلات</button><a class="button" href="<?php echo esc_url(admin_url('admin.php?page=mh-orders')); ?>">إغلاق</a></div>
+        <div class="wide mhops-actions"><button class="button button-primary" type="submit">حفظ التعديلات</button><a class="button" href="<?php echo esc_url(admin_url('admin.php?page=mh-orders')); ?>">إغلاق</a><?php if (mh_ops_phone_digits((string) ($order['technician_phone'] ?? '')) !== ''): $job_url = mh_ops_job_url($order); $job_message = rawurlencode('مهمة تركيب من Marco’s Home — ' . (string) $order['order_code'] . "\n" . 'العميل: ' . (string) ($order['customer_name'] ?? '') . "\n" . 'الموعد: ' . (string) ($order['scheduled_at'] ?? 'غير محدد') . "\n" . 'افتح تفاصيل المهمة وحدّث الحالة من الرابط: ' . $job_url); ?><a class="button button-secondary" target="_blank" rel="noopener" href="https://wa.me/<?php echo esc_attr(mh_ops_phone_digits((string) $order['technician_phone'])); ?>?text=<?php echo esc_attr($job_message); ?>">إرسال المهمة للفني</a><?php endif; ?></div>
     </form></div>
     <?php
 }
@@ -430,13 +451,11 @@ add_action('wp_head', 'mh_ops_portal_head', 2);
 function mh_ops_portal_shell(string $type): string {
     $is_team = $type === 'team';
     $title = $is_team ? 'تطبيق فريق Marco’s Home' : 'طلبات Marco’s Home';
-    $subtitle = $is_team ? 'شاهد التركيبات المسندة لك وحدّث حالة التنفيذ.' : 'تابع طلبك وموعد المعاينة أو التركيب من هاتفك.';
+    $subtitle = $is_team ? 'افتح رابط المهمة المرسل لك على واتساب وحدّث حالة التنفيذ مباشرة.' : 'تابع طلبك وموعد المعاينة أو التركيب من هاتفك.';
     ob_start(); ?>
     <main class="mhop" dir="rtl"><section class="mhop-card"><div class="mhop-logo">MH</div><span class="mhop-kicker"><?php echo $is_team ? 'بوابة الفني' : 'بوابة العميل'; ?></span><h1><?php echo esc_html($title); ?></h1><p><?php echo esc_html($subtitle); ?></p>
     <?php if ($is_team): ?>
-        <?php if (!is_user_logged_in()): ?><a class="mhop-btn" href="<?php echo esc_url(wp_login_url(home_url('/marcos-team/'))); ?>">تسجيل دخول الفني</a>
-        <?php elseif (!current_user_can('mh_view_assigned_jobs') && !current_user_can('manage_options')): ?><div class="mhop-note">هذا الحساب غير مسجل كفني.</div>
-        <?php else: ?><?php echo mh_ops_team_jobs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><?php endif; ?>
+        <?php echo mh_ops_team_jobs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
     <?php else: ?>
         <form class="mhop-form" method="post"><label>رقم الطلب<input name="order_code" inputmode="text" placeholder="مثال MH-1001" required></label><label>رقم الهاتف<input name="phone" inputmode="tel" placeholder="965XXXXXXXX" required></label><button class="mhop-btn" type="submit">متابعة الطلب</button></form>
         <?php echo mh_ops_customer_lookup(); ?>
@@ -449,20 +468,21 @@ function mh_ops_portal_shell(string $type): string {
 
 function mh_ops_team_jobs(): string {
     global $wpdb;
-    $where = current_user_can('manage_options') ? '1=1' : $wpdb->prepare('o.technician_id=%d', get_current_user_id());
-    $jobs = $wpdb->get_results('SELECT o.*, c.name customer_name, c.phone customer_phone, c.area customer_area, c.address customer_address FROM ' . mh_ops_table('orders') . ' o LEFT JOIN ' . mh_ops_table('customers') . ' c ON c.id=o.customer_id WHERE ' . $where . " AND o.status NOT IN ('cancelled','collected') ORDER BY (o.scheduled_at IS NULL), o.scheduled_at ASC LIMIT 50", ARRAY_A);
-    if (!is_array($jobs) || $jobs === []) return '<div class="mhop-note">لا توجد مهام مسندة لك حاليًا.</div>';
+    $order_id = absint($_GET['job'] ?? 0);
+    $access = sanitize_text_field((string) ($_GET['access'] ?? ''));
+    if ($order_id < 1 || $access === '') return '<div class="mhop-note">لا تحتاج إلى اسم مستخدم أو كلمة مرور. افتح رابط المهمة الخاص الذي وصلك على واتساب.</div>';
+    $job = $wpdb->get_row($wpdb->prepare('SELECT o.*, c.name customer_name, c.phone customer_phone, c.area customer_area, c.address customer_address FROM ' . mh_ops_table('orders') . ' o LEFT JOIN ' . mh_ops_table('customers') . ' c ON c.id=o.customer_id WHERE o.id=%d LIMIT 1', $order_id), ARRAY_A);
+    if (!is_array($job) || !hash_equals(mh_ops_job_access_key($job), $access)) return '<div class="mhop-note">رابط المهمة غير صالح أو تم تغييره. اطلب رابطًا جديدًا من الإدارة.</div>';
     ob_start();
     if (isset($_GET['job_updated'])) echo '<div class="mhop-note">تم تحديث حالة المهمة.</div>';
-    foreach ($jobs as $job):
-        $phone = preg_replace('/\D+/', '', (string) ($job['customer_phone'] ?? ''));
+    $phone = preg_replace('/\D+/', '', (string) ($job['customer_phone'] ?? ''));
         ?>
         <article class="mhop-job"><h3><?php echo esc_html((string) $job['order_code']); ?> — <?php echo esc_html((string) ($job['customer_name'] ?? '')); ?></h3>
             <div class="mhop-job-meta"><span>المنتج: <?php echo esc_html((string) $job['product']); ?></span><span>الموعد: <?php echo esc_html((string) ($job['scheduled_at'] ?: 'غير محدد')); ?></span><span>المنطقة: <?php echo esc_html((string) ($job['customer_area'] ?? '—')); ?></span><span>الحالة: <?php echo esc_html(mh_ops_statuses()[(string) $job['status']] ?? (string) $job['status']); ?></span></div>
             <?php if ($phone !== ''): ?><p><a href="https://wa.me/<?php echo esc_attr($phone); ?>" target="_blank" rel="noopener">فتح واتساب العميل</a></p><?php endif; ?>
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="mh_ops_technician_update"><input type="hidden" name="order_id" value="<?php echo esc_attr((string) $job['id']); ?>"><?php wp_nonce_field('mh_ops_technician_update'); ?><select name="status"><option value="enroute">في الطريق</option><option value="working">بدأ التنفيذ</option><option value="completed">تم التنفيذ</option><option value="issue">توجد مشكلة</option></select><button type="submit">تحديث الحالة</button></form>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="mh_ops_technician_update"><input type="hidden" name="order_id" value="<?php echo esc_attr((string) $job['id']); ?>"><input type="hidden" name="access" value="<?php echo esc_attr($access); ?>"><?php wp_nonce_field('mh_ops_job_update_' . (string) $job['id'] . '_' . $access); ?><select name="status"><option value="enroute">في الطريق</option><option value="working">بدأ التنفيذ</option><option value="completed">تم التنفيذ</option><option value="issue">توجد مشكلة</option></select><button type="submit">تحديث الحالة</button></form>
         </article>
-    <?php endforeach;
+    <?php
     return (string) ob_get_clean();
 }
 
