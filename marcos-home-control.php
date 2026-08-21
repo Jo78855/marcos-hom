@@ -3033,7 +3033,15 @@ add_action('wp_head', 'mh_control_campaign_attribution_script', 3);
 
 
 function mh_control_refresh_site_cache_once(): void {
-    if (get_option('mh_global_cache_version') === '1.1.2') return;
+    if (get_option('mh_global_cache_version') === '1.1.3') return;
+    $urls = [
+        home_url('/'),
+        home_url('/design-198/'),
+        home_url('/product-category/%d9%86%d9%85%d8%a7%d8%b0%d8%ac-%d9%88%d8%aa%d8%b5%d9%85%d9%8a%d9%85%d8%a7%d8%aa/'),
+    ];
+    foreach ($urls as $url) {
+        do_action('litespeed_purge_url', $url);
+    }
     do_action('litespeed_purge_all');
     if (class_exists('LiteSpeed_Cache_API') && is_callable(['LiteSpeed_Cache_API', 'purge_all'])) {
         LiteSpeed_Cache_API::purge_all();
@@ -3042,7 +3050,7 @@ function mh_control_refresh_site_cache_once(): void {
         rocket_clean_domain();
     }
     wp_cache_flush();
-    update_option('mh_global_cache_version', '1.1.2', false);
+    update_option('mh_global_cache_version', '1.1.3', false);
 }
 add_action('init', 'mh_control_refresh_site_cache_once', 999);
 
