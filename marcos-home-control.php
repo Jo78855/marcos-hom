@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.12.3
+ * Version: 1.12.5
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.12.4');
+define('MH_CONTROL_VERSION', '1.12.5');
 define('MH_CONTROL_SNAP_PIXEL_ID', '2770b368-fa3d-49f1-bf4e-685b62c10ecf');
 define('MH_CONTROL_META_PIXEL_ID', '761400161961314');
 define('MH_CONTROL_LEADS_DB_VERSION', '1.0');
@@ -105,11 +105,13 @@ function mh_control_render_admin_page(): void {
     $stats = is_array($stats) ? $stats : [];
     $stats = array_filter($stats, static fn($row): bool => is_array($row) && ($row['source'] ?? '') !== 'deployment_check');
     $views = 0;
+    $choices = 0;
     $clicks = 0;
     foreach ($stats as $row) {
         if (!is_array($row)) continue;
         $count = max(0, (int) ($row['count'] ?? 0));
         if (($row['event'] ?? '') === 'page_view') $views += $count;
+        if (($row['event'] ?? '') === 'calculator_choice') $choices += $count;
         if (($row['event'] ?? '') === 'whatsapp_click') $clicks += $count;
     }
     uasort($stats, static fn($a, $b): int => strcmp((string) ($b['date'] ?? ''), (string) ($a['date'] ?? '')));
@@ -119,6 +121,7 @@ function mh_control_render_admin_page(): void {
         <p><strong>حالة الربط:</strong> جاهز لتسجيل الزيارات والنقرات &nbsp; | &nbsp; <strong>الإصدار:</strong> <?php echo esc_html(MH_CONTROL_VERSION); ?></p>
         <div class="mh-admin-cards">
             <div><span>زيارات صفحات الإعلان</span><strong><?php echo esc_html(number_format_i18n($views)); ?></strong></div>
+            <div><span>اختيارات الحاسبة</span><strong><?php echo esc_html(number_format_i18n($choices)); ?></strong></div>
             <div><span>نقرات واتساب</span><strong><?php echo esc_html(number_format_i18n($clicks)); ?></strong></div>
             <div><span>طلبات عرض السعر</span><strong><?php echo esc_html(number_format_i18n($lead_count)); ?></strong></div>
             <div><span>تحويل الزيارة إلى طلب</span><strong><?php echo esc_html($views > 0 ? number_format_i18n(($lead_count / $views) * 100, 1) . '%' : '—'); ?></strong></div>
@@ -168,14 +171,14 @@ function mh_control_render_admin_page(): void {
                 <td><?php echo esc_html((string) ($row['page'] ?? '')); ?></td>
                 <td><?php echo esc_html((string) ($row['source'] ?? 'direct')); ?></td>
                 <td><?php echo esc_html((string) ($row['campaign'] ?? '—')); ?></td>
-                <td><?php echo esc_html(($row['event'] ?? '') === 'whatsapp_click' ? 'نقرة واتساب' : (($row['event'] ?? '') === 'lead_submitted' ? 'طلب عرض سعر' : 'زيارة')); ?></td>
+                <td><?php echo esc_html(($row['event'] ?? '') === 'whatsapp_click' ? 'نقرة واتساب' : (($row['event'] ?? '') === 'lead_submitted' ? 'طلب عرض سعر' : (($row['event'] ?? '') === 'calculator_choice' ? 'اختيار داخل الحاسبة' : 'زيارة'))); ?></td>
                 <td><?php echo esc_html((string) ($row['details'] ?? '—')); ?></td>
                 <td><strong><?php echo esc_html(number_format_i18n((int) ($row['count'] ?? 0))); ?></strong></td>
             </tr>
         <?php endforeach; endif; ?>
         </tbody></table></div>
     </div>
-    <style>.mh-admin{max-width:1280px}.mh-admin-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:24px 0}.mh-admin-cards>div{background:#fff;border:1px solid #dcdcde;border-radius:12px;padding:24px}.mh-admin-cards span{display:block;color:#646970;font-weight:700}.mh-admin-cards strong{display:block;font-size:34px;color:#071a33;margin-top:12px}.mh-admin-table{overflow:auto;background:#fff;margin-bottom:32px}.mh-leads-table td{vertical-align:middle;min-width:90px}.mh-leads-table td:nth-child(5){min-width:240px}.mh-status-form select{min-width:120px}@media(max-width:900px){.mh-admin-cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.mh-admin-cards{grid-template-columns:1fr}}</style>
+    <style>.mh-admin{max-width:1280px}.mh-admin-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin:24px 0}.mh-admin-cards>div{background:#fff;border:1px solid #dcdcde;border-radius:12px;padding:24px}.mh-admin-cards span{display:block;color:#646970;font-weight:700}.mh-admin-cards strong{display:block;font-size:34px;color:#071a33;margin-top:12px}.mh-admin-table{overflow:auto;background:#fff;margin-bottom:32px}.mh-leads-table td{vertical-align:middle;min-width:90px}.mh-leads-table td:nth-child(5){min-width:240px}.mh-status-form select{min-width:120px}@media(max-width:900px){.mh-admin-cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.mh-admin-cards{grid-template-columns:1fr}}</style>
     <?php
 }
 
@@ -375,7 +378,7 @@ function mh_control_record_ad_event(WP_REST_Request $request): WP_REST_Response 
     }
 
     $event = sanitize_key((string) $request->get_param('event'));
-    $allowed_events = ['page_view', 'whatsapp_click'];
+    $allowed_events = ['page_view', 'calculator_choice', 'whatsapp_click'];
     if (!in_array($event, $allowed_events, true)) {
         return new WP_REST_Response(['recorded' => false], 400);
     }
@@ -2319,13 +2322,30 @@ function mh_control_design_198_markup(): string {
             <div><strong>الكويت</strong><h3>نطاق التنفيذ</h3><p>مراجعة المقاس والتجهيز والتركيب قبل الاعتماد.</p></div>
         </div></div></section>
 
+
+        <section class="mh198-faq" id="mh198-faq" aria-labelledby="mh198-faq-title">
+            <div class="mh198-shell">
+                <div class="mh198-heading"><span class="mh198-kicker mh198-kicker--blue">قبل تأكيد الطلب</span><h2 id="mh198-faq-title">أسئلة شائعة عن تصميم 198</h2><p>الإجابات توضح ما يشمله السعر وطريقة الطلب والتنفيذ داخل الكويت.</p></div>
+                <div class="mh198-faq__list">
+                    <details open><summary>ماذا تشمل باقة 130 د.ك بدون تركيب؟</summary><p>مناسبة لحائط من 3 متر إلى أقل من 3.5 متر، وتشمل طاولة معلّقة 2.5 متر وكابينة أرفف و3 ألواح فوم بورد، من دون خدمة التركيب.</p></details>
+                    <details><summary>ما الفرق بين 150 د.ك و198 د.ك؟</summary><p>السعران لشريحة حائط من 3.5 إلى 4.5 متر، وتشمل طاولة 3 متر وكابينة و4 ألواح فوم بورد؛ 150 د.ك بدون تركيب و198 د.ك مع التركيب داخل الكويت.</p></details>
+                    <details><summary>هل سعر 170 د.ك يشمل التركيب؟</summary><p>نعم، للشريحة الأولى من 3 متر إلى أقل من 3.5 متر داخل الكويت. يُعتمد السعر النهائي بعد مراجعة صورة الحائط والمقاس وموقع التنفيذ.</p></details>
+                    <details><summary>ما الألوان المتاحة؟</summary><p>بيج خشبي وهو الاختيار الافتراضي، وأبيض، ورمادي غامق. اضغط على اللون في الصفحة لمشاهدة صورته الحقيقية.</p></details>
+                    <details><summary>متى يتم تحديد موعد التنفيذ؟</summary><p>يُحدد الموعد بعد إرسال صورة الحائط والمقاس واللون ومراجعة جاهزية موقع التنفيذ، ثم تأكيد التفاصيل معك على واتساب.</p></details>
+                    <details><summary>كيف يتم تأكيد الطلب والدفع؟</summary><p>لا يتم تحصيل أي مبلغ من هذه الصفحة. يُراجع فريق Marco's Home المقاس والسعر والمواصفات والموعد معك على واتساب قبل اعتماد الطلب.</p></details>
+                    <details><summary>ماذا أفعل إذا احتجت متابعة بعد التنفيذ؟</summary><p>تواصل على واتساب بنفس رقم الطلب لمراجعة التنفيذ وتحديد خدمة الصيانة أو قطع الغيار المتاحة حسب الحالة.</p></details>
+                </div>
+            </div>
+        </section>
+
         <section class="mh198-trust" aria-labelledby="mh198-trust-title">
             <div class="mh198-shell">
                 <div class="mh198-heading"><span class="mh198-kicker mh198-kicker--blue">معلومات واضحة قبل الطلب</span><h2 id="mh198-trust-title">اطلب من Marco's Home بثقة</h2><p>صفحة رسمية لتصميم 198 على نطاق marcohom.com، والتنفيذ داخل الكويت فقط.</p></div>
                 <div class="mh198-trust__grid">
-                    <article><span class="mh198-trust__icon" aria-hidden="true">MH</span><h3>هوية النشاط</h3><strong>Marco's Home — ماركوز هوم</strong><p>تصميم وتوريد وتركيب حلول الديكور الداخلي وخلفيات الشاشات داخل الكويت.</p></article>
-                    <article><span class="mh198-trust__icon" aria-hidden="true">1</span><h3>طريقة الطلب</h3><p>اختر شريحة الحائط، وحدد مع أو بدون تركيب، ثم اختر اللون وأرسل الباقة على واتساب. لا يتم تحصيل أي دفعة من هذه الصفحة.</p></article>
-                    <article><span class="mh198-trust__icon" aria-hidden="true">✓</span><h3>السعر والتنفيذ</h3><p>الإجمالي المعروض مبدئي ويُعتمد بعد مراجعة صورة الموقع والمقاسات وتأكيد تفاصيل التنفيذ والتركيب.</p></article>
+                    <article><span class="mh198-trust__icon" aria-hidden="true">MH</span><h3>مواصفات واضحة</h3><strong>Marco's Home — ماركوز هوم</strong><p>المقاس واللون ومكونات الباقة وطريقة الاستلام موضحة قبل إرسال الطلب.</p></article>
+                    <article><span class="mh198-trust__icon" aria-hidden="true">KW</span><h3>تنفيذ داخل الكويت</h3><p>تُراجع صورة الحائط والمقاس وموقع التنفيذ قبل اعتماد خدمة التركيب.</p></article>
+                    <article><span class="mh198-trust__icon" aria-hidden="true">✓</span><h3>اعتماد قبل الدفع</h3><p>لا يتم تحصيل أي مبلغ من الصفحة؛ السعر والمواصفات والموعد تُؤكد مع العميل على واتساب أولًا.</p></article>
+                    <article><span class="mh198-trust__icon" aria-hidden="true">24</span><h3>متابعة بعد التنفيذ</h3><p>التواصل متاح على واتساب لمراجعة التنفيذ وتحديد الصيانة أو قطع الغيار المتاحة حسب الحالة.</p></article>
                 </div>
                 <div class="mh198-trust__actions">
                     <a href="https://wa.me/96550204320" target="_blank" rel="noopener">واتساب: +965 5020 4320</a>
@@ -2363,10 +2383,10 @@ function mh_control_design_198_head(): void {
     if (!mh_control_is_design_198_page()) return;
     ?>
     <style id="mh-design-198-styles">
-    :root{--mh198-blue:#1266d6;--mh198-navy:#071a33;--mh198-ink:#14263b;--mh198-soft:#f1f5f9;--mh198-line:#dce5ee;--mh198-green:#20b95a;--mh198-gold:#d6aa62}.mh198{font-family:Tahoma,Arial,sans-serif;color:var(--mh198-ink);background:#fff;overflow:hidden}.mh198 *{box-sizing:border-box}.mh198-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}.mh198-hero{padding:74px 0;background:linear-gradient(135deg,#f8fafc,#e7eef6)}.mh198-hero__grid{display:grid;grid-template-columns:.82fr 1.18fr;gap:54px;align-items:center}.mh198-kicker{display:inline-flex;align-items:center;gap:10px;color:#60738a;font-size:14px;font-weight:900;margin-bottom:15px}.mh198-kicker:before{content:"";width:34px;height:2px;background:var(--mh198-gold)}.mh198-kicker--blue{color:var(--mh198-blue)}.mh198-hero h1{font-size:clamp(44px,6vw,74px);line-height:1.08;margin:0 0 20px;color:var(--mh198-navy);font-weight:900}.mh198-hero h1 em{font-style:normal;color:var(--mh198-blue)}.mh198-hero p{font-size:18px;line-height:1.9;color:#617389;margin:0 0 24px}.mh198-hero p strong{color:var(--mh198-navy)}.mh198-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:27px}.mh198-badges span{background:#fff;border:1px solid var(--mh198-line);border-radius:999px;padding:9px 13px;font-size:12px;font-weight:800}.mh198-btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:12px 23px;border-radius:9px;text-decoration:none!important;font-weight:900}.mh198-btn--primary{background:var(--mh198-navy);color:#fff!important}.mh198-btn--whatsapp{width:100%;background:var(--mh198-green);color:#fff!important}.mh198-hero__visual{margin:0;border-radius:20px;overflow:hidden;background:#e6ebef;box-shadow:0 24px 55px rgba(7,26,51,.16);position:relative}.mh198-hero__visual img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.mh198-hero__visual figcaption{position:absolute;inset-inline:18px;bottom:16px;background:rgba(7,26,51,.88);color:#fff;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800}.mh198-gallery{padding:86px 0}.mh198-heading{text-align:center;max-width:750px;margin:0 auto 40px}.mh198-heading h2,.mh198-form h2{font-size:clamp(32px,5vw,50px);color:var(--mh198-navy);line-height:1.2;margin:0 0 13px}.mh198-heading p{color:#687a8e;margin:0}.mh198-gallery__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.mh198-thumb{border:1px solid var(--mh198-line);background:#fff;border-radius:14px;padding:0;overflow:hidden;cursor:pointer;font:800 13px Tahoma,Arial;color:var(--mh198-navy);text-align:right}.mh198-thumb img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.mh198-thumb span{display:block;padding:13px 15px}.mh198-thumb.is-active{outline:3px solid var(--mh198-blue);outline-offset:2px}.mh198-calculator{padding:88px 0;background:var(--mh198-soft)}.mh198-calculator__grid{display:grid;grid-template-columns:1.25fr .75fr;gap:36px;align-items:start}.mh198-form fieldset{border:0;padding:0;margin:0 0 30px}.mh198-form legend{font-size:17px;font-weight:900;color:var(--mh198-navy);margin-bottom:13px}.mh198-form legend b{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--mh198-blue);color:#fff;margin-left:7px}.mh198-options{display:grid;gap:10px}.mh198-options--walls,.mh198-options--service{grid-template-columns:repeat(2,1fr)}.mh198-options button,.mh198-colors button{border:1px solid var(--mh198-line);background:#fff;border-radius:11px;cursor:pointer;font:inherit;color:#44586e}.mh198-options button{padding:16px 13px;text-align:right}.mh198-options strong,.mh198-options span,.mh198-options small{display:block}.mh198-options strong{font-size:13px;color:var(--mh198-navy)}.mh198-options span{font-size:12px;font-weight:900;color:var(--mh198-blue);margin-top:7px}.mh198-options small{font-size:10px;line-height:1.6;color:#6b7d91;margin-top:6px}.mh198-options button.is-active,.mh198-colors button.is-active{outline:2px solid var(--mh198-blue);outline-offset:1px;background:#f6f9ff}.mh198-colors{display:flex;gap:10px;flex-wrap:wrap}.mh198-colors button{display:flex;align-items:center;gap:8px;padding:10px 14px;font-weight:800}.mh198-colors i{width:27px;height:27px;border-radius:50%;background:var(--mh198-swatch);border:1px solid rgba(0,0,0,.16)}.mh198-summary{position:sticky;top:24px;background:var(--mh198-navy);color:#fff;border-radius:18px;padding:30px;box-shadow:0 20px 50px rgba(7,26,51,.18)}.mh198-summary>span{color:#b1c0d0;font-size:13px}.mh198-summary>strong{display:block;font-size:56px;line-height:1;margin:12px 0 20px}.mh198-summary>strong small{font-size:17px}.mh198-summary ul{list-style:none;padding:0;margin:0 0 20px;border-block:1px solid rgba(255,255,255,.13)}.mh198-summary li{display:flex;justify-content:space-between;gap:12px;padding:11px 0;font-size:12px;color:#aebed0}.mh198-summary li+li{border-top:1px solid rgba(255,255,255,.08)}.mh198-summary li b{color:#fff;text-align:left;max-width:65%}.mh198-special{background:#e6f1ff;color:#0b417e;border-radius:9px;padding:12px;font-size:12px;line-height:1.65;margin-bottom:16px}.mh198-summary>p{color:#98aabd;font-size:11px;line-height:1.7;text-align:center;margin:13px 0 0}.mh198-specs{padding:88px 0}.mh198-specs__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.mh198-specs__grid>div{border:1px solid var(--mh198-line);border-radius:15px;padding:25px;background:#fff}.mh198-specs strong{font-size:27px;color:var(--mh198-blue)}.mh198-specs h3{color:var(--mh198-navy);margin:10px 0 7px}.mh198-specs p{color:#6a7c90;font-size:13px;line-height:1.7;margin:0}.mh198-mobile-whatsapp{display:none}
-    .mh198-trust{padding:88px 0;background:#f1f5f9;border-top:1px solid var(--mh198-line)}.mh198-trust__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.mh198-trust__grid article{background:#fff;border:1px solid var(--mh198-line);border-radius:15px;padding:25px}.mh198-trust__grid h3{color:var(--mh198-navy);margin:12px 0 8px}.mh198-trust__grid strong{display:block;color:var(--mh198-blue);font-size:14px;margin-bottom:8px}.mh198-trust__grid p{color:#63758a;font-size:13px;line-height:1.8;margin:0}.mh198-trust__icon{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--mh198-navy);color:#fff;font-weight:900}.mh198-trust__actions{display:flex;justify-content:center;gap:10px 18px;flex-wrap:wrap;margin-top:24px}.mh198-trust__actions a{color:var(--mh198-blue)!important;font-size:12px;font-weight:900;text-decoration:none!important;border-bottom:1px solid currentColor;padding-bottom:2px}
+    :root{--mh198-blue:#1266d6;--mh198-navy:#071a33;--mh198-ink:#14263b;--mh198-soft:#f1f5f9;--mh198-line:#dce5ee;--mh198-green:#20b95a;--mh198-gold:#d6aa62}.mh198{font-family:Tahoma,Arial,sans-serif;color:var(--mh198-ink);background:#fff;overflow:hidden}.mh198 *{box-sizing:border-box}.mh198-shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}.mh198-hero{padding:74px 0;background:linear-gradient(135deg,#f8fafc,#e7eef6)}.mh198-hero__grid{display:grid;grid-template-columns:.82fr 1.18fr;gap:54px;align-items:center}.mh198-kicker{display:inline-flex;align-items:center;gap:10px;color:#60738a;font-size:14px;font-weight:900;margin-bottom:15px}.mh198-kicker:before{content:"";width:34px;height:2px;background:var(--mh198-gold)}.mh198-kicker--blue{color:var(--mh198-blue)}.mh198-hero h1{font-size:clamp(44px,6vw,74px);line-height:1.08;margin:0 0 20px;color:var(--mh198-navy);font-weight:900}.mh198-hero h1 em{font-style:normal;color:var(--mh198-blue)}.mh198-hero p{font-size:18px;line-height:1.9;color:#617389;margin:0 0 24px}.mh198-hero p strong{color:var(--mh198-navy)}.mh198-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:27px}.mh198-badges span{background:#fff;border:1px solid var(--mh198-line);border-radius:999px;padding:9px 13px;font-size:12px;font-weight:800}.mh198-btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:12px 23px;border-radius:9px;text-decoration:none!important;font-weight:900}.mh198-btn--primary{background:var(--mh198-navy);color:#fff!important}.mh198-btn--whatsapp{width:100%;background:var(--mh198-green);color:#fff!important}.mh198-hero__visual{margin:0;border-radius:20px;overflow:hidden;background:#e6ebef;box-shadow:0 24px 55px rgba(7,26,51,.16);position:relative}.mh198-hero__visual img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.mh198-hero__visual figcaption{position:absolute;inset-inline:18px;bottom:16px;background:rgba(7,26,51,.88);color:#fff;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:800}.mh198-gallery{padding:86px 0}.mh198-heading{text-align:center;max-width:750px;margin:0 auto 40px}.mh198-heading h2,.mh198-form h2{font-size:clamp(32px,5vw,50px);color:var(--mh198-navy);line-height:1.2;margin:0 0 13px}.mh198-heading p{color:#687a8e;margin:0}.mh198-gallery__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.mh198-thumb{border:1px solid var(--mh198-line);background:#fff;border-radius:14px;padding:0;overflow:hidden;cursor:pointer;font:800 13px Tahoma,Arial;color:var(--mh198-navy);text-align:right}.mh198-thumb img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.mh198-thumb span{display:block;padding:13px 15px}.mh198-thumb.is-active{outline:3px solid var(--mh198-blue);outline-offset:2px}.mh198-calculator{padding:88px 0;background:var(--mh198-soft)}.mh198-calculator__grid{display:grid;grid-template-columns:1.25fr .75fr;gap:36px;align-items:start}.mh198-form fieldset{border:0;padding:0;margin:0 0 30px}.mh198-form legend{font-size:17px;font-weight:900;color:var(--mh198-navy);margin-bottom:13px}.mh198-form legend b{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--mh198-blue);color:#fff;margin-left:7px}.mh198-options{display:grid;gap:10px}.mh198-options--walls,.mh198-options--service{grid-template-columns:repeat(2,1fr)}.mh198-options button,.mh198-colors button{border:1px solid var(--mh198-line);background:#fff;border-radius:11px;cursor:pointer;font:inherit;color:#44586e}.mh198-options button{padding:16px 13px;text-align:right}.mh198-options strong,.mh198-options span,.mh198-options small{display:block}.mh198-options strong{font-size:13px;color:var(--mh198-navy)}.mh198-options span{font-size:12px;font-weight:900;color:var(--mh198-blue);margin-top:7px}.mh198-options small{font-size:10px;line-height:1.6;color:#6b7d91;margin-top:6px}.mh198-options button.is-active,.mh198-colors button.is-active{outline:2px solid var(--mh198-blue);outline-offset:1px;background:#f6f9ff}.mh198-colors{display:flex;gap:10px;flex-wrap:wrap}.mh198-colors button{display:flex;align-items:center;gap:8px;padding:10px 14px;font-weight:800}.mh198-colors i{width:27px;height:27px;border-radius:50%;background:var(--mh198-swatch);border:1px solid rgba(0,0,0,.16)}.mh198-summary{position:sticky;top:24px;background:var(--mh198-navy);color:#fff;border-radius:18px;padding:30px;box-shadow:0 20px 50px rgba(7,26,51,.18)}.mh198-summary>span{color:#b1c0d0;font-size:13px}.mh198-summary>strong{display:block;font-size:56px;line-height:1;margin:12px 0 20px}.mh198-summary>strong small{font-size:17px}.mh198-summary ul{list-style:none;padding:0;margin:0 0 20px;border-block:1px solid rgba(255,255,255,.13)}.mh198-summary li{display:flex;justify-content:space-between;gap:12px;padding:11px 0;font-size:12px;color:#aebed0}.mh198-summary li+li{border-top:1px solid rgba(255,255,255,.08)}.mh198-summary li b{color:#fff;text-align:left;max-width:65%}.mh198-special{background:#e6f1ff;color:#0b417e;border-radius:9px;padding:12px;font-size:12px;line-height:1.65;margin-bottom:16px}.mh198-summary>p{color:#98aabd;font-size:11px;line-height:1.7;text-align:center;margin:13px 0 0}.mh198-specs{padding:88px 0}.mh198-specs__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.mh198-specs__grid>div{border:1px solid var(--mh198-line);border-radius:15px;padding:25px;background:#fff}.mh198-specs strong{font-size:27px;color:var(--mh198-blue)}.mh198-specs h3{color:var(--mh198-navy);margin:10px 0 7px}.mh198-specs p{color:#6a7c90;font-size:13px;line-height:1.7;margin:0}.mh198-mobile-whatsapp{display:none}.mh198-faq{padding:88px 0;background:#fff;border-top:1px solid var(--mh198-line)}.mh198-faq__list{max-width:900px;margin:0 auto;display:grid;gap:12px}.mh198-faq details{border:1px solid var(--mh198-line);border-radius:14px;background:#fff;padding:0 20px;box-shadow:0 8px 25px rgba(7,26,51,.04)}.mh198-faq summary{cursor:pointer;list-style:none;padding:20px 34px 20px 0;position:relative;font-weight:900;color:var(--mh198-navy)}.mh198-faq summary::-webkit-details-marker{display:none}.mh198-faq summary:before{content:"+";position:absolute;right:0;top:16px;display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#e8f1ff;color:var(--mh198-blue);font-size:18px}.mh198-faq details[open] summary:before{content:"−"}.mh198-faq details p{margin:0;padding:0 34px 20px 0;color:#63758a;font-size:14px;line-height:1.9}
+    .mh198-trust{padding:88px 0;background:#f1f5f9;border-top:1px solid var(--mh198-line)}.mh198-trust__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.mh198-trust__grid article{background:#fff;border:1px solid var(--mh198-line);border-radius:15px;padding:25px}.mh198-trust__grid h3{color:var(--mh198-navy);margin:12px 0 8px}.mh198-trust__grid strong{display:block;color:var(--mh198-blue);font-size:14px;margin-bottom:8px}.mh198-trust__grid p{color:#63758a;font-size:13px;line-height:1.8;margin:0}.mh198-trust__icon{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--mh198-navy);color:#fff;font-weight:900}.mh198-trust__actions{display:flex;justify-content:center;gap:10px 18px;flex-wrap:wrap;margin-top:24px}.mh198-trust__actions a{color:var(--mh198-blue)!important;font-size:12px;font-weight:900;text-decoration:none!important;border-bottom:1px solid currentColor;padding-bottom:2px}
     @media(max-width:950px){.mh198-hero__grid,.mh198-calculator__grid{grid-template-columns:1fr}.mh198-summary{position:static}.mh198-gallery__grid{grid-template-columns:repeat(2,1fr)}.mh198-trust__grid{grid-template-columns:1fr}}
-    @media(max-width:600px){.mh198-shell{width:min(100% - 28px,1180px)}.mh198-hero{padding:50px 0}.mh198-hero h1{font-size:42px}.mh198-hero p{font-size:15px}.mh198-gallery,.mh198-calculator,.mh198-specs,.mh198-trust{padding:60px 0}.mh198-gallery__grid{grid-template-columns:1fr 1fr;gap:10px}.mh198-options--walls,.mh198-options--service{grid-template-columns:1fr}.mh198-specs__grid{grid-template-columns:1fr}.mh198-trust__actions{align-items:stretch;flex-direction:column;text-align:center}.mh198-mobile-whatsapp{display:flex;position:fixed;z-index:9999;left:12px;right:12px;bottom:10px;min-height:54px;align-items:center;justify-content:center;border-radius:10px;background:var(--mh198-green);color:#fff!important;text-decoration:none!important;font-weight:900;box-shadow:0 14px 35px rgba(0,0,0,.28)}body:has(.mh198){padding-bottom:72px}}
+    @media(max-width:600px){.mh198-shell{width:min(100% - 28px,1180px)}.mh198-hero{padding:50px 0}.mh198-hero h1{font-size:42px}.mh198-hero p{font-size:15px}.mh198-gallery,.mh198-calculator,.mh198-specs,.mh198-faq,.mh198-trust{padding:60px 0}.mh198-gallery__grid{grid-template-columns:1fr 1fr;gap:10px}.mh198-options--walls,.mh198-options--service{grid-template-columns:1fr}.mh198-specs__grid{grid-template-columns:1fr}.mh198-faq details{padding-inline:15px}.mh198-faq summary{padding-right:32px}.mh198-faq details p{padding-right:32px}.mh198-trust__actions{align-items:stretch;flex-direction:column;text-align:center}.mh198-mobile-whatsapp{display:flex;position:fixed;z-index:9999;left:12px;right:12px;bottom:10px;min-height:54px;align-items:center;justify-content:center;border-radius:10px;background:var(--mh198-green);color:#fff!important;text-decoration:none!important;font-weight:900;box-shadow:0 14px 35px rgba(0,0,0,.28)}body:has(.mh198){padding-bottom:72px}}
     </style>
     <?php
 }
@@ -2381,9 +2401,16 @@ function mh_control_design_198_script(): void {
         var state={wall:'3 إلى أقل من 3.5 متر',wallMin:3,wallMax:3.49,noInstall:130,withInstall:170,included:'طاولة 2.5 متر + كابينة + 3 ألواح فوم بورد',install:false,custom:false,color:'بيج خشبي'};
         var main=document.getElementById('mh198-main-image'),caption=document.getElementById('mh198-main-caption');
         var wallSummary=document.getElementById('mh198-wall-summary'),wallPrice=document.getElementById('mh198-wall-price'),serviceSummary=document.getElementById('mh198-service-summary'),includedSummary=document.getElementById('mh198-included-summary'),colorSummary=document.getElementById('mh198-color-summary'),total=document.getElementById('mh198-total'),special=document.getElementById('mh198-special');
-        var wa=document.getElementById('mh198-whatsapp'),mobileWa=document.getElementById('mh198-mobile-whatsapp');
+        var wa=document.getElementById('mh198-whatsapp'),mobileWa=document.getElementById('mh198-mobile-whatsapp'),choiceTimer=null;
         function campaign(){try{return JSON.parse(localStorage.getItem('mh_campaign_params')||'{}');}catch(e){return {};}}
         function selectedPrice(){return state.install?state.withInstall:state.noInstall;}
+        function choiceDetails(){return 'تصميم 198 | '+state.wall+' | '+serviceLabel()+' | '+state.color+' | '+(state.custom?'تسعير خاص':selectedPrice()+' د.ك')+' | '+state.included;}
+        function recordChoice(){
+            var track=campaign(),details=choiceDetails(),key='mh198-choice:'+details;
+            try{if(sessionStorage.getItem('mh198_choice_last')===key)return;sessionStorage.setItem('mh198_choice_last',key);}catch(e){}
+            fetch('<?php echo esc_url_raw(rest_url('marcos-home/v1/ad-event')); ?>',{method:'POST',credentials:'same-origin',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'calculator_choice',page:location.pathname,source:track.utm_source||'direct',medium:track.utm_medium||'',campaign:track.utm_campaign||'',details:details})}).catch(function(){});
+        }
+        function scheduleChoice(){clearTimeout(choiceTimer);choiceTimer=setTimeout(recordChoice,700);}
         function serviceLabel(){return state.install?'مع التركيب':'بدون تركيب';}
         function update(){
             var price=selectedPrice(),track=campaign();
@@ -2391,14 +2418,14 @@ function mh_control_design_198_script(): void {
             total.innerHTML=state.custom?'حسب الطلب':price+' <small>د.ك</small>';special.hidden=!state.custom;
             var lines=['مرحباً ماركوز هوم، أريد الاستفسار عن تصميم 198 — الخشب الهرمي.','اللون: '+state.color,'فئة الحائط: '+state.wall,'طريقة الاستلام: '+serviceLabel(),'تشمل الباقة: '+state.included,'سعر الباقة: '+(state.custom?'يحتاج حساب تكلفة ومراجعة':price+' د.ك'),'الإجمالي المبدئي: '+(state.custom?'تسعير خاص عبر واتساب':price+' د.ك'),'التنفيذ: داخل الكويت','مصدر الإعلان: '+(track.utm_source||'direct'),'وسيط الحملة: '+(track.utm_medium||'—'),'اسم الحملة: '+(track.utm_campaign||'—'),'محتوى الإعلان: '+(track.utm_content||'—'),'كلمة الإعلان: '+(track.utm_term||'—'),'fbclid: '+(track.fbclid||'—')];
             var href='https://wa.me/96550204320?text='+encodeURIComponent(lines.join('\n'));
-            var detail='تصميم 198 | '+state.wall+' | '+serviceLabel()+' | '+state.color+' | '+(state.custom?'تسعير خاص':price+' د.ك')+' | '+state.included;
+            var detail=choiceDetails();
             wa.href=href;mobileWa.href=href;wa.dataset.mhAdDetails=detail;mobileWa.dataset.mhAdDetails=detail;
         }
         function activate(group,button){root.querySelectorAll(group).forEach(function(b){b.classList.remove('is-active');b.setAttribute('aria-pressed','false');});button.classList.add('is-active');button.setAttribute('aria-pressed','true');}
-        root.querySelectorAll('[data-mh198-wall]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-wall]',button);state.wall=button.dataset.mh198Wall;state.wallMin=Number(button.dataset.mh198WallMin);state.wallMax=Number(button.dataset.mh198WallMax);state.noInstall=Number(button.dataset.mh198NoInstall);state.withInstall=Number(button.dataset.mh198WithInstall);state.included=button.dataset.mh198Included;state.custom=button.dataset.mh198Custom==='1';update();});});
-        root.querySelectorAll('[data-mh198-install]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-install]',button);state.install=button.dataset.mh198Install==='1';update();});});
-        root.querySelectorAll('[data-mh198-color-choice]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-color-choice]',button);state.color=button.dataset.mh198ColorChoice;main.src=button.dataset.mh198ColorImage;main.alt='تصميم 198 الخشب الهرمي باللون '+state.color;caption.textContent=state.color;root.querySelectorAll('[data-mh198-color]').forEach(function(b){b.classList.toggle('is-active',b.dataset.mh198Color===state.color);b.setAttribute('aria-pressed',b.dataset.mh198Color===state.color?'true':'false');});update();});});
-        root.querySelectorAll('[data-mh198-color]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-color]',button);main.src=button.dataset.mh198Image;main.alt=button.querySelector('img').alt;caption.textContent=button.dataset.mh198Color;if(button.dataset.mh198Color!=='المقاسات'){state.color=button.dataset.mh198Color;root.querySelectorAll('[data-mh198-color-choice]').forEach(function(b){b.classList.toggle('is-active',b.dataset.mh198ColorChoice===state.color);b.setAttribute('aria-pressed',b.dataset.mh198ColorChoice===state.color?'true':'false');});update();}});});
+        root.querySelectorAll('[data-mh198-wall]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-wall]',button);state.wall=button.dataset.mh198Wall;state.wallMin=Number(button.dataset.mh198WallMin);state.wallMax=Number(button.dataset.mh198WallMax);state.noInstall=Number(button.dataset.mh198NoInstall);state.withInstall=Number(button.dataset.mh198WithInstall);state.included=button.dataset.mh198Included;state.custom=button.dataset.mh198Custom==='1';update();scheduleChoice();});});
+        root.querySelectorAll('[data-mh198-install]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-install]',button);state.install=button.dataset.mh198Install==='1';update();scheduleChoice();});});
+        root.querySelectorAll('[data-mh198-color-choice]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-color-choice]',button);state.color=button.dataset.mh198ColorChoice;main.src=button.dataset.mh198ColorImage;main.alt='تصميم 198 الخشب الهرمي باللون '+state.color;caption.textContent=state.color;root.querySelectorAll('[data-mh198-color]').forEach(function(b){b.classList.toggle('is-active',b.dataset.mh198Color===state.color);b.setAttribute('aria-pressed',b.dataset.mh198Color===state.color?'true':'false');});update();scheduleChoice();});});
+        root.querySelectorAll('[data-mh198-color]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-color]',button);main.src=button.dataset.mh198Image;main.alt=button.querySelector('img').alt;caption.textContent=button.dataset.mh198Color;if(button.dataset.mh198Color!=='المقاسات'){state.color=button.dataset.mh198Color;root.querySelectorAll('[data-mh198-color-choice]').forEach(function(b){b.classList.toggle('is-active',b.dataset.mh198ColorChoice===state.color);b.setAttribute('aria-pressed',b.dataset.mh198ColorChoice===state.color?'true':'false');});update();scheduleChoice();}});});
         [wa,mobileWa].forEach(function(link){link.addEventListener('click',function(){if(typeof window.fbq==='function')window.fbq('track','Contact',{content_ids:['design-198'],content_name:'Design 198 Pyramid Wood'});if(typeof window.snaptr==='function')window.snaptr('track','START_CHECKOUT',{item_ids:['design-198'],item_category:'TV Wall Design',price:state.custom?0:selectedPrice(),currency:'KWD'});});});
         update();
     });
@@ -3033,7 +3060,7 @@ add_action('wp_head', 'mh_control_campaign_attribution_script', 3);
 
 
 function mh_control_refresh_site_cache_once(): void {
-    if (get_option('mh_global_cache_version') === '1.1.3') return;
+    if (get_option('mh_global_cache_version') === '1.1.4') return;
     $urls = [
         home_url('/'),
         home_url('/design-198/'),
@@ -3050,7 +3077,7 @@ function mh_control_refresh_site_cache_once(): void {
         rocket_clean_domain();
     }
     wp_cache_flush();
-    update_option('mh_global_cache_version', '1.1.3', false);
+    update_option('mh_global_cache_version', '1.1.4', false);
 }
 add_action('init', 'mh_control_refresh_site_cache_once', 999);
 
@@ -3754,6 +3781,18 @@ function mh_control_fire_structured_data(): string {
 function mh_control_design_198_structured_data(): string {
     if (!mh_control_is_design_198_page()) return '';
     $canonical = home_url('/design-198/');
+    $questions = [
+        ['ماذا تشمل باقة 130 د.ك بدون تركيب؟', 'مناسبة لحائط من 3 متر إلى أقل من 3.5 متر، وتشمل طاولة معلقة 2.5 متر وكابينة أرفف و3 ألواح فوم بورد، من دون خدمة التركيب.'],
+        ['ما الفرق بين 150 د.ك و198 د.ك؟', 'السعران لشريحة حائط من 3.5 إلى 4.5 متر وتشمل طاولة 3 متر وكابينة و4 ألواح فوم بورد؛ 150 د.ك بدون تركيب و198 د.ك مع التركيب داخل الكويت.'],
+        ['هل سعر 170 د.ك يشمل التركيب؟', 'نعم للشريحة الأولى داخل الكويت، ويعتمد السعر النهائي بعد مراجعة صورة الحائط والمقاس وموقع التنفيذ.'],
+        ['ما الألوان المتاحة؟', 'بيج خشبي وهو الاختيار الافتراضي، وأبيض، ورمادي غامق.'],
+        ['كيف يتم تأكيد الطلب والدفع؟', 'لا يتم تحصيل أي مبلغ من الصفحة، وتراجع المواصفات والسعر والموعد مع العميل على واتساب قبل اعتماد الطلب.'],
+        ['كيف تتم المتابعة بعد التنفيذ؟', 'يتواصل العميل على واتساب بنفس رقم الطلب لمراجعة التنفيذ وتحديد الصيانة أو قطع الغيار المتاحة حسب الحالة.'],
+    ];
+    $faq = [];
+    foreach ($questions as $question) {
+        $faq[] = ['@type' => 'Question', 'name' => $question[0], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $question[1]]];
+    }
     $schema = [
         '@context' => 'https://schema.org',
         '@graph' => [
@@ -3778,6 +3817,7 @@ function mh_control_design_198_structured_data(): string {
                     'availability' => 'https://schema.org/InStock',
                 ],
             ],
+            ['@type' => 'FAQPage', '@id' => $canonical . '#faq', 'mainEntity' => $faq],
             [
                 '@type' => 'BreadcrumbList',
                 '@id' => $canonical . '#breadcrumb',
