@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.12.3');
+define('MH_CONTROL_VERSION', '1.12.4');
 define('MH_CONTROL_SNAP_PIXEL_ID', '2770b368-fa3d-49f1-bf4e-685b62c10ecf');
 define('MH_CONTROL_META_PIXEL_ID', '761400161961314');
 define('MH_CONTROL_LEADS_DB_VERSION', '1.0');
@@ -159,9 +159,9 @@ function mh_control_render_admin_page(): void {
         </tbody></table></div>
         <h2>تفاصيل آخر 90 يومًا</h2>
         <p>البيانات مجمعة ولا تخزن اسم الزائر أو رقم الهاتف أو عنوان IP.</p>
-        <div class="mh-admin-table"><table class="widefat striped"><thead><tr><th>التاريخ</th><th>الصفحة</th><th>المصدر</th><th>الحملة</th><th>النتيجة</th><th>العدد</th></tr></thead><tbody>
+        <div class="mh-admin-table"><table class="widefat striped"><thead><tr><th>التاريخ</th><th>الصفحة</th><th>المصدر</th><th>الحملة</th><th>النتيجة</th><th>اختيار العميل</th><th>العدد</th></tr></thead><tbody>
         <?php if ($stats === []): ?>
-            <tr><td colspan="6">لا توجد بيانات بعد. ستبدأ اللوحة في التسجيل عند زيارة روابط UTM الجديدة.</td></tr>
+            <tr><td colspan="7">لا توجد بيانات بعد. ستبدأ اللوحة في التسجيل عند زيارة روابط UTM الجديدة.</td></tr>
         <?php else: foreach (array_slice($stats, 0, 200) as $row): ?>
             <tr>
                 <td><?php echo esc_html((string) ($row['date'] ?? '')); ?></td>
@@ -169,6 +169,7 @@ function mh_control_render_admin_page(): void {
                 <td><?php echo esc_html((string) ($row['source'] ?? 'direct')); ?></td>
                 <td><?php echo esc_html((string) ($row['campaign'] ?? '—')); ?></td>
                 <td><?php echo esc_html(($row['event'] ?? '') === 'whatsapp_click' ? 'نقرة واتساب' : (($row['event'] ?? '') === 'lead_submitted' ? 'طلب عرض سعر' : 'زيارة')); ?></td>
+                <td><?php echo esc_html((string) ($row['details'] ?? '—')); ?></td>
                 <td><strong><?php echo esc_html(number_format_i18n((int) ($row['count'] ?? 0))); ?></strong></td>
             </tr>
         <?php endforeach; endif; ?>
@@ -387,6 +388,7 @@ function mh_control_record_ad_event(WP_REST_Request $request): WP_REST_Response 
     $source = strtolower($clean($request->get_param('source'), 50));
     $campaign = $clean($request->get_param('campaign'), 80);
     $medium = $clean($request->get_param('medium'), 50);
+    $details = $clean($request->get_param('details'), 300);
     $date = current_time('Y-m-d');
     $source = $source !== '' ? $source : 'direct';
     $page = $page !== '' ? $page : '/';
@@ -396,7 +398,7 @@ function mh_control_record_ad_event(WP_REST_Request $request): WP_REST_Response 
 
     $stats = get_option('mh_control_ad_stats', []);
     $stats = is_array($stats) ? $stats : [];
-    $key = md5(implode('|', [$date, $page, $source, $campaign, $medium, $event]));
+    $key = md5(implode('|', [$date, $page, $source, $campaign, $medium, $event, $details]));
     $stats[$key] = [
         'date' => $date,
         'page' => $page,
@@ -404,6 +406,7 @@ function mh_control_record_ad_event(WP_REST_Request $request): WP_REST_Response 
         'campaign' => $campaign,
         'medium' => $medium,
         'event' => $event,
+        'details' => $details,
         'count' => max(0, (int) ($stats[$key]['count'] ?? 0)) + 1,
     ];
     $cutoff = gmdate('Y-m-d', strtotime('-90 days'));
@@ -525,8 +528,8 @@ function mh_control_ad_tracking_script(): void {
         var source=params.get('utm_source')||'';
         if(!source&&document.referrer){try{source=new URL(document.referrer).hostname.replace(/^www\./,'');}catch(e){}}
         var payload={page:location.pathname,source:source||'direct',medium:params.get('utm_medium')||'',campaign:params.get('utm_campaign')||''};
-        function send(event){
-            var body=JSON.stringify(Object.assign({},payload,{event:event}));
+        function send(event,details){
+            var body=JSON.stringify(Object.assign({},payload,{event:event,details:details||''}));
             if(navigator.sendBeacon){navigator.sendBeacon(endpoint,new Blob([body],{type:'application/json'}));}
             else{fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:body,credentials:'same-origin',keepalive:true});}
         }
@@ -534,7 +537,7 @@ function mh_control_ad_tracking_script(): void {
         if(!sessionStorage.getItem(viewKey)){send('page_view');sessionStorage.setItem(viewKey,'1');}
         document.addEventListener('click',function(event){
             var link=event.target.closest('a[href*="wa.me/"]');
-            if(link){send('whatsapp_click');}
+            if(link){send('whatsapp_click',link.dataset.mhAdDetails||'');}
         },true);
     }());
     </script>
@@ -560,7 +563,7 @@ function mh_control_snap_pixel_script(): void {
         '/design-198/' => [
             'item_ids' => ['design-198'],
             'item_category' => 'TV Wall Design',
-            'price' => 173.00,
+            'price' => 130.00,
             'currency' => 'KWD',
         ],
     ];
@@ -619,7 +622,7 @@ function mh_control_meta_pixel_script(): void {
             'content_name' => 'Design 198 Pyramid Wood',
             'content_category' => 'TV Wall Design',
             'content_type' => 'product',
-            'value' => 173.00,
+            'value' => 130.00,
             'currency' => 'KWD',
         ],
     ];
@@ -710,7 +713,7 @@ function mh_control_homepage_markup(): string {
                     </a>
                     <a class="mh-card mh-card--wide" href="<?php echo esc_url(home_url('/design-198/')); ?>">
                         <img src="<?php echo esc_url(mh_control_design_198_asset('design-198-beige-wood.webp')); ?>" alt="تصميم 198 الخشب الهرمي من ماركوز هوم">
-                        <span class="mh-card__shade"></span><span class="mh-card__text"><b>تصميم 198 — الخشب الهرمي</b><small>جديد — 3 ألوان وحاسبة سعر فورية</small></span>
+                        <span class="mh-card__shade"></span><span class="mh-card__text"><b>تصميم 198 — الخشب الهرمي</b><small>يبدأ من 130 د.ك بدون تركيب / 170 د.ك مع التركيب</small></span>
                     </a>
                     <a class="mh-card" href="https://marcohom.com/coffee-corner/">
                         <img src="https://coffee.marcohom.com/coffee/brown-travertine.webp" alt="ركن قهوة من ماركوز هوم">
@@ -2387,7 +2390,9 @@ function mh_control_design_198_script(): void {
             wallSummary.textContent=state.wall;serviceSummary.textContent=serviceLabel();wallPrice.textContent=state.custom?'تسعير خاص':price+' د.ك';includedSummary.textContent=state.included;colorSummary.textContent=state.color;
             total.innerHTML=state.custom?'حسب الطلب':price+' <small>د.ك</small>';special.hidden=!state.custom;
             var lines=['مرحباً ماركوز هوم، أريد الاستفسار عن تصميم 198 — الخشب الهرمي.','اللون: '+state.color,'فئة الحائط: '+state.wall,'طريقة الاستلام: '+serviceLabel(),'تشمل الباقة: '+state.included,'سعر الباقة: '+(state.custom?'يحتاج حساب تكلفة ومراجعة':price+' د.ك'),'الإجمالي المبدئي: '+(state.custom?'تسعير خاص عبر واتساب':price+' د.ك'),'التنفيذ: داخل الكويت','مصدر الإعلان: '+(track.utm_source||'direct'),'وسيط الحملة: '+(track.utm_medium||'—'),'اسم الحملة: '+(track.utm_campaign||'—'),'محتوى الإعلان: '+(track.utm_content||'—'),'كلمة الإعلان: '+(track.utm_term||'—'),'fbclid: '+(track.fbclid||'—')];
-            var href='https://wa.me/96550204320?text='+encodeURIComponent(lines.join('\n'));wa.href=href;mobileWa.href=href;
+            var href='https://wa.me/96550204320?text='+encodeURIComponent(lines.join('\n'));
+            var detail='تصميم 198 | '+state.wall+' | '+serviceLabel()+' | '+state.color+' | '+(state.custom?'تسعير خاص':price+' د.ك')+' | '+state.included;
+            wa.href=href;mobileWa.href=href;wa.dataset.mhAdDetails=detail;mobileWa.dataset.mhAdDetails=detail;
         }
         function activate(group,button){root.querySelectorAll(group).forEach(function(b){b.classList.remove('is-active');b.setAttribute('aria-pressed','false');});button.classList.add('is-active');button.setAttribute('aria-pressed','true');}
         root.querySelectorAll('[data-mh198-wall]').forEach(function(button){button.addEventListener('click',function(){activate('[data-mh198-wall]',button);state.wall=button.dataset.mh198Wall;state.wallMin=Number(button.dataset.mh198WallMin);state.wallMax=Number(button.dataset.mh198WallMax);state.noInstall=Number(button.dataset.mh198NoInstall);state.withInstall=Number(button.dataset.mh198WithInstall);state.included=button.dataset.mh198Included;state.custom=button.dataset.mh198Custom==='1';update();});});
@@ -2499,7 +2504,7 @@ function mh_control_tv_wall_markup(): string {
                 <div class="mhtw-heading"><span class="mhtw-eyebrow mhtw-eyebrow--blue">تصميمات وأفكار</span><h2>اختار الشكل الأقرب لمساحتك</h2><p>أرسل لنا صورة الحائط وسنرشح لك التكوين والمقاسات الأنسب.</p></div>
                 <a class="mhtw-featured-198" href="<?php echo esc_url(home_url('/design-198/')); ?>">
                     <img src="<?php echo esc_url(mh_control_design_198_asset('design-198-beige-wood.webp')); ?>" alt="تصميم 198 الخشب الهرمي باللون البيج الخشبي" loading="lazy">
-                    <span><small>جديد — حاسبة سعر فورية</small><strong>تصميم 198 — الخشب الهرمي</strong><em>ثلاثة ألوان، مقاسات مرنة وتنفيذ داخل الكويت</em><b>شاهد التصميم واحسب السعر</b></span>
+                    <span><small>جديد — حاسبة سعر فورية</small><strong>تصميم 198 — الخشب الهرمي</strong><em>يبدأ من 130 د.ك بدون تركيب أو 170 د.ك مع التركيب</em><b>شاهد التصميم واحسب السعر</b></span>
                 </a>
                 <div class="mhtw-gallery">
                     <figure class="mhtw-gallery__tall"><img src="https://marcohom.com/wp-content/uploads/2025/10/IMG-20251031-WA0012-580x879.jpg" alt="خلفية شاشة خشبية مع طاولة معلقة" loading="lazy"></figure>
@@ -3028,7 +3033,7 @@ add_action('wp_head', 'mh_control_campaign_attribution_script', 3);
 
 
 function mh_control_refresh_site_cache_once(): void {
-    if (get_option('mh_global_cache_version') === '1.1.1') return;
+    if (get_option('mh_global_cache_version') === '1.1.2') return;
     do_action('litespeed_purge_all');
     if (class_exists('LiteSpeed_Cache_API') && is_callable(['LiteSpeed_Cache_API', 'purge_all'])) {
         LiteSpeed_Cache_API::purge_all();
@@ -3037,7 +3042,7 @@ function mh_control_refresh_site_cache_once(): void {
         rocket_clean_domain();
     }
     wp_cache_flush();
-    update_option('mh_global_cache_version', '1.1.1', false);
+    update_option('mh_global_cache_version', '1.1.2', false);
 }
 add_action('init', 'mh_control_refresh_site_cache_once', 999);
 
