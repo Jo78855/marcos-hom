@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import DecorAdmin from './components/DecorAdmin';
 import './styles.css';
 
 const rootElement = document.getElementById('root');
@@ -9,8 +10,12 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+const isDecorAdmin = window.location.pathname.startsWith('/decor-admin');
 
-if (window.location.hostname.startsWith('fire.') || window.location.pathname.startsWith('/fire')) {
+if (isDecorAdmin) {
+  document.title = 'Marco’s Home | إدارة الديكورات';
+  document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute('content', '#111827');
+} else if (window.location.hostname.startsWith('fire.') || window.location.pathname.startsWith('/fire')) {
   document.title = 'ماركوز هوم | جهاز الفير المعطر';
   document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.setAttribute('href', '/fire-manifest.webmanifest');
   document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute('content', '#b45309');
@@ -18,7 +23,7 @@ if (window.location.hostname.startsWith('fire.') || window.location.pathname.sta
 
 root.render(
   <React.StrictMode>
-    <App />
+    {isDecorAdmin ? <DecorAdmin /> : <App />}
   </React.StrictMode>
 );
 
