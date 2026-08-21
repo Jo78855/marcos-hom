@@ -239,7 +239,10 @@ function mh_ops_admin_save_order(): void {
     if (!current_user_can('manage_options')) wp_die('غير مسموح.');
     check_admin_referer('mh_ops_save_order');
     $order_id = absint($_POST['order_id'] ?? 0);
-    if ($order_id < 1) wp_safe_redirect(admin_url('admin.php?page=mh-orders'));
+    if ($order_id < 1) {
+        wp_safe_redirect(admin_url('admin.php?page=mh-orders'));
+        exit;
+    }
 
     $statuses = mh_ops_statuses();
     $payments = mh_ops_payment_statuses();
@@ -276,7 +279,10 @@ function mh_ops_technician_update(): void {
     $order_id = absint($_POST['order_id'] ?? 0);
     $status = sanitize_key((string) ($_POST['status'] ?? ''));
     $allowed = ['enroute', 'working', 'completed', 'issue'];
-    if ($order_id < 1 || !in_array($status, $allowed, true)) wp_safe_redirect(home_url('/marcos-team/'));
+    if ($order_id < 1 || !in_array($status, $allowed, true)) {
+        wp_safe_redirect(home_url('/marcos-team/'));
+        exit;
+    }
     global $wpdb;
     $order = $wpdb->get_row($wpdb->prepare('SELECT id, technician_id FROM ' . mh_ops_table('orders') . ' WHERE id=%d LIMIT 1', $order_id), ARRAY_A);
     if (!is_array($order) || (!current_user_can('manage_options') && (int) $order['technician_id'] !== get_current_user_id())) wp_die('هذا الطلب غير مسند لك.');
