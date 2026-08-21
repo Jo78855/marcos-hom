@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_OPS_DB_VERSION', '1.0.0');
+define('MH_OPS_DB_VERSION', '1.1.0');
 
 function mh_ops_table(string $name): string {
     global $wpdb;
@@ -68,6 +68,7 @@ function mh_ops_install_schema(): void {
         notes text NOT NULL,
         PRIMARY KEY (id),
         UNIQUE KEY order_code (order_code),
+        KEY lead_id (lead_id),
         KEY customer_id (customer_id),
         KEY status (status),
         KEY scheduled_at (scheduled_at),
@@ -97,6 +98,110 @@ function mh_ops_statuses(): array {
         'cancelled' => 'ملغي',
     ];
 }
+
+function mh_ops_status_from_lead(string $status): string {
+    return [
+        'new' => 'new',
+        'contacted' => 'contacted',
+        'quoted' => 'quoted',
+        'won' => 'confirmed',
+        'closed' => 'cancelled',
+    ][$status] ?? 'new';
+}
+
+function mh_ops_product_label(string $product): string {
+    return [
+        'fire-blaze' => 'جهاز Fire Blaze',
+        'tv-tables' => 'طاولة TV معلقة',
+        'design-198' => 'تصميم 198 — الخشب الهرمي',
+    ][$product] ?? $product;
+}
+
+function mh_ops_sync_lead(array $lead): int {
+    $lead_id = absint($lead['id'] ?? 0);
+    $phone = sanitize_text_field((string) ($lead['phone'] ?? ''));
+    if ($lead_id < 1 || $phone === '') return 0;
+
+    global $wpdb;
+    mh_ops_install_schema();
+    $customers = mh_ops_table('customers');
+    $orders = mh_ops_table('orders');
+    $now = current_time('mysql');
+    $customer_id = (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$customers} WHERE phone=%s LIMIT 1", $phone));
+    $customer_data = [
+        'updated_at' => $now,
+        'name' => sanitize_text_field((string) ($lead['name'] ?? 'عميل Marco’s Home')),
+        'phone' => $phone,
+        'area' => sanitize_text_field((string) ($lead['area'] ?? '')),
+    ];
+    if ($customer_id > 0) {
+        $wpdb->update($customers, $customer_data, ['id' => $customer_id], ['%s', '%s', '%s', '%s'], ['%d']);
+    } else {
+        $customer_data['created_at'] = (string) ($lead['created_at'] ?? $now);
+        $customer_data['address'] = '';
+        $customer_data['notes'] = '';
+        $wpdb->insert($customers, $customer_data, ['%s', '%s', '%s', '%s', '%s', '%s', '%s']);
+        $customer_id = (int) $wpdb->insert_id;
+    }
+    if ($customer_id < 1) return 0;
+
+    $existing_order = (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$orders} WHERE lead_id=%d LIMIT 1", $lead_id));
+    $order_data = [
+        'updated_at' => $now,
+        'customer_id' => $customer_id,
+        'product' => mh_ops_product_label(sanitize_key((string) ($lead['product'] ?? ''))),
+        'source' => sanitize_text_field((string) ($lead['source'] ?? 'direct')),
+        'medium' => sanitize_text_field((string) ($lead['medium'] ?? '')),
+        'campaign' => sanitize_text_field((string) ($lead['campaign'] ?? '')),
+        'status' => mh_ops_status_from_lead(sanitize_key((string) ($lead['status'] ?? 'new'))),
+        'notes' => sanitize_textarea_field((string) ($lead['details'] ?? '')),
+    ];
+    if ($existing_order > 0) {
+        $wpdb->update($orders, $order_data, ['id' => $existing_order], ['%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s'], ['%d']);
+        return $existing_order;
+    }
+
+    $order_data += [
+        'created_at' => (string) ($lead['created_at'] ?? $now),
+        'order_code' => 'MH-' . str_pad((string) $lead_id, 6, '0', STR_PAD_LEFT),
+        'lead_id' => $lead_id,
+        'design' => '',
+        'wall_width' => 0,
+        'table_width' => 0,
+        'color' => '',
+        'installation' => '',
+        'total' => 0,
+        'deposit' => 0,
+        'balance' => 0,
+        'technician_id' => 0,
+        'scheduled_at' => null,
+        'completed_at' => null,
+    ];
+    $inserted = $wpdb->insert($orders, $order_data);
+    return $inserted === false ? 0 : (int) $wpdb->insert_id;
+}
+add_action('mh_control_lead_created', 'mh_ops_sync_lead');
+
+function mh_ops_sync_lead_status(int $lead_id, string $status): void {
+    global $wpdb;
+    $wpdb->update(
+        mh_ops_table('orders'),
+        ['status' => mh_ops_status_from_lead($status), 'updated_at' => current_time('mysql')],
+        ['lead_id' => $lead_id],
+        ['%s', '%s'],
+        ['%d']
+    );
+}
+add_action('mh_control_lead_status_updated', 'mh_ops_sync_lead_status', 10, 2);
+
+function mh_ops_backfill_existing_leads(): void {
+    if (!current_user_can('manage_options') || !function_exists('mh_control_leads_table')) return;
+    global $wpdb;
+    $leads = $wpdb->get_results('SELECT * FROM ' . mh_control_leads_table() . ' ORDER BY id ASC LIMIT 500', ARRAY_A);
+    if (!is_array($leads)) return;
+    foreach ($leads as $lead) mh_ops_sync_lead($lead);
+}
+add_action('admin_init', 'mh_ops_backfill_existing_leads', 30);
 
 function mh_ops_menu(): void {
     add_menu_page(
@@ -280,4 +385,3 @@ function mh_ops_portal_titles(string $title): string {
     return $title;
 }
 add_filter('pre_get_document_title', 'mh_ops_portal_titles', 130);
-
