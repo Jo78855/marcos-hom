@@ -3,7 +3,7 @@
  * Plugin Name: Marco's Home Control
  * Plugin URI: https://marcohom.com/
  * Description: قناة آمنة لإدارة تعديلات موقع Marco's Home المنشورة من فرع WordPress المخصص.
- * Version: 1.13.0
+ * Version: 1.14.0
  * Author: Marco's Home
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_CONTROL_VERSION', '1.13.0');
+define('MH_CONTROL_VERSION', '1.14.0');
 define('MH_CONTROL_SNAP_PIXEL_ID', '2770b368-fa3d-49f1-bf4e-685b62c10ecf');
 define('MH_CONTROL_META_PIXEL_ID', '761400161961314');
 define('MH_CONTROL_LEADS_DB_VERSION', '1.0');
@@ -201,6 +201,7 @@ function mh_control_update_lead_status(): void {
             ['%s', '%s'],
             ['%d']
         );
+        do_action('mh_control_lead_status_updated', $lead_id, $status);
     }
     wp_safe_redirect(admin_url('tools.php?page=marcos-home-control#mh-leads'));
     exit;
@@ -314,7 +315,7 @@ function mh_control_create_lead(WP_REST_Request $request): WP_REST_Response {
     $campaign = $clean($request->get_param('campaign'), 120);
     $page = $clean($request->get_param('page'), 160);
     $consent = (bool) $request->get_param('consent');
-    $allowed_products = ['fire-blaze', 'tv-tables'];
+    $allowed_products = ['fire-blaze', 'tv-tables', 'design-198'];
 
     if ((function_exists('mb_strlen') ? mb_strlen($name) : strlen($name)) < 2) {
         return new WP_REST_Response(['saved' => false, 'field' => 'name', 'message' => 'اكتب الاسم بشكل صحيح.'], 400);
@@ -356,16 +357,32 @@ function mh_control_create_lead(WP_REST_Request $request): WP_REST_Response {
     if ($inserted === false) {
         return new WP_REST_Response(['saved' => false, 'message' => 'تعذر حفظ الطلب الآن. جرّب التواصل على واتساب.'], 500);
     }
+    $lead_id = (int) $wpdb->insert_id;
+    do_action('mh_control_lead_created', [
+        'id' => $lead_id,
+        'created_at' => $now,
+        'updated_at' => $now,
+        'name' => $name,
+        'phone' => '+965' . $phone_digits,
+        'area' => $area,
+        'product' => $product,
+        'details' => $details,
+        'source' => $source !== '' ? $source : 'direct',
+        'medium' => $medium,
+        'campaign' => $campaign,
+        'page' => $page,
+        'status' => 'new',
+    ]);
     set_transient($rate_key, 1, 120);
     mh_control_record_internal_stat('lead_submitted', $page, $source, $campaign, $medium);
 
     $product_name = $product === 'fire-blaze' ? 'جهاز Fire Blaze' : 'طاولة TV معلقة';
-    $message = "مرحباً ماركوز هوم، سجلت طلب عرض سعر رقم #{$wpdb->insert_id}.\n"
+    $message = "مرحباً ماركوز هوم، سجلت طلب عرض سعر رقم #{$lead_id}.\n"
         . "الاسم: {$name}\nالمنتج: {$product_name}\nالمنطقة: " . ($area !== '' ? $area : 'غير محددة')
         . "\nالتفاصيل: " . ($details !== '' ? $details : 'أحتاج عرض سعر وتفاصيل أكثر.');
     return new WP_REST_Response([
         'saved' => true,
-        'lead_id' => (int) $wpdb->insert_id,
+        'lead_id' => $lead_id,
         'whatsapp_url' => 'https://wa.me/96550204320?text=' . rawurlencode($message),
     ], 201);
 }
