@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MH_OPS_DB_VERSION', '1.4.0');
+define('MH_OPS_DB_VERSION', '1.5.0');
 
 function mh_ops_table(string $name): string {
     global $wpdb;
@@ -71,6 +71,9 @@ function mh_ops_install_schema(): void {
         scheduled_at datetime NULL,
         completed_at datetime NULL,
         technician_note text NOT NULL,
+        client_received_at datetime NULL,
+        client_rating tinyint(3) unsigned NOT NULL DEFAULT 0,
+        client_note text NOT NULL,
         notes text NOT NULL,
         PRIMARY KEY (id),
         UNIQUE KEY order_code (order_code),
@@ -113,6 +116,7 @@ function mh_ops_statuses(): array {
         'working' => 'بدأ التنفيذ',
         'issue' => 'توجد مشكلة',
         'completed' => 'تم التنفيذ',
+        'received' => 'استلم العميل الأعمال',
         'collected' => 'تم التحصيل',
         'cancelled' => 'ملغي',
     ];
@@ -139,6 +143,16 @@ function mh_ops_job_access_key(array $order): string {
 function mh_ops_job_url(array $order): string {
     if (absint($order['id'] ?? 0) < 1 || mh_ops_phone_digits((string) ($order['technician_phone'] ?? '')) === '') return home_url('/marcos-team/');
     return add_query_arg(['job' => absint($order['id']), 'access' => mh_ops_job_access_key($order)], home_url('/marcos-team/'));
+}
+
+function mh_ops_customer_access_key(array $order): string {
+    $payload = absint($order['id'] ?? 0) . '|' . mh_ops_phone_digits((string) ($order['customer_phone'] ?? '')) . '|customer';
+    return hash_hmac('sha256', $payload, wp_salt('auth'));
+}
+
+function mh_ops_customer_url(array $order): string {
+    if (absint($order['id'] ?? 0) < 1 || mh_ops_phone_digits((string) ($order['customer_phone'] ?? '')) === '') return home_url('/marcos-app/');
+    return add_query_arg(['order' => absint($order['id']), 'access' => mh_ops_customer_access_key($order)], home_url('/marcos-app/'));
 }
 
 function mh_ops_status_from_lead(string $status): string {
@@ -223,6 +237,9 @@ function mh_ops_sync_lead(array $lead): int {
         'scheduled_at' => null,
         'completed_at' => null,
         'technician_note' => '',
+        'client_received_at' => null,
+        'client_rating' => 0,
+        'client_note' => '',
     ];
     $inserted = $wpdb->insert($orders, $order_data);
     return $inserted === false ? 0 : (int) $wpdb->insert_id;
@@ -334,6 +351,78 @@ function mh_ops_technician_update(): void {
 add_action('admin_post_mh_ops_technician_update', 'mh_ops_technician_update');
 add_action('admin_post_nopriv_mh_ops_technician_update', 'mh_ops_technician_update');
 
+function mh_ops_customer_feedback(): void {
+    $order_id = absint($_POST['order_id'] ?? 0);
+    $access = sanitize_text_field((string) ($_POST['access'] ?? ''));
+    global $wpdb;
+    $order = $wpdb->get_row($wpdb->prepare(
+        'SELECT o.*, c.phone customer_phone FROM ' . mh_ops_table('orders') . ' o INNER JOIN ' . mh_ops_table('customers') . ' c ON c.id=o.customer_id WHERE o.id=%d LIMIT 1',
+        $order_id
+    ), ARRAY_A);
+    if (!is_array($order) || $access === '' || !hash_equals(mh_ops_customer_access_key($order), $access)) wp_die('رابط الطلب غير صالح.');
+    check_admin_referer('mh_ops_customer_feedback_' . $order_id . '_' . $access);
+    if (!in_array((string) ($order['status'] ?? ''), ['completed', 'received', 'collected'], true)) {
+        wp_safe_redirect(add_query_arg('feedback_error', 'not_completed', mh_ops_customer_url($order)));
+        exit;
+    }
+    $rating = max(1, min(5, absint($_POST['client_rating'] ?? 0)));
+    $note = sanitize_textarea_field(wp_unslash((string) ($_POST['client_note'] ?? '')));
+    $data = [
+        'updated_at' => current_time('mysql'),
+        'client_received_at' => current_time('mysql'),
+        'client_rating' => $rating,
+        'client_note' => $note,
+    ];
+    if ((string) ($order['status'] ?? '') !== 'collected') $data['status'] = 'received';
+    $wpdb->update(mh_ops_table('orders'), $data, ['id' => $order_id]);
+    $upload_result = mh_ops_save_client_photo($order_id);
+    $args = ['feedback_saved' => 1];
+    if (is_wp_error($upload_result)) $args['client_photo_error'] = $upload_result->get_error_code();
+    wp_safe_redirect(add_query_arg($args, mh_ops_customer_url($order)));
+    exit;
+}
+add_action('admin_post_mh_ops_customer_feedback', 'mh_ops_customer_feedback');
+add_action('admin_post_nopriv_mh_ops_customer_feedback', 'mh_ops_customer_feedback');
+
+function mh_ops_save_client_photo(int $order_id) {
+    if (empty($_FILES['client_photo']) || (int) ($_FILES['client_photo']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) return 0;
+    if ((int) ($_FILES['client_photo']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) return new WP_Error('upload_failed');
+    if ((int) ($_FILES['client_photo']['size'] ?? 0) > 8 * MB_IN_BYTES) return new WP_Error('too_large');
+    require_once ABSPATH . 'wp-admin/includes/file.php';
+    require_once ABSPATH . 'wp-admin/includes/image.php';
+    $file = [
+        'name' => sanitize_file_name((string) ($_FILES['client_photo']['name'] ?? 'receipt.jpg')),
+        'type' => sanitize_mime_type((string) ($_FILES['client_photo']['type'] ?? '')),
+        'tmp_name' => (string) ($_FILES['client_photo']['tmp_name'] ?? ''),
+        'error' => (int) ($_FILES['client_photo']['error'] ?? UPLOAD_ERR_NO_FILE),
+        'size' => (int) ($_FILES['client_photo']['size'] ?? 0),
+    ];
+    $checked = wp_check_filetype_and_ext($file['tmp_name'], $file['name'], [
+        'jpg|jpeg|jpe' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp',
+    ]);
+    if (empty($checked['type']) || !str_starts_with((string) $checked['type'], 'image/')) return new WP_Error('invalid_type');
+    $handled = wp_handle_upload($file, ['test_form' => false, 'mimes' => [
+        'jpg|jpeg|jpe' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp',
+    ]]);
+    if (!empty($handled['error']) || empty($handled['file'])) return new WP_Error('upload_failed');
+    $attachment_id = wp_insert_attachment([
+        'post_mime_type' => (string) $handled['type'],
+        'post_title' => 'MH ' . $order_id . ' client receipt',
+        'post_content' => '',
+        'post_status' => 'inherit',
+    ], (string) $handled['file']);
+    if (is_wp_error($attachment_id) || $attachment_id < 1) return new WP_Error('upload_failed');
+    wp_update_attachment_metadata($attachment_id, wp_generate_attachment_metadata($attachment_id, (string) $handled['file']));
+    global $wpdb;
+    $wpdb->insert(mh_ops_table('job_media'), [
+        'order_id' => $order_id,
+        'attachment_id' => $attachment_id,
+        'media_type' => 'client',
+        'created_at' => current_time('mysql'),
+    ], ['%d', '%d', '%s', '%s']);
+    return 1;
+}
+
 function mh_ops_save_job_photos(int $order_id) {
     if (empty($_FILES['job_photos']) || !is_array($_FILES['job_photos']['name'] ?? null)) return 0;
     $type = sanitize_key((string) ($_POST['photo_type'] ?? 'before'));
@@ -385,18 +474,20 @@ function mh_ops_save_job_photos(int $order_id) {
     return $saved;
 }
 
-function mh_ops_get_job_media(int $order_id): array {
+function mh_ops_get_job_media(int $order_id, array $types = []): array {
     global $wpdb;
     $rows = $wpdb->get_results($wpdb->prepare('SELECT * FROM ' . mh_ops_table('job_media') . ' WHERE order_id=%d ORDER BY id ASC', $order_id), ARRAY_A);
-    return is_array($rows) ? $rows : [];
+    if (!is_array($rows)) return [];
+    if ($types === []) return $rows;
+    return array_values(array_filter($rows, static fn($row) => in_array((string) ($row['media_type'] ?? ''), $types, true)));
 }
 
 function mh_ops_media_type_label(string $type): string {
-    return ['before' => 'قبل التنفيذ', 'after' => 'بعد التنفيذ', 'issue' => 'مشكلة في التنفيذ'][$type] ?? 'صورة تنفيذ';
+    return ['before' => 'قبل التنفيذ', 'after' => 'بعد التنفيذ', 'issue' => 'مشكلة في التنفيذ', 'client' => 'صورة من العميل'][$type] ?? 'صورة تنفيذ';
 }
 
-function mh_ops_render_job_media(int $order_id, bool $admin = false): void {
-    $media = mh_ops_get_job_media($order_id);
+function mh_ops_render_job_media(int $order_id, bool $admin = false, array $types = []): void {
+    $media = mh_ops_get_job_media($order_id, $types);
     if ($media === []) {
         if ($admin) echo '<p class="mhops-empty">لم يرفع الفني صورًا لهذه المهمة بعد.</p>';
         return;
@@ -504,8 +595,14 @@ function mh_ops_render_order_editor(int $order_id): void {
         <label>هاتف العميل<input type="text" value="<?php echo esc_attr((string) ($order['customer_phone'] ?? '')); ?>" readonly></label>
         <label class="wide">ملاحظات الطلب<textarea name="notes"><?php echo esc_textarea((string) $order['notes']); ?></textarea></label>
         <?php if ((string) ($order['technician_note'] ?? '') !== ''): ?><div class="wide"><strong>آخر ملاحظة من الفني</strong><div class="mhops-card" style="margin-top:7px"><?php echo nl2br(esc_html((string) $order['technician_note'])); ?></div></div><?php endif; ?>
-        <div class="wide mhops-actions"><button class="button button-primary" type="submit">حفظ التعديلات</button><a class="button" href="<?php echo esc_url(admin_url('admin.php?page=mh-orders')); ?>">إغلاق</a><?php if (mh_ops_phone_digits((string) ($order['technician_phone'] ?? '')) !== ''): $job_url = mh_ops_job_url($order); $job_message = rawurlencode('مهمة تركيب من Marco’s Home — ' . (string) $order['order_code'] . "\n" . 'العميل: ' . (string) ($order['customer_name'] ?? '') . "\n" . 'الموعد: ' . (string) ($order['scheduled_at'] ?? 'غير محدد') . "\n" . 'افتح تفاصيل المهمة وحدّث الحالة من الرابط: ' . $job_url); ?><a class="button button-secondary" target="_blank" rel="noopener" href="https://wa.me/<?php echo esc_attr(mh_ops_phone_digits((string) $order['technician_phone'])); ?>?text=<?php echo esc_attr($job_message); ?>">إرسال المهمة للفني</a><?php endif; ?></div>
-    </form><hr><h3>صور التنفيذ من الفني</h3><?php mh_ops_render_job_media($order_id, true); ?></div>
+        <?php if (!empty($order['client_received_at'])): ?><div class="wide"><strong>تأكيد استلام العميل</strong><div class="mhops-card" style="margin-top:7px"><p>تم الاستلام: <?php echo esc_html((string) $order['client_received_at']); ?></p><p>التقييم: <?php echo esc_html(str_repeat('★', max(0, min(5, absint($order['client_rating'] ?? 0))))); ?></p><?php if ((string) ($order['client_note'] ?? '') !== ''): ?><p><?php echo nl2br(esc_html((string) $order['client_note'])); ?></p><?php endif; ?></div></div><?php endif; ?>
+        <div class="wide mhops-actions">
+            <button class="button button-primary" type="submit">حفظ التعديلات</button>
+            <a class="button" href="<?php echo esc_url(admin_url('admin.php?page=mh-orders')); ?>">إغلاق</a>
+            <?php if (mh_ops_phone_digits((string) ($order['customer_phone'] ?? '')) !== ''): $customer_url = mh_ops_customer_url($order); $customer_message = rawurlencode('مرحبًا ' . (string) ($order['customer_name'] ?? '') . "\n" . 'يمكنك متابعة طلبك لدى Marco’s Home وتأكيد الاستلام من الرابط الخاص: ' . $customer_url); ?><a class="button button-secondary" target="_blank" rel="noopener" href="https://wa.me/<?php echo esc_attr(mh_ops_phone_digits((string) $order['customer_phone'])); ?>?text=<?php echo esc_attr($customer_message); ?>">إرسال بوابة العميل</a><?php endif; ?>
+            <?php if (mh_ops_phone_digits((string) ($order['technician_phone'] ?? '')) !== ''): $job_url = mh_ops_job_url($order); $job_message = rawurlencode('مهمة تركيب من Marco’s Home — ' . (string) $order['order_code'] . "\n" . 'العميل: ' . (string) ($order['customer_name'] ?? '') . "\n" . 'الموعد: ' . (string) ($order['scheduled_at'] ?? 'غير محدد') . "\n" . 'افتح تفاصيل المهمة وحدّث الحالة من الرابط: ' . $job_url); ?><a class="button button-secondary" target="_blank" rel="noopener" href="https://wa.me/<?php echo esc_attr(mh_ops_phone_digits((string) $order['technician_phone'])); ?>?text=<?php echo esc_attr($job_message); ?>">إرسال المهمة للفني</a><?php endif; ?>
+        </div>
+    </form><hr><h3>صور التنفيذ وتأكيد العميل</h3><?php mh_ops_render_job_media($order_id, true); ?></div>
     <?php
 }
 
@@ -553,11 +650,10 @@ function mh_ops_portal_shell(string $type): string {
     <?php if ($is_team): ?>
         <?php echo mh_ops_team_jobs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
     <?php else: ?>
-        <form class="mhop-form" method="post"><label>رقم الطلب<input name="order_code" inputmode="text" placeholder="مثال MH-1001" required></label><label>رقم الهاتف<input name="phone" inputmode="tel" placeholder="965XXXXXXXX" required></label><button class="mhop-btn" type="submit">متابعة الطلب</button></form>
-        <?php echo mh_ops_customer_lookup(); ?>
+        <?php echo mh_ops_customer_portal(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
     <?php endif; ?>
     <button class="mhop-install" type="button" hidden>ثبّت التطبيق على الهاتف</button><a class="mhop-home" href="<?php echo esc_url(home_url('/')); ?>">العودة إلى موقع ماركوز هوم</a></section></main>
-    <style>body{background:#eef5fb!important}.mhop{min-height:75vh;display:grid;place-items:center;padding:36px 18px;font-family:Tahoma,Arial,sans-serif}.mhop-card{width:min(100%,680px);background:#fff;border-radius:24px;padding:38px;box-shadow:0 24px 70px rgba(7,26,51,.12);text-align:right}.mhop-logo{width:66px;height:66px;border-radius:18px;background:#071a33;color:#fff;display:grid;place-items:center;font-size:24px;font-weight:900;border-bottom:6px solid #0878d1}.mhop-kicker{display:block;color:#0878d1;font-weight:900;margin-top:24px}.mhop h1{color:#071a33;font-size:34px;margin:9px 0}.mhop p{color:#627087;line-height:1.9}.mhop-form{display:grid;gap:14px;margin:26px 0}.mhop-form label{font-weight:800;color:#071a33}.mhop-form input,.mhop-form select,.mhop-form textarea{display:block;width:100%;box-sizing:border-box;margin-top:7px;border:1px solid #cad5e2;border-radius:12px;padding:14px;font-size:16px}.mhop-btn,.mhop-install{display:block;width:100%;border:0;border-radius:12px;background:#0878d1;color:#fff!important;padding:14px;text-align:center;text-decoration:none;font-weight:900;font-size:17px}.mhop-install{margin-top:12px;background:#071a33}.mhop-home{display:block;text-align:center;margin-top:18px;color:#516176}.mhop-note{margin:22px 0;padding:16px;border-radius:12px;background:#eef5fb;color:#071a33;line-height:1.8}.mhop-result{margin-top:18px;padding:18px;border-radius:14px;background:#f5fbf7;border:1px solid #cce9d5}.mhop-result b{color:#071a33}.mhop-job{border:1px solid #dbe5ef;border-radius:16px;padding:18px;margin:14px 0;background:#fbfdff}.mhop-job h3{margin:0 0 10px;color:#071a33}.mhop-job-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;color:#516176;margin-bottom:14px}.mhop-job form{display:grid;gap:12px}.mhop-job select,.mhop-job textarea,.mhop-job input[type=file]{width:100%;box-sizing:border-box;border:1px solid #cad5e2;border-radius:10px;padding:10px;background:#fff}.mhop-job button{border:0;border-radius:10px;padding:12px 16px;background:#0878d1;color:#fff;font-weight:900}.mhop-upload-help{font-size:13px;color:#627087}.mhop-media{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0}.mhop-media figure{margin:0;border-radius:10px;overflow:hidden;background:#fff;border:1px solid #dbe5ef}.mhop-media img{display:block;width:100%;height:130px;object-fit:cover}.mhop-media figcaption{padding:7px;font-size:12px;font-weight:800}@media(max-width:620px){.mhop-card{padding:24px}.mhop-job-meta,.mhop-media{grid-template-columns:1fr 1fr}}</style>
+    <style>body{background:#eef5fb!important}.mhop{min-height:75vh;display:grid;place-items:center;padding:36px 18px;font-family:Tahoma,Arial,sans-serif}.mhop-card{width:min(100%,680px);background:#fff;border-radius:24px;padding:38px;box-shadow:0 24px 70px rgba(7,26,51,.12);text-align:right}.mhop-logo{width:66px;height:66px;border-radius:18px;background:#071a33;color:#fff;display:grid;place-items:center;font-size:24px;font-weight:900;border-bottom:6px solid #0878d1}.mhop-kicker{display:block;color:#0878d1;font-weight:900;margin-top:24px}.mhop h1{color:#071a33;font-size:34px;margin:9px 0}.mhop p{color:#627087;line-height:1.9}.mhop-form{display:grid;gap:14px;margin:26px 0}.mhop-form label{font-weight:800;color:#071a33}.mhop-form input,.mhop-form select,.mhop-form textarea{display:block;width:100%;box-sizing:border-box;margin-top:7px;border:1px solid #cad5e2;border-radius:12px;padding:14px;font-size:16px}.mhop-btn,.mhop-install{display:block;width:100%;border:0;border-radius:12px;background:#0878d1;color:#fff!important;padding:14px;text-align:center;text-decoration:none;font-weight:900;font-size:17px}.mhop-install{margin-top:12px;background:#071a33}.mhop-home{display:block;text-align:center;margin-top:18px;color:#516176}.mhop-note{margin:22px 0;padding:16px;border-radius:12px;background:#eef5fb;color:#071a33;line-height:1.8}.mhop-result{margin-top:18px;padding:18px;border-radius:14px;background:#f5fbf7;border:1px solid #cce9d5}.mhop-result b{color:#071a33}.mhop-job{border:1px solid #dbe5ef;border-radius:16px;padding:18px;margin:14px 0;background:#fbfdff}.mhop-job h3{margin:0 0 10px;color:#071a33}.mhop-job-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;color:#516176;margin-bottom:14px}.mhop-job form{display:grid;gap:12px}.mhop-job select,.mhop-job textarea,.mhop-job input[type=file]{width:100%;box-sizing:border-box;border:1px solid #cad5e2;border-radius:10px;padding:10px;background:#fff}.mhop-job button{border:0;border-radius:10px;padding:12px 16px;background:#0878d1;color:#fff;font-weight:900}.mhop-upload-help{font-size:13px;color:#627087}.mhop-media{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0}.mhop-media figure{margin:0;border-radius:10px;overflow:hidden;background:#fff;border:1px solid #dbe5ef}.mhop-media img{display:block;width:100%;height:130px;object-fit:cover}.mhop-media figcaption{padding:7px;font-size:12px;font-weight:800}.mhop-order-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.mhop-order-grid span{padding:12px;border-radius:10px;background:#eef5fb;color:#34465d}.mhop-stars{color:#e6a600;font-size:24px;letter-spacing:3px}.mhop-whatsapp{display:block;margin-top:14px;padding:13px;border-radius:12px;text-align:center;text-decoration:none;background:#1faf5d;color:#fff!important;font-weight:900}@media(max-width:620px){.mhop-card{padding:24px}.mhop-job-meta,.mhop-media,.mhop-order-grid{grid-template-columns:1fr}}</style>
     <script>(function(){if('serviceWorker' in navigator)navigator.serviceWorker.register('<?php echo esc_url(home_url('/marcos-app-sw.js')); ?>');var prompt;var button=document.querySelector('.mhop-install');window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();prompt=e;button.hidden=false});if(button)button.addEventListener('click',function(){if(prompt){prompt.prompt();prompt=null;button.hidden=true}})})();</script>
     <?php return (string) ob_get_clean();
 }
@@ -582,7 +678,7 @@ function mh_ops_team_jobs(): string {
         <article class="mhop-job"><h3><?php echo esc_html((string) $job['order_code']); ?> — <?php echo esc_html((string) ($job['customer_name'] ?? '')); ?></h3>
             <div class="mhop-job-meta"><span>المنتج: <?php echo esc_html((string) $job['product']); ?></span><span>الموعد: <?php echo esc_html((string) ($job['scheduled_at'] ?: 'غير محدد')); ?></span><span>المنطقة: <?php echo esc_html((string) ($job['customer_area'] ?? '—')); ?></span><span>الحالة: <?php echo esc_html(mh_ops_statuses()[(string) $job['status']] ?? (string) $job['status']); ?></span></div>
             <?php if ($phone !== ''): ?><p><a href="https://wa.me/<?php echo esc_attr($phone); ?>" target="_blank" rel="noopener">فتح واتساب العميل</a></p><?php endif; ?>
-            <?php mh_ops_render_job_media(absint($job['id'])); ?>
+            <?php mh_ops_render_job_media(absint($job['id']), false, ['before', 'after', 'issue']); ?>
             <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="mh_ops_technician_update"><input type="hidden" name="order_id" value="<?php echo esc_attr((string) $job['id']); ?>"><input type="hidden" name="access" value="<?php echo esc_attr($access); ?>"><?php wp_nonce_field('mh_ops_job_update_' . (string) $job['id'] . '_' . $access); ?>
                 <label>حالة التنفيذ<select name="status"><option value="enroute" <?php selected((string) $job['status'], 'enroute'); ?>>في الطريق</option><option value="working" <?php selected((string) $job['status'], 'working'); ?>>بدأ التنفيذ</option><option value="completed" <?php selected((string) $job['status'], 'completed'); ?>>تم التنفيذ</option><option value="issue" <?php selected((string) $job['status'], 'issue'); ?>>توجد مشكلة</option></select></label>
                 <label>نوع الصور<select name="photo_type"><option value="before">قبل التنفيذ</option><option value="after">بعد التنفيذ</option><option value="issue">مشكلة في التنفيذ</option></select></label>
@@ -595,17 +691,93 @@ function mh_ops_team_jobs(): string {
     return (string) ob_get_clean();
 }
 
+function mh_ops_customer_portal(): string {
+    $order_id = absint($_GET['order'] ?? 0);
+    $access = sanitize_text_field((string) ($_GET['access'] ?? ''));
+    if ($order_id > 0 || $access !== '') {
+        global $wpdb;
+        $order = $wpdb->get_row($wpdb->prepare(
+            'SELECT o.*, c.name customer_name, c.phone customer_phone, c.area customer_area, c.address customer_address FROM ' . mh_ops_table('orders') . ' o INNER JOIN ' . mh_ops_table('customers') . ' c ON c.id=o.customer_id WHERE o.id=%d LIMIT 1',
+            $order_id
+        ), ARRAY_A);
+        if (!is_array($order) || $access === '' || !hash_equals(mh_ops_customer_access_key($order), $access)) {
+            return '<div class="mhop-note">رابط الطلب غير صالح أو تم تغييره. اطلب رابطًا جديدًا من إدارة Marco’s Home.</div>';
+        }
+        return mh_ops_customer_order_card($order, $access);
+    }
+
+    ob_start(); ?>
+    <form class="mhop-form" method="post">
+        <label>رقم الطلب<input type="text" name="order_code" inputmode="text" required placeholder="مثال: MH-1024"></label>
+        <label>رقم الهاتف<input type="tel" name="phone" inputmode="tel" required placeholder="965XXXXXXXX"></label>
+        <button class="mhop-btn" type="submit">عرض الطلب</button>
+    </form>
+    <?php echo mh_ops_customer_lookup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    return (string) ob_get_clean();
+}
+
 function mh_ops_customer_lookup(): string {
     if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') return '';
     $code = isset($_POST['order_code']) ? sanitize_text_field(wp_unslash((string) $_POST['order_code'])) : '';
-    $phone = isset($_POST['phone']) ? preg_replace('/\D+/', '', wp_unslash((string) $_POST['phone'])) : '';
+    $phone = isset($_POST['phone']) ? mh_ops_phone_digits(wp_unslash((string) $_POST['phone'])) : '';
     if ($code === '' || strlen($phone) < 8) return '<div class="mhop-note">تأكد من رقم الطلب ورقم الهاتف.</div>';
     global $wpdb;
-    $order = $wpdb->get_row($wpdb->prepare('SELECT o.* FROM ' . mh_ops_table('orders') . ' o INNER JOIN ' . mh_ops_table('customers') . ' c ON c.id=o.customer_id WHERE o.order_code=%s AND REPLACE(REPLACE(c.phone,"+","")," ","")=%s LIMIT 1', $code, $phone), ARRAY_A);
-    if (!is_array($order)) return '<div class="mhop-note">لم نعثر على طلب مطابق. أرسل لنا على واتساب للمساعدة.</div>';
-    $status = mh_ops_statuses()[(string) $order['status']] ?? (string) $order['status'];
+    $order = $wpdb->get_row($wpdb->prepare(
+        'SELECT o.*, c.name customer_name, c.phone customer_phone, c.area customer_area, c.address customer_address FROM ' . mh_ops_table('orders') . ' o INNER JOIN ' . mh_ops_table('customers') . ' c ON c.id=o.customer_id WHERE o.order_code=%s LIMIT 1',
+        $code
+    ), ARRAY_A);
+    if (!is_array($order) || !hash_equals(mh_ops_phone_digits((string) ($order['customer_phone'] ?? '')), $phone)) {
+        return '<div class="mhop-note">لم نعثر على طلب مطابق. أرسل لنا على واتساب للمساعدة.</div>';
+    }
+    return mh_ops_customer_order_card($order, mh_ops_customer_access_key($order));
+}
+
+function mh_ops_customer_order_card(array $order, string $access): string {
+    $order_id = absint($order['id'] ?? 0);
+    $status = mh_ops_statuses()[(string) ($order['status'] ?? '')] ?? (string) ($order['status'] ?? '');
     $payment = mh_ops_payment_statuses()[(string) ($order['payment_status'] ?? 'unpaid')] ?? 'غير مدفوع';
-    return '<div class="mhop-result"><b>حالة الطلب: ' . esc_html($status) . '</b><br>المنتج: ' . esc_html((string) $order['product']) . '<br>الموعد: ' . esc_html((string) ($order['scheduled_at'] ?: 'لم يحدد بعد')) . '<br>الإجمالي: ' . esc_html(number_format_i18n((float) ($order['total'] ?? 0), 3)) . ' د.ك<br>الدفع: ' . esc_html($payment) . '</div>';
+    $installation = (string) ($order['installation'] ?? '') === 'with' ? 'مع التركيب' : ((string) ($order['installation'] ?? '') === 'without' ? 'بدون تركيب' : 'حسب الطلب');
+    $can_receive = in_array((string) ($order['status'] ?? ''), ['completed', 'received', 'collected'], true);
+    $received = !empty($order['client_received_at']);
+    $rating = max(0, min(5, absint($order['client_rating'] ?? 0)));
+    $whatsapp_message = rawurlencode('مرحبًا Marco’s Home، أحتاج مساعدة بخصوص الطلب ' . (string) ($order['order_code'] ?? ''));
+    ob_start();
+    if (isset($_GET['feedback_saved'])): ?><div class="mhop-note">تم تأكيد استلام الأعمال وحفظ تقييمك. شكرًا لاختيارك Marco’s Home.</div><?php endif;
+    if (isset($_GET['feedback_error'])): ?><div class="mhop-note">لا يمكن تأكيد الاستلام قبل اكتمال التنفيذ.</div><?php endif;
+    if (isset($_GET['client_photo_error'])):
+        $errors = ['too_large' => 'حجم الصورة أكبر من 8 ميجابايت.', 'invalid_type' => 'صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WebP.', 'upload_failed' => 'تعذر رفع الصورة. حاول مرة أخرى.'];
+        $error = sanitize_key((string) $_GET['client_photo_error']); ?><div class="mhop-note"><?php echo esc_html($errors[$error] ?? 'تعذر رفع الصورة. حاول مرة أخرى.'); ?></div><?php endif; ?>
+    <article class="mhop-job">
+        <h3><?php echo esc_html((string) ($order['order_code'] ?? '')); ?> — <?php echo esc_html((string) ($order['customer_name'] ?? '')); ?></h3>
+        <div class="mhop-order-grid">
+            <span><b>الحالة</b><br><?php echo esc_html($status); ?></span>
+            <span><b>المنتج</b><br><?php echo esc_html(mh_ops_product_label((string) ($order['product'] ?? ''))); ?></span>
+            <?php if (!empty($order['design'])): ?><span><b>التصميم</b><br><?php echo esc_html((string) $order['design']); ?></span><?php endif; ?>
+            <?php if (!empty($order['color'])): ?><span><b>اللون</b><br><?php echo esc_html((string) $order['color']); ?></span><?php endif; ?>
+            <?php if ((float) ($order['wall_width'] ?? 0) > 0): ?><span><b>عرض الحائط</b><br><?php echo esc_html(number_format_i18n((float) $order['wall_width'], 2)); ?> م</span><?php endif; ?>
+            <?php if ((float) ($order['table_width'] ?? 0) > 0): ?><span><b>عرض الطاولة</b><br><?php echo esc_html(number_format_i18n((float) $order['table_width'], 2)); ?> م</span><?php endif; ?>
+            <span><b>التنفيذ</b><br><?php echo esc_html($installation); ?></span>
+            <span><b>الموعد</b><br><?php echo esc_html((string) (($order['scheduled_at'] ?? '') ?: 'لم يحدد بعد')); ?></span>
+            <span><b>الإجمالي الكامل</b><br><?php echo esc_html(number_format_i18n((float) ($order['total'] ?? 0), 3)); ?> د.ك</span>
+            <span><b>الدفع</b><br><?php echo esc_html($payment); ?></span>
+        </div>
+        <?php if ($received): ?>
+            <div class="mhop-result"><b>تم تأكيد الاستلام</b><br><span class="mhop-stars"><?php echo esc_html(str_repeat('★', $rating)); ?></span><?php if ((string) ($order['client_note'] ?? '') !== ''): ?><p><?php echo nl2br(esc_html((string) $order['client_note'])); ?></p><?php endif; ?></div>
+            <?php mh_ops_render_job_media($order_id, false, ['client']); ?>
+        <?php elseif ($can_receive): ?>
+            <form class="mhop-form" method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <input type="hidden" name="action" value="mh_ops_customer_feedback"><input type="hidden" name="order_id" value="<?php echo esc_attr((string) $order_id); ?>"><input type="hidden" name="access" value="<?php echo esc_attr($access); ?>"><?php wp_nonce_field('mh_ops_customer_feedback_' . $order_id . '_' . $access); ?>
+                <label>تقييم التنفيذ<select name="client_rating" required><option value="5">5 — ممتاز</option><option value="4">4 — جيد جدًا</option><option value="3">3 — جيد</option><option value="2">2 — مقبول</option><option value="1">1 — يحتاج تحسين</option></select></label>
+                <label>ملاحظة اختيارية<textarea name="client_note" rows="3" placeholder="اكتب ملاحظتك للإدارة"></textarea></label>
+                <label>صورة اختيارية بعد الاستلام<input type="file" name="client_photo" accept="image/jpeg,image/png,image/webp"></label>
+                <button class="mhop-btn" type="submit">تأكيد استلام الأعمال</button>
+            </form>
+        <?php else: ?>
+            <div class="mhop-note">سيظهر زر تأكيد الاستلام هنا بعد اكتمال التنفيذ.</div>
+        <?php endif; ?>
+        <a class="mhop-whatsapp" href="https://wa.me/96550204320?text=<?php echo esc_attr($whatsapp_message); ?>" target="_blank" rel="noopener">تواصل مع الإدارة عبر واتساب</a>
+    </article>
+    <?php return (string) ob_get_clean();
 }
 
 function mh_ops_render_portals(): void {
