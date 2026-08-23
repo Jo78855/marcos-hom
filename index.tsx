@@ -7,25 +7,25 @@ import './styles.css';
 import './assistant.css';
 
 const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
-}
+if (!rootElement) throw new Error("Could not find root element to mount to");
 
 const root = ReactDOM.createRoot(rootElement);
 const isFire = window.location.hostname.startsWith('fire.') || window.location.pathname.startsWith('/fire');
 const isAdmin = window.location.pathname.startsWith('/admin');
 const isAssistantAdmin = window.location.pathname.startsWith('/admin/assistant');
+const isAssistantEmbed = window.location.pathname.startsWith('/assistant/embed');
 
 if (isFire) {
   document.title = 'ماركوز هوم | جهاز الفير المعطر';
   document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.setAttribute('href', '/fire-manifest.webmanifest');
   document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute('content', '#b45309');
 }
+if (isAssistantEmbed) document.title = 'مساعد ماركوز هوم';
 
 root.render(
   <React.StrictMode>
-    {isAssistantAdmin ? <AssistantAdmin /> : <App />}
-    {!isAdmin && !isFire && <MarcosAssistant />}
+    {isAssistantEmbed ? <MarcosAssistant embedded /> : isAssistantAdmin ? <AssistantAdmin /> : <App />}
+    {!isAssistantEmbed && !isAdmin && !isFire && <MarcosAssistant />}
   </React.StrictMode>
 );
 
