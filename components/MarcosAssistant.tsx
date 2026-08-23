@@ -15,32 +15,64 @@ function productMatch(text:string, products:Product[]){
   return products.find(p=>[p.name_ar,...(p.aliases_ar||[])].some(a=>q.includes(norm(a))));
 }
 
+function naturalLead(kind:'price'|'details'|'general'|'width'='general'){
+  const options={
+    price:['أكيد.','تمام، بالنسبة للسعر،','حاضر.'],
+    details:['أكيد، خليني أوضح لك.','تمام، التفاصيل كالتالي.','حاضر، باختصار.'],
+    general:['أكيد.','تمام.','حاضر.'],
+    width:['تمام، على المقاس ده،','أكيد، بالنسبة للمقاس ده،','حاضر، المقاس ده يدخل في']
+  }[kind];
+  return options[Math.floor(Math.random()*options.length)];
+}
+
 function answerFor(text:string, offers:Offer[], products:Product[]){
   const q=norm(text);
   const product=productMatch(text,products);
+
   if(product){
     const wantsPrice=/سعر|كام|بكام|تكلف/.test(q);
     const wantsDetails=/تفاصيل|مكون|يتكون|مقاس|الوان|خامة|خامات/.test(q);
-    if(wantsPrice) return `${product.name_ar}: ${product.price_text_ar}${product.details_ar?`. ${product.details_ar}`:''}`;
-    if(wantsDetails) return `${product.name_ar}: ${product.description_ar}${product.price_text_ar?` السعر: ${product.price_text_ar}.`:''}${product.details_ar?` ${product.details_ar}`:''}`;
-    return `${product.name_ar}: ${product.description_ar}${product.price_text_ar?` السعر الحالي: ${product.price_text_ar}.`:''}`;
+    if(wantsPrice) return `${naturalLead('price')} ${product.name_ar} ${product.price_text_ar}. ${product.details_ar||'ولو تحب أشرح لك المكونات أو أسجل لك طلب.'}`;
+    if(wantsDetails) return `${naturalLead('details')} ${product.description_ar}. ${product.price_text_ar?`والسعر الحالي ${product.price_text_ar}.`:''} ${product.details_ar||''}`.trim();
+    return `${naturalLead()} ${product.name_ar}: ${product.description_ar}. ${product.price_text_ar?`وسعره الحالي ${product.price_text_ar}.`:''} لو تحب، أقول لك المقاسات أو أسجل لك طلب.`;
   }
 
   const width=text.match(/(\d+(?:[.,]\d+)?)\s*(?:متر|م\b)/);
   if(width&&offers.length){
-    const w=Number(width[1].replace(',','.')); const match=offerForWidth(w,offers);
-    if(match) return `لو عرض الحائط ${w} متر، الفئة المناسبة ${rangeLabel(match)}. المكونات: ${match.components_ar}. السعر ${money(match.price_without_installation)} د.ك بدون تركيب أو ${money(match.price_with_installation)} د.ك مع التركيب.`;
-    if(w>Math.max(...offers.map(o=>Number(o.max_width||o.min_width)))) return 'المقاس أكبر من الفئات الحالية ويحتاج طلب خاص. أقدر أسجل بياناتك ويتواصل معك فريق ماركوز هوم.';
+    const w=Number(width[1].replace(',','.'));
+    const match=offerForWidth(w,offers);
+    if(match) return `${naturalLead('width')} لو عرض الحائط ${w} متر، الفئة المناسبة ${rangeLabel(match)}. التصميم يشمل ${match.components_ar}. السعر ${money(match.price_without_installation)} دينار بدون تركيب، أو ${money(match.price_with_installation)} دينار مع التركيب. ولو تحب أكمل معاك للحجز.`;
+    if(w>Math.max(...offers.map(o=>Number(o.max_width||o.min_width)))) return 'المقاس أكبر من الفئات الجاهزة عندنا، لكن مفيش مشكلة. أسجل لك الطلب كطلب خاص، والفريق يتواصل معاك بالتسعير المناسب.';
   }
 
   if(/عندكم|ايه المنتجات|ايه الخدمات|الخدمات|المنتجات|بتبيعوا ايه|بتعملوا ايه/.test(q)){
     const names=products.slice(0,8).map(p=>p.name_ar).join('، ');
-    return `أهم خدمات ومنتجات ماركوز هوم: ${names}. اسألني عن أي واحد فيهم بالسعر أو التفاصيل.`;
+    return `أكيد. عندنا ${names}. قول لي بس إيه اللي مهتم بيه، وأنا أقول لك السعر والتفاصيل مباشرة.`;
   }
+
   if(/سعر|كام|بكام|تكلف/.test(q)&&offers.length){
-    return `لو تقصد تصميم 198 فالتسعير حسب عرض الحائط: ${offers.map(o=>`${rangeLabel(o)}: ${money(o.price_without_installation)} بدون تركيب / ${money(o.price_with_installation)} مع التركيب`).join('، ')}. أو اذكر اسم المنتج مثل كوفي كورنر أو أعمدة WPC.`;
+    return `أكيد. لو تقصد تصميم 198 فالسعر بيتحدد حسب عرض الحائط. قول لي العرض بالمتر، وأنا أطلع لك السعر مباشرة. ولو تقصد منتج تاني، اذكر اسمه بس.`;
   }
-  return 'أنا مساعد ماركوز هوم. اسألني عن تصميم 198، تصميم 130، ركن القهوة، طاولات الشاشة، أعمدة WPC، الفوم بورد أو جهاز الفير. وأقدر كمان أسجل طلب أو معاينة.';
+
+  return 'تمام. قول لي إنت محتاج إيه بالضبط: خلفية شاشة، ركن قهوة، طاولة، أعمدة، فوم بورد أو جهاز الفير؟ وأنا أساعدك بالسعر والتفاصيل خطوة بخطوة.';
+}
+
+function pickArabicVoice(){
+  if(!('speechSynthesis' in window)) return undefined;
+  const voices=window.speechSynthesis.getVoices();
+  const arabic=voices.filter(v=>/^ar([-_]|$)/i.test(v.lang));
+  if(!arabic.length) return undefined;
+  const score=(v:SpeechSynthesisVoice)=>{
+    const n=(v.name+' '+v.lang).toLowerCase();
+    let s=0;
+    if(/ar-kw|kuwait/.test(n)) s+=8;
+    if(/ar-sa|saudi/.test(n)) s+=6;
+    if(/ar-eg|egypt/.test(n)) s+=4;
+    if(/hamed|maged|tarik|naayf|male/.test(n)) s+=3;
+    if(/natural|neural|online/.test(n)) s+=2;
+    return s;
+  };
+  return [...arabic].sort((a,b)=>score(b)-score(a))[0];
 }
 
 export default function MarcosAssistant({embedded=false}:{embedded?:boolean}){
@@ -49,7 +81,7 @@ export default function MarcosAssistant({embedded=false}:{embedded?:boolean}){
   const [bookingOpen,setBookingOpen]=useState(false),[bookingBusy,setBookingBusy]=useState(false),[bookingNotice,setBookingNotice]=useState('');
   const [customerName,setCustomerName]=useState(''),[customerPhone,setCustomerPhone]=useState(''),[area,setArea]=useState(''),[wallWidth,setWallWidth]=useState('');
   const [installation,setInstallation]=useState(true);
-  const [messages,setMessages]=useState<Msg[]>([{role:'assistant',text:'أهلاً بك في ماركوز هوم. اسألني بصوتك عن أي منتج أو سعر، أو قل: عايز أحجز.'}]);
+  const [messages,setMessages]=useState<Msg[]>([{role:'assistant',text:'أهلاً وسهلاً في ماركوز هوم. قول لي إنت محتاج إيه، وأنا أساعدك في السعر والمقاس والتفاصيل.'}]);
   const recognitionRef=useRef<any>(null);
   const speechSupported=useMemo(()=>typeof window!=='undefined'&&!!((window as any).SpeechRecognition||(window as any).webkitSpeechRecognition),[]);
 
@@ -58,17 +90,75 @@ export default function MarcosAssistant({embedded=false}:{embedded?:boolean}){
       supabase.from('assistant_offers').select('*').eq('active',true).order('sort_order'),
       supabase.from('assistant_products').select('*').eq('active',true).order('sort_order')
     ]);
-    if(o.data)setOffers(o.data as Offer[]); if(p.data)setProducts(p.data as Product[]);
+    if(o.data)setOffers(o.data as Offer[]);
+    if(p.data)setProducts(p.data as Product[]);
   })();},[]);
 
-  const speak=(text:string)=>{if(!('speechSynthesis'in window))return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ar-KW';u.rate=.95;window.speechSynthesis.speak(u)};
-  const submit=(raw=input)=>{const text=raw.trim();if(!text)return;let reply:string;if(/احجز|حجز|معاينه|معاينة|اطلب|طلب/.test(norm(text))){setBookingOpen(true);reply='تمام. فتحت لك تسجيل الطلب. اكتب الاسم ورقم الهاتف والمنطقة وعرض الحائط.'}else reply=answerFor(text,offers,products);setMessages(v=>[...v,{role:'user',text},{role:'assistant',text:reply}]);setInput('');speak(reply)};
-  const startVoice=()=>{const SR=(window as any).SpeechRecognition||(window as any).webkitSpeechRecognition;if(!SR)return;const r=new SR();r.lang='ar-KW';r.interimResults=false;r.continuous=false;r.onstart=()=>setListening(true);r.onend=()=>setListening(false);r.onerror=()=>setListening(false);r.onresult=(e:any)=>{const t=e.results?.[0]?.[0]?.transcript||'';setInput(t);submit(t)};recognitionRef.current=r;r.start()};
+  const speak=(text:string)=>{
+    if(!('speechSynthesis' in window))return;
+    window.speechSynthesis.cancel();
+    const voice=pickArabicVoice();
+    const parts=text.split(/(?<=[.!؟])\s+/).filter(Boolean);
+    parts.forEach((part,index)=>{
+      const u=new SpeechSynthesisUtterance(part);
+      u.lang=voice?.lang||'ar-KW';
+      if(voice)u.voice=voice;
+      u.rate=.88;
+      u.pitch=.94;
+      u.volume=1;
+      if(index>0) u.rate=.86;
+      window.speechSynthesis.speak(u);
+    });
+  };
 
-  const submitBooking=async(e:FormEvent)=>{e.preventDefault();setBookingNotice('');const width=Number(wallWidth);if(!customerName.trim()||!customerPhone.trim()||!area.trim()||!Number.isFinite(width)||width<=0){setBookingNotice('أكمل الاسم ورقم الهاتف والمنطقة وعرض الحائط.');return}const offer=offerForWidth(width,offers);const total=offer?Number(installation?offer.price_with_installation:offer.price_without_installation):0;setBookingBusy(true);const{error}=await supabase.from('orders').insert({customer_name:customerName.trim(),customer_phone:customerPhone.trim(),design_id:null,installation,total,status:'new',area:area.trim(),wall_width:width,source:'voice_assistant'});setBookingBusy(false);if(error){setBookingNotice(`تعذر تسجيل الطلب: ${error.message}`);return}const reply=total>0?`تم تسجيل طلبك. السعر المبدئي ${money(total)} د.ك ${installation?'مع التركيب':'بدون تركيب'}. سيتواصل معك فريق ماركوز هوم.`:'تم تسجيل طلبك الخاص، وسيتواصل معك فريق ماركوز هوم للتسعير.';setBookingNotice(reply);setMessages(v=>[...v,{role:'assistant',text:reply}]);speak(reply);setCustomerName('');setCustomerPhone('');setArea('');setWallWidth('')};
+  const submit=(raw=input)=>{
+    const text=raw.trim();
+    if(!text)return;
+    let reply:string;
+    if(/احجز|حجز|معاينه|معاينة|اطلب|طلب/.test(norm(text))){
+      setBookingOpen(true);
+      reply='أكيد. فتحت لك تسجيل الطلب. اكتب الاسم ورقم الهاتف والمنطقة وعرض الحائط، وأنا أكمل معاك.';
+    }else reply=answerFor(text,offers,products);
+    setMessages(v=>[...v,{role:'user',text},{role:'assistant',text:reply}]);
+    setInput('');
+    speak(reply);
+  };
+
+  const startVoice=()=>{
+    const SR=(window as any).SpeechRecognition||(window as any).webkitSpeechRecognition;
+    if(!SR)return;
+    const r=new SR();
+    r.lang='ar-KW';
+    r.interimResults=false;
+    r.continuous=false;
+    r.onstart=()=>setListening(true);
+    r.onend=()=>setListening(false);
+    r.onerror=()=>setListening(false);
+    r.onresult=(e:any)=>{const t=e.results?.[0]?.[0]?.transcript||'';setInput(t);submit(t)};
+    recognitionRef.current=r;
+    r.start();
+  };
+
+  const submitBooking=async(e:FormEvent)=>{
+    e.preventDefault();
+    setBookingNotice('');
+    const width=Number(wallWidth);
+    if(!customerName.trim()||!customerPhone.trim()||!area.trim()||!Number.isFinite(width)||width<=0){setBookingNotice('كمل الاسم ورقم الهاتف والمنطقة وعرض الحائط، وأنا أسجل الطلب.');return}
+    const offer=offerForWidth(width,offers);
+    const total=offer?Number(installation?offer.price_with_installation:offer.price_without_installation):0;
+    setBookingBusy(true);
+    const{error}=await supabase.from('orders').insert({customer_name:customerName.trim(),customer_phone:customerPhone.trim(),design_id:null,installation,total,status:'new',area:area.trim(),wall_width:width,source:'voice_assistant'});
+    setBookingBusy(false);
+    if(error){setBookingNotice(`تعذر تسجيل الطلب: ${error.message}`);return}
+    const reply=total>0?`تمام، تم تسجيل طلبك. السعر المبدئي ${money(total)} دينار ${installation?'مع التركيب':'بدون تركيب'}. فريق ماركوز هوم هيتواصل معاك لتأكيد التفاصيل.`:'تمام، تم تسجيل طلبك كطلب خاص. فريق ماركوز هوم هيتواصل معاك علشان التسعير والتفاصيل.';
+    setBookingNotice(reply);
+    setMessages(v=>[...v,{role:'assistant',text:reply}]);
+    speak(reply);
+    setCustomerName('');setCustomerPhone('');setArea('');setWallWidth('');
+  };
 
   return <div className={embedded?'mh-assistant mh-assistant-embedded':'mh-assistant'} dir="rtl">
-    {open&&<section className="mh-assistant-panel"><header><div><strong>مساعد ماركوز هوم</strong><small>الأسعار والمعلومات متصلة بلوحة التحكم</small></div>{!embedded&&<button onClick={()=>setOpen(false)} aria-label="إغلاق">×</button>}</header>
+    {open&&<section className="mh-assistant-panel"><header><div><strong>مساعد ماركوز هوم</strong><small>اسأل بصوتك أو اكتب سؤالك</small></div>{!embedded&&<button onClick={()=>setOpen(false)} aria-label="إغلاق">×</button>}</header>
       <div className="mh-assistant-messages">{messages.map((m,i)=><div key={i} className={`mh-msg ${m.role}`}>{m.text}</div>)}
       {bookingOpen&&<form className="mh-booking" onSubmit={submitBooking}><strong>تسجيل طلب / معاينة</strong><input value={customerName} onChange={e=>setCustomerName(e.target.value)} placeholder="الاسم"/><input value={customerPhone} onChange={e=>setCustomerPhone(e.target.value)} inputMode="tel" placeholder="رقم الهاتف"/><input value={area} onChange={e=>setArea(e.target.value)} placeholder="المنطقة"/><input value={wallWidth} onChange={e=>setWallWidth(e.target.value)} inputMode="decimal" placeholder="عرض الحائط بالمتر"/><div className="mh-booking-options"><button type="button" className={!installation?'active':''} onClick={()=>setInstallation(false)}>بدون تركيب</button><button type="button" className={installation?'active':''} onClick={()=>setInstallation(true)}>مع التركيب</button></div><button className="mh-booking-submit" disabled={bookingBusy}>{bookingBusy?'جاري التسجيل...':'تسجيل الطلب'}</button>{bookingNotice&&<small>{bookingNotice}</small>}</form>}
       </div>
