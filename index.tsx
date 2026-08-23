@@ -1,7 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import MarcosAssistant from './components/MarcosAssistant';
+import AssistantAdmin from './components/AssistantAdmin';
 import './styles.css';
+import './assistant.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -9,8 +12,11 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+const isFire = window.location.hostname.startsWith('fire.') || window.location.pathname.startsWith('/fire');
+const isAdmin = window.location.pathname.startsWith('/admin');
+const isAssistantAdmin = window.location.pathname.startsWith('/admin/assistant');
 
-if (window.location.hostname.startsWith('fire.') || window.location.pathname.startsWith('/fire')) {
+if (isFire) {
   document.title = 'ماركوز هوم | جهاز الفير المعطر';
   document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.setAttribute('href', '/fire-manifest.webmanifest');
   document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute('content', '#b45309');
@@ -18,7 +24,8 @@ if (window.location.hostname.startsWith('fire.') || window.location.pathname.sta
 
 root.render(
   <React.StrictMode>
-    <App />
+    {isAssistantAdmin ? <AssistantAdmin /> : <App />}
+    {!isAdmin && !isFire && <MarcosAssistant />}
   </React.StrictMode>
 );
 
