@@ -28,7 +28,7 @@ function answerFor(text: string, offers: Offer[]) {
   const q = text.replace(/[؟?]/g, '').trim();
   if (!offers.length) return 'بيانات التصميمات غير متاحة مؤقتاً. حاول مرة أخرى بعد قليل.';
 
-  const width = q.match(/(\d+(?:[.,]\d+)?)\s*(?:متر|م)?/);
+  const width = q.match(/(\d+(?:[.,]\d+)?)\s*(?:متر|م\b)/);
   if (width) {
     const w = Number(width[1].replace(',', '.'));
     const match = offers.find(o => w >= Number(o.min_width) && (o.max_width == null || w <= Number(o.max_width)));
