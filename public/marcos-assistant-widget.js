@@ -4,7 +4,7 @@
   var host='https://coffee.marcohom.com';
   var wrap=document.createElement('div');
   wrap.id='marcos-assistant-widget-host';
-  wrap.style.cssText='position:fixed;z-index:2147483000;right:18px;bottom:18px;font-family:Arial,sans-serif;direction:rtl';
+  wrap.style.cssText='position:fixed;z-index:2147483000;left:18px;bottom:18px;font-family:Arial,sans-serif;direction:rtl';
   var btn=document.createElement('button');
   btn.type='button';
   btn.innerHTML='🎙 <span>اسأل ماركوز هوم</span>';
