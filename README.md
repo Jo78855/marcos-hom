@@ -1,26 +1,14 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Marcos Home
 
-# Marco's Home
+React/Vite storefront and admin tools for Marco's Home.
 
-مشروع موقع ماركوز هوم للتصميمات والديكور.
+## Voice assistant prototype
 
-> تجربة عملية: تمت إضافة هذه الرسالة بواسطة Codex من خلال GitHub، داخل فرع منفصل وآمن للمراجعة.
+The current development branch includes a website voice assistant connected to Supabase knowledge data.
 
-# Run and deploy your AI Studio app
+- Customer assistant: main storefront (microphone where browser speech recognition is available; text fallback otherwise)
+- Assistant knowledge admin: `/admin/assistant`
+- Knowledge table: `assistant_offers`
+- Current scope: Design 198 components, wall-width tiers, with/without-installation prices
 
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/drive/1l_i0bGglMQIL9pupQIwrAkOGtH1qPWCe
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+The assistant reads active knowledge rows at page load, so price/component changes made from the assistant admin page do not require code changes.
