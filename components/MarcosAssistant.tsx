@@ -20,7 +20,7 @@ function answerFor(text:string, offers:Offer[], products:Product[]){
   const product=productMatch(text,products);
   if(product){
     const wantsPrice=/سعر|كام|بكام|تكلف/.test(q);
-    const wantsDetails=/تفاصيل|مكون|يتكون|مقاس|الوان|الوان|خامة|خامات/.test(q);
+    const wantsDetails=/تفاصيل|مكون|يتكون|مقاس|الوان|خامة|خامات/.test(q);
     if(wantsPrice) return `${product.name_ar}: ${product.price_text_ar}${product.details_ar?`. ${product.details_ar}`:''}`;
     if(wantsDetails) return `${product.name_ar}: ${product.description_ar}${product.price_text_ar?` السعر: ${product.price_text_ar}.`:''}${product.details_ar?` ${product.details_ar}`:''}`;
     return `${product.name_ar}: ${product.description_ar}${product.price_text_ar?` السعر الحالي: ${product.price_text_ar}.`:''}`;
@@ -43,8 +43,8 @@ function answerFor(text:string, offers:Offer[], products:Product[]){
   return 'أنا مساعد ماركوز هوم. اسألني عن تصميم 198، تصميم 130، ركن القهوة، طاولات الشاشة، أعمدة WPC، الفوم بورد أو جهاز الفير. وأقدر كمان أسجل طلب أو معاينة.';
 }
 
-export default function MarcosAssistant(){
-  const [open,setOpen]=useState(false),[listening,setListening]=useState(false),[input,setInput]=useState('');
+export default function MarcosAssistant({embedded=false}:{embedded?:boolean}){
+  const [open,setOpen]=useState(embedded),[listening,setListening]=useState(false),[input,setInput]=useState('');
   const [offers,setOffers]=useState<Offer[]>([]),[products,setProducts]=useState<Product[]>([]);
   const [bookingOpen,setBookingOpen]=useState(false),[bookingBusy,setBookingBusy]=useState(false),[bookingNotice,setBookingNotice]=useState('');
   const [customerName,setCustomerName]=useState(''),[customerPhone,setCustomerPhone]=useState(''),[area,setArea]=useState(''),[wallWidth,setWallWidth]=useState('');
@@ -67,14 +67,14 @@ export default function MarcosAssistant(){
 
   const submitBooking=async(e:FormEvent)=>{e.preventDefault();setBookingNotice('');const width=Number(wallWidth);if(!customerName.trim()||!customerPhone.trim()||!area.trim()||!Number.isFinite(width)||width<=0){setBookingNotice('أكمل الاسم ورقم الهاتف والمنطقة وعرض الحائط.');return}const offer=offerForWidth(width,offers);const total=offer?Number(installation?offer.price_with_installation:offer.price_without_installation):0;setBookingBusy(true);const{error}=await supabase.from('orders').insert({customer_name:customerName.trim(),customer_phone:customerPhone.trim(),design_id:null,installation,total,status:'new',area:area.trim(),wall_width:width,source:'voice_assistant'});setBookingBusy(false);if(error){setBookingNotice(`تعذر تسجيل الطلب: ${error.message}`);return}const reply=total>0?`تم تسجيل طلبك. السعر المبدئي ${money(total)} د.ك ${installation?'مع التركيب':'بدون تركيب'}. سيتواصل معك فريق ماركوز هوم.`:'تم تسجيل طلبك الخاص، وسيتواصل معك فريق ماركوز هوم للتسعير.';setBookingNotice(reply);setMessages(v=>[...v,{role:'assistant',text:reply}]);speak(reply);setCustomerName('');setCustomerPhone('');setArea('');setWallWidth('')};
 
-  return <div className="mh-assistant" dir="rtl">
-    {open&&<section className="mh-assistant-panel"><header><div><strong>مساعد ماركوز هوم</strong><small>الأسعار والمعلومات متصلة بلوحة التحكم</small></div><button onClick={()=>setOpen(false)} aria-label="إغلاق">×</button></header>
+  return <div className={embedded?'mh-assistant mh-assistant-embedded':'mh-assistant'} dir="rtl">
+    {open&&<section className="mh-assistant-panel"><header><div><strong>مساعد ماركوز هوم</strong><small>الأسعار والمعلومات متصلة بلوحة التحكم</small></div>{!embedded&&<button onClick={()=>setOpen(false)} aria-label="إغلاق">×</button>}</header>
       <div className="mh-assistant-messages">{messages.map((m,i)=><div key={i} className={`mh-msg ${m.role}`}>{m.text}</div>)}
       {bookingOpen&&<form className="mh-booking" onSubmit={submitBooking}><strong>تسجيل طلب / معاينة</strong><input value={customerName} onChange={e=>setCustomerName(e.target.value)} placeholder="الاسم"/><input value={customerPhone} onChange={e=>setCustomerPhone(e.target.value)} inputMode="tel" placeholder="رقم الهاتف"/><input value={area} onChange={e=>setArea(e.target.value)} placeholder="المنطقة"/><input value={wallWidth} onChange={e=>setWallWidth(e.target.value)} inputMode="decimal" placeholder="عرض الحائط بالمتر"/><div className="mh-booking-options"><button type="button" className={!installation?'active':''} onClick={()=>setInstallation(false)}>بدون تركيب</button><button type="button" className={installation?'active':''} onClick={()=>setInstallation(true)}>مع التركيب</button></div><button className="mh-booking-submit" disabled={bookingBusy}>{bookingBusy?'جاري التسجيل...':'تسجيل الطلب'}</button>{bookingNotice&&<small>{bookingNotice}</small>}</form>}
       </div>
       <div className="mh-assistant-input"><button className={listening?'mic listening':'mic'} onClick={startVoice} disabled={!speechSupported}>{listening?'●':'🎙'}</button><input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()} placeholder="اتكلم أو اكتب سؤالك"/><button onClick={()=>submit()}>إرسال</button></div>
       {!speechSupported&&<p className="mh-assistant-note">يمكنك تجربة المحادثة بالكتابة حالياً على هذا المتصفح.</p>}
     </section>}
-    <button className="mh-assistant-launcher" onClick={()=>setOpen(v=>!v)} aria-label="مساعد ماركوز هوم">🎙<span>اسأل ماركوز هوم</span></button>
+    {!embedded&&<button className="mh-assistant-launcher" onClick={()=>setOpen(v=>!v)} aria-label="مساعد ماركوز هوم">🎙<span>اسأل ماركوز هوم</span></button>}
   </div>
 }
