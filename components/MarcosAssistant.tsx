@@ -1,45 +1,81 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { supabase } from '../supabase';
 
 type Msg = { role: 'assistant' | 'user'; text: string };
-
-const DESIGN_198 = {
-  name: 'تصميم 198',
-  height: '2.90 متر',
-  tiers: [
-    { width: 'من 3 إلى 3.5 متر', without: 130, with: 170, parts: 'طاولة 2.5 متر + كبت + 3 ألواح فوم بورد' },
-    { width: 'من 3.5 إلى 4.5 متر', without: 150, with: 198, parts: 'طاولة 3 متر + كبت + 4 ألواح فوم بورد' },
-    { width: 'من 4.6 إلى 5.5 متر', without: 160, with: 210, parts: 'تنفيذ حسب المقاس ضمن مكونات التصميم المعتمدة' },
-  ],
+type Offer = {
+  id: number;
+  code: string;
+  name_ar: string;
+  min_width: number;
+  max_width: number | null;
+  height_m: number;
+  price_without_installation: number;
+  price_with_installation: number;
+  components_ar: string;
+  active: boolean;
+  sort_order: number;
 };
 
-function answerFor(text: string) {
+function money(value: number) {
+  return Number(value).toLocaleString('ar-KW', { maximumFractionDigits: 2 });
+}
+
+function rangeLabel(offer: Offer) {
+  return offer.max_width ? `من ${offer.min_width} إلى ${offer.max_width} متر` : `من ${offer.min_width} متر فأكثر`;
+}
+
+function answerFor(text: string, offers: Offer[]) {
   const q = text.replace(/[؟?]/g, '').trim();
-  if (/مكون|يتكون|فيه ايه|فيه إيه|تفاصيل/.test(q)) {
-    return `تصميم 198 ارتفاعه ${DESIGN_198.height}. للمقاس من 3 إلى 3.5 متر: ${DESIGN_198.tiers[0].parts}. وللمقاس من 3.5 إلى 4.5 متر: ${DESIGN_198.tiers[1].parts}. قول لي عرض الحائط وأنا أحدد لك الفئة المناسبة.`;
-  }
-  if (/سعر|كام|بكام|تكلف/.test(q)) {
-    return 'الأسعار حسب عرض الحائط: من 3 إلى 3.5 متر: 130 د.ك بدون تركيب أو 170 د.ك مع التركيب. من 3.5 إلى 4.5 متر: 150 د.ك بدون تركيب أو 198 د.ك مع التركيب. من 4.6 إلى 5.5 متر: 160 د.ك بدون تركيب أو 210 د.ك مع التركيب.';
-  }
-  const width = q.match(/(3(?:[.,]\d+)?|4(?:[.,]\d+)?|5(?:[.,]\d+)?)\s*(?:متر|م)?/);
+  if (!offers.length) return 'بيانات التصميمات غير متاحة مؤقتاً. حاول مرة أخرى بعد قليل.';
+
+  const width = q.match(/(\d+(?:[.,]\d+)?)\s*(?:متر|م)?/);
   if (width) {
     const w = Number(width[1].replace(',', '.'));
-    if (w >= 3 && w <= 3.5) return `مقاس ${w} متر يدخل في الفئة الأولى: ${DESIGN_198.tiers[0].parts}. السعر 130 د.ك بدون تركيب أو 170 د.ك مع التركيب.`;
-    if (w > 3.5 && w <= 4.5) return `مقاس ${w} متر يدخل في الفئة الثانية: ${DESIGN_198.tiers[1].parts}. السعر 150 د.ك بدون تركيب أو 198 د.ك مع التركيب.`;
-    if (w > 4.5 && w <= 5.5) return `مقاس ${w} متر يدخل في الفئة الثالثة. السعر 160 د.ك بدون تركيب أو 210 د.ك مع التركيب.`;
-    if (w > 5.5) return 'المقاس أكبر من 5.5 متر ويحتاج طلب خاص. أقدر أجمع بياناتك للحجز في المرحلة التالية.';
+    const match = offers.find(o => w >= Number(o.min_width) && (o.max_width == null || w <= Number(o.max_width)));
+    if (match) {
+      return `مقاس ${w} متر مناسب لفئة ${rangeLabel(match)}. المكونات: ${match.components_ar}. السعر ${money(match.price_without_installation)} د.ك بدون تركيب أو ${money(match.price_with_installation)} د.ك مع التركيب.`;
+    }
+    if (w > Math.max(...offers.map(o => Number(o.max_width || o.min_width)))) {
+      return 'المقاس أكبر من الفئات الحالية ويحتاج طلب خاص. في المرحلة التالية أقدر أجمع بياناتك للحجز مباشرة.';
+    }
   }
-  return 'أنا مساعد ماركوز هوم. أقدر حالياً أشرح لك مكونات تصميم 198 وأسعاره حسب عرض الحائط. جرّب تقول: مكونات التصميم إيه؟ أو: الحائط 4 متر.';
+
+  if (/مكون|يتكون|فيه ايه|فيه إيه|تفاصيل/.test(q)) {
+    const first = offers[0];
+    const details = offers.map(o => `${rangeLabel(o)}: ${o.components_ar}`).join('. ');
+    return `${first.name_ar} ارتفاعه ${first.height_m} متر. ${details}. قول لي عرض الحائط وأنا أحدد لك الفئة المناسبة.`;
+  }
+
+  if (/سعر|كام|بكام|تكلف/.test(q)) {
+    const prices = offers.map(o => `${rangeLabel(o)}: ${money(o.price_without_installation)} د.ك بدون تركيب أو ${money(o.price_with_installation)} د.ك مع التركيب`).join('. ');
+    return `الأسعار الحالية حسب عرض الحائط: ${prices}.`;
+  }
+
+  return 'أنا مساعد ماركوز هوم. أقدر حالياً أشرح مكونات التصميم وأسعاره حسب عرض الحائط. جرّب تقول: مكونات التصميم إيه؟ أو: الحائط 4 متر.';
 }
 
 export default function MarcosAssistant() {
   const [open, setOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [input, setInput] = useState('');
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [messages, setMessages] = useState<Msg[]>([
-    { role: 'assistant', text: 'أهلاً بك في ماركوز هوم. اسألني بصوتك عن مكونات تصميم 198 أو المقاس والسعر.' },
+    { role: 'assistant', text: 'أهلاً بك في ماركوز هوم. اسألني بصوتك عن مكونات التصميم أو المقاس والسعر.' },
   ]);
   const recognitionRef = useRef<any>(null);
   const speechSupported = useMemo(() => typeof window !== 'undefined' && !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition), []);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from('assistant_offers')
+        .select('*')
+        .eq('active', true)
+        .order('sort_order');
+      if (data) setOffers(data as Offer[]);
+    };
+    load();
+  }, []);
 
   const speak = (text: string) => {
     if (!('speechSynthesis' in window)) return;
@@ -53,7 +89,7 @@ export default function MarcosAssistant() {
   const submit = (raw = input) => {
     const text = raw.trim();
     if (!text) return;
-    const reply = answerFor(text);
+    const reply = answerFor(text, offers);
     setMessages(prev => [...prev, { role: 'user', text }, { role: 'assistant', text: reply }]);
     setInput('');
     speak(reply);
@@ -81,7 +117,7 @@ export default function MarcosAssistant() {
   return (
     <div className="mh-assistant" dir="rtl">
       {open && <section className="mh-assistant-panel">
-        <header><div><strong>مساعد ماركوز هوم</strong><small>نسخة تجريبية — تصميم 198</small></div><button onClick={() => setOpen(false)} aria-label="إغلاق">×</button></header>
+        <header><div><strong>مساعد ماركوز هوم</strong><small>المعلومات متصلة بلوحة التحكم</small></div><button onClick={() => setOpen(false)} aria-label="إغلاق">×</button></header>
         <div className="mh-assistant-messages">
           {messages.map((m, i) => <div key={i} className={`mh-msg ${m.role}`}>{m.text}</div>)}
         </div>
