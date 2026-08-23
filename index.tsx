@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import MarcosAssistant from './components/MarcosAssistant';
 import './styles.css';
+import './assistant.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
