@@ -10,9 +10,9 @@
   btn.innerHTML='🎙 <span>اسأل ماركوز هوم</span>';
   btn.style.cssText='border:0;border-radius:999px;padding:14px 18px;background:#1258a6;color:#fff;font-weight:800;box-shadow:0 12px 32px rgba(0,0,0,.22);cursor:pointer';
   var frame=document.createElement('iframe');
-  frame.src=host+'/assistant/embed';
+  frame.src=host+'/assistant/embed?v=voice-neural-20260824a';
   frame.title='مساعد ماركوز هوم';
-  frame.allow='microphone';
+  frame.allow='microphone; autoplay';
   frame.style.cssText='display:none;width:min(410px,calc(100vw - 24px));height:min(620px,75vh);border:0;border-radius:22px;box-shadow:0 22px 70px rgba(17,24,39,.25);background:transparent;margin-bottom:10px';
   btn.onclick=function(){frame.style.display=frame.style.display==='none'?'block':'none';};
   wrap.appendChild(frame);wrap.appendChild(btn);document.body.appendChild(wrap);
