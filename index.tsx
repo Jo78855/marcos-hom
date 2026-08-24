@@ -5,6 +5,7 @@ import MarcosAssistant from './components/MarcosAssistant';
 import AssistantAdmin from './components/AssistantAdmin';
 import './styles.css';
 import './assistant.css';
+import './unified-admin.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error("Could not find root element to mount to");
