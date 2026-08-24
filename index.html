@@ -8,10 +8,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="ماركوز هوم" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <link id="app-manifest" rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
     <link rel="apple-touch-icon" href="/icons/icon.svg" />
-    <title>ماركوز هوم | ركن القهوة</title>
+    <title>ماركوز هوم</title>
+    <script>
+      if (location.pathname.startsWith('/admin/overview')) {
+        document.getElementById('app-manifest').setAttribute('href','/admin-manifest.webmanifest');
+        document.title = 'ماركوز هوم | لوحة التحكم';
+      }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
