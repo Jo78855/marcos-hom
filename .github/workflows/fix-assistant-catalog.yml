@@ -1,0 +1,45 @@
+name: Fix assistant catalog binding
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-assistant-catalog.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Patch MarcosAssistant
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('components/MarcosAssistant.tsx')
+          s=p.read_text()
+          old="""function answerFor(text:string,offers:Offer[],products:Product[]){\n  const q=norm(text),product=productMatch(text,products);"""
+          new="""function answerFor(text:string,offers:Offer[],products:Product[]){\n  const q=norm(text);\n  const design198=offers.find(o=>o.code==='design-198');\n  if(/(?:تصميم\\s*)?198/.test(q)&&design198){\n    return`${opener()} تصميم 198 سعره ${money(design198.price_without_installation)} دينار بدون تركيب، و${money(design198.price_with_installation)} دينار مع التركيب. ${design198.components_ar}`;\n  }\n  const product=productMatch(text,products);"""
+          if old not in s:
+              raise SystemExit('answerFor marker not found')
+          s=s.replace(old,new,1)
+
+          old2="""    try{\n      const{data,error}=await supabase.functions.invoke('marcos-realtime-token',{body:{}});if(error)throw error;"""
+          new2="""    try{\n      const[catalogOffers,catalogProducts]=await Promise.all([\n        supabase.from('assistant_offers').select('*').eq('active',true).order('sort_order'),\n        supabase.from('assistant_products').select('*').eq('active',true).order('sort_order')\n      ]);\n      const freshOffers=(catalogOffers.data?.length?catalogOffers.data:offers) as Offer[];\n      const freshProducts=(catalogProducts.data?.length?catalogProducts.data:products) as Product[];\n      if(catalogOffers.data?.length)setOffers(freshOffers);\n      if(catalogProducts.data?.length)setProducts(freshProducts);\n      const{data,error}=await supabase.functions.invoke('marcos-realtime-token',{body:{}});if(error)throw error;"""
+          if old2 not in s:
+              raise SystemExit('realtime marker not found')
+          s=s.replace(old2,new2,1)
+          s=s.replace("catalogInstructions(offers,products)","catalogInstructions(freshOffers,freshProducts)",1)
+          p.write_text(s)
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add components/MarcosAssistant.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Fix assistant price lookup and realtime catalog refresh"
+          git push
