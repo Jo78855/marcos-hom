@@ -13,7 +13,12 @@ const productMatch=(text:string,products:Product[])=>{const q=norm(text);return 
 const opener=()=>['أكيد.','تمام.','طبعًا.'][Math.floor(Math.random()*3)];
 
 function answerFor(text:string,offers:Offer[],products:Product[]){
-  const q=norm(text),product=productMatch(text,products);
+  const q=norm(text);
+  const design198=offers.find(o=>o.code==='design-198');
+  if(/(?:تصميم\s*)?198/.test(q)&&design198){
+    return`${opener()} تصميم 198 سعره ${money(design198.price_without_installation)} دينار بدون تركيب، و${money(design198.price_with_installation)} دينار مع التركيب. ${design198.components_ar}`;
+  }
+  const product=productMatch(text,products);
   if(product){
     const price=/سعر|كام|بكام|تكلف/.test(q),details=/تفاصيل|مكون|يتكون|مقاس|الوان|خامة|خامات/.test(q);
     if(price)return`${opener()} ${product.price_text_ar}${product.details_ar?`. ${product.details_ar}`:''}`;
@@ -66,11 +71,19 @@ export default function MarcosAssistant({embedded=false}:{embedded?:boolean}){
     if(realtimeState==='connected'||realtimeState==='connecting'){stopRealtime();return}
     setRealtimeState('connecting');
     try{
+      const[catalogOffers,catalogProducts]=await Promise.all([
+        supabase.from('assistant_offers').select('*').eq('active',true).order('sort_order'),
+        supabase.from('assistant_products').select('*').eq('active',true).order('sort_order')
+      ]);
+      const freshOffers=(catalogOffers.data?.length?catalogOffers.data:offers) as Offer[];
+      const freshProducts=(catalogProducts.data?.length?catalogProducts.data:products) as Product[];
+      if(catalogOffers.data?.length)setOffers(freshOffers);
+      if(catalogProducts.data?.length)setProducts(freshProducts);
       const{data,error}=await supabase.functions.invoke('marcos-realtime-token',{body:{}});if(error)throw error;
       const key=(data as any)?.value||(data as any)?.client_secret?.value||(data as any)?.client_secret;if(!key||typeof key!=='string')throw new Error('لم يتم استلام مفتاح الجلسة');
       const pc=new RTCPeerConnection();pcRef.current=pc;const remoteAudio=document.createElement('audio');remoteAudio.autoplay=true;remoteAudio.setAttribute('playsinline','true');pc.ontrack=e=>{remoteAudio.srcObject=e.streams[0];void remoteAudio.play().catch(()=>{})};
       const stream=await navigator.mediaDevices.getUserMedia({audio:true});streamRef.current=stream;stream.getTracks().forEach(track=>pc.addTrack(track,stream));
-      const dc=pc.createDataChannel('oai-events');dcRef.current=dc;dc.onopen=()=>{setRealtimeState('connected');dc.send(JSON.stringify({type:'session.update',session:{instructions:catalogInstructions(offers,products),audio:{output:{voice:'marin'}}}}))};dc.onclose=()=>setRealtimeState('idle');dc.onerror=()=>setRealtimeState('error');dc.onmessage=e=>{try{const evt=JSON.parse(e.data);if(evt.type==='conversation.item.input_audio_transcription.completed'&&evt.transcript)setMessages(v=>[...v,{role:'user',text:evt.transcript}]);if((evt.type==='response.output_audio_transcript.done'||evt.type==='response.output_text.done')&&(evt.transcript||evt.text))setMessages(v=>[...v,{role:'assistant',text:evt.transcript||evt.text}])}catch{}};
+      const dc=pc.createDataChannel('oai-events');dcRef.current=dc;dc.onopen=()=>{setRealtimeState('connected');dc.send(JSON.stringify({type:'session.update',session:{instructions:catalogInstructions(freshOffers,freshProducts),audio:{output:{voice:'marin'}}}}))};dc.onclose=()=>setRealtimeState('idle');dc.onerror=()=>setRealtimeState('error');dc.onmessage=e=>{try{const evt=JSON.parse(e.data);if(evt.type==='conversation.item.input_audio_transcription.completed'&&evt.transcript)setMessages(v=>[...v,{role:'user',text:evt.transcript}]);if((evt.type==='response.output_audio_transcript.done'||evt.type==='response.output_text.done')&&(evt.transcript||evt.text))setMessages(v=>[...v,{role:'assistant',text:evt.transcript||evt.text}])}catch{}};
       const offer=await pc.createOffer();await pc.setLocalDescription(offer);const sdpResponse=await fetch('https://api.openai.com/v1/realtime/calls',{method:'POST',body:offer.sdp||'',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/sdp'}});if(!sdpResponse.ok)throw new Error(`Realtime ${sdpResponse.status}`);await pc.setRemoteDescription({type:'answer',sdp:await sdpResponse.text()});
     }catch(err){console.error('Realtime voice failed',err);stopRealtime();setRealtimeState('error');setTimeout(()=>setRealtimeState('idle'),3000)}
   };
