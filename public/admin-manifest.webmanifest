@@ -1,0 +1,15 @@
+{
+  "name": "ماركوز هوم - لوحة التحكم",
+  "short_name": "إدارة ماركوز",
+  "description": "لوحة ماركوز هوم الموحدة لإدارة الطلبات والعملاء والمنتجات والمتابعة",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/admin/overview",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#0a376a",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
