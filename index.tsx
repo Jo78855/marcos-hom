@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import MarcosAssistant from './components/MarcosAssistant';
 import AssistantAdmin from './components/AssistantAdmin';
+import UnifiedAdmin from './components/UnifiedAdmin';
 import './styles.css';
 import './assistant.css';
 import './unified-admin.css';
@@ -11,12 +12,18 @@ const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error("Could not find root element to mount to");
 
 const root = ReactDOM.createRoot(rootElement);
-const isFire = window.location.hostname.startsWith('fire.') || window.location.pathname.startsWith('/fire');
-const isAdmin = window.location.pathname.startsWith('/admin');
-const isAssistantAdmin = window.location.pathname.startsWith('/admin/assistant');
-const isAssistantEmbed = window.location.pathname.startsWith('/assistant/embed');
+const path = window.location.pathname;
+const isFire = window.location.hostname.startsWith('fire.') || path.startsWith('/fire');
+const isAdmin = path.startsWith('/admin');
+const isUnifiedAdmin = path === '/admin' || path.startsWith('/admin/overview');
+const isAssistantAdmin = path.startsWith('/admin/assistant');
+const isAssistantEmbed = path.startsWith('/assistant/embed');
 
-if (isFire) {
+if (isUnifiedAdmin) {
+  document.title = 'ماركوز هوم | لوحة التحكم';
+  document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.setAttribute('href', '/admin-manifest.webmanifest');
+  document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute('content', '#0a376a');
+} else if (isFire) {
   document.title = 'ماركوز هوم | جهاز الفير المعطر';
   document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.setAttribute('href', '/fire-manifest.webmanifest');
   document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute('content', '#b45309');
@@ -25,7 +32,7 @@ if (isAssistantEmbed) document.title = 'مساعد ماركوز هوم';
 
 root.render(
   <React.StrictMode>
-    {isAssistantEmbed ? <MarcosAssistant embedded /> : isAssistantAdmin ? <AssistantAdmin /> : <App />}
+    {isAssistantEmbed ? <MarcosAssistant embedded /> : isAssistantAdmin ? <AssistantAdmin /> : isUnifiedAdmin ? <UnifiedAdmin /> : <App />}
     {!isAssistantEmbed && !isAdmin && !isFire && <MarcosAssistant />}
   </React.StrictMode>
 );
