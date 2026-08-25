@@ -3,51 +3,107 @@ import type{Session}from'@supabase/supabase-js';
 import{supabase}from'../supabase';
 
 type Product='coffee'|'fire'|'assistant';
-type UnifiedOrder={id:string;product:Product;customerName:string;customerPhone:string;selection:string;total:number|null;status:string;createdAt:string;area?:string;wallWidth?:number|null;wallHeight?:number|null;spaceNotes?:string;spacePhotoUrl?:string;source?:string;followUpAt?:string|null;followUpNote?:string|null};
+type UnifiedOrder={
+  id:string;product:Product;customerName:string;customerPhone:string;selection:string;
+  total:number|null;status:string;createdAt:string;area?:string|null;wallWidth?:number|null;
+  wallHeight?:number|null;notes?:string|null;photoUrl?:string;source?:string|null;
+  followUpAt?:string|null;followUpNote?:string|null
+};
+
 const productLabel:Record<Product,string>={coffee:'ركن القهوة',fire:'الفير المعطر',assistant:'تصميم / مساعد ماركوز'};
-const productPage:Record<Product,string>={coffee:'https://coffee.marcohom.com/',fire:'https://fire.marcohom.com/',assistant:'https://marcohom.com/'};
-const slackChannel='C0BRVGRB3T3';
+const statusLabel:Record<string,string>={
+  new:'جديد',needs_photo:'تحتاج صورة',measurements_received:'المقاسات والصورة وصلت',
+  ready_for_review:'جاهز للمراجعة',contacted:'تم التواصل',confirmed:'مؤكد',completed:'مكتمل',cancelled:'ملغي'
+};
+const statusOptions=['new','needs_photo','measurements_received','ready_for_review','contacted','confirmed','completed','cancelled'];
+const slackUrl='https://marcoshome.slack.com/archives/C0BRVGRB3T3';
 
 export default function UnifiedAdmin(){
- const[session,setSession]=useState<Session|null>(null),[loading,setLoading]=useState(true);
- useEffect(()=>{supabase.auth.getSession().then(({data})=>{setSession(data.session);setLoading(false)});const{data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s));return()=>data.subscription.unsubscribe()},[]);
- if(loading)return<div className="admin-center" dir="rtl">جاري التحميل...</div>;
- return session?<UnifiedDashboard onLogout={()=>supabase.auth.signOut()}/>:<UnifiedLogin/>;
+  const[session,setSession]=useState<Session|null>(null),[loading,setLoading]=useState(true);
+  useEffect(()=>{
+    supabase.auth.getSession().then(({data})=>{setSession(data.session);setLoading(false)});
+    const{data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s));
+    return()=>data.subscription.unsubscribe();
+  },[]);
+  if(loading)return<div className="admin-center" dir="rtl">جاري التحميل...</div>;
+  return session?<Dashboard onLogout={()=>supabase.auth.signOut()}/>:<Login/>;
 }
 
-function UnifiedLogin(){
- const[email,setEmail]=useState('joseph.sobhy2022@gmail.com'),[password,setPassword]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
- const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError('');const{error:x}=await supabase.auth.signInWithPassword({email,password});if(x)setError('بيانات الدخول غير صحيحة');setBusy(false)};
- return<main className="admin-login" dir="rtl"><form onSubmit={submit}><div className="brand-mark unified-mark">MH</div><h1>لوحة ماركوز هوم الموحدة</h1><p>كل الطلبات والعملاء والمنتجات في مكان واحد</p><label>البريد الإلكتروني<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label><label>كلمة المرور<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required/></label>{error&&<div className="admin-error">{error}</div>}<button disabled={busy}>{busy?'جاري الدخول...':'دخول'}</button></form></main>;
+function Login(){
+  const[email,setEmail]=useState('joseph.sobhy2022@gmail.com'),[password,setPassword]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+  const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError('');const{error:x}=await supabase.auth.signInWithPassword({email,password});if(x)setError('بيانات الدخول غير صحيحة');setBusy(false)};
+  return<main className="admin-login" dir="rtl"><form onSubmit={submit}>
+    <div className="brand-mark unified-mark">MH</div><h1>لوحة طلبات ماركوز هوم</h1><p>طلبات المساعد والمنتجات في مكان واحد</p>
+    <label>البريد الإلكتروني<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label>
+    <label>كلمة المرور<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required/></label>
+    {error&&<div className="admin-error">{error}</div>}<button disabled={busy}>{busy?'جاري الدخول...':'دخول'}</button>
+  </form></main>;
 }
 
-function UnifiedDashboard({onLogout}:{onLogout:()=>void}){
- const[orders,setOrders]=useState<UnifiedOrder[]>([]),[loading,setLoading]=useState(false),[error,setError]=useState(''),[lastUpdated,setLastUpdated]=useState(''),[query,setQuery]=useState(''),[productFilter,setProductFilter]=useState<'all'|Product>('all'),[updatingOrder,setUpdatingOrder]=useState(''),[tab,setTab]=useState<'home'|'orders'|'customers'|'products'|'followup'|'slack'>('home'),[installPrompt,setInstallPrompt]=useState<any>(null);
- useEffect(()=>{const h=(e:any)=>{e.preventDefault();setInstallPrompt(e)};window.addEventListener('beforeinstallprompt',h);return()=>window.removeEventListener('beforeinstallprompt',h)},[]);
- const installAdmin=async()=>{if(installPrompt){await installPrompt.prompt();setInstallPrompt(null);return}alert('على آيفون: افتح هذه الصفحة في Safari ثم مشاركة ← إضافة إلى الشاشة الرئيسية. على أندرويد/Chrome: من قائمة المتصفح اختر تثبيت التطبيق أو إضافة إلى الشاشة الرئيسية.')};
- const tableFor=(o:UnifiedOrder)=>o.product==='fire'?'fire_orders':'orders';
- const load=async()=>{setLoading(true);setError('');const[c,d,f]=await Promise.all([supabase.from('orders').select('*').order('created_at',{ascending:false}),supabase.from('designs').select('id,name_ar'),supabase.from('fire_orders').select('*').order('created_at',{ascending:false})]);if(c.error||f.error)setError('تعذر تحميل بعض الطلبات.');const names=new Map((d.data||[]).map(x=>[x.id,x.name_ar]));const coffee:UnifiedOrder[]=await Promise.all((c.data||[]).map(async(o:any)=>{let photo='';if(o.space_photo_path){const s=await supabase.storage.from('customer-spaces').createSignedUrl(o.space_photo_path,3600);photo=s.data?.signedUrl||''}const assistant=o.source==='voice_assistant'||o.source==='assistant';return{id:o.id,product:assistant?'assistant':'coffee',customerName:o.customer_name||'عميل',customerPhone:o.customer_phone||'بدون رقم',selection:assistant?(o.wall_width?`حائط ${o.wall_width}م`:'طلب تصميم'):names.get(o.design_id)||(o.installation?'شامل التركيب':'بدون تركيب'),total:o.total,status:o.status,createdAt:o.created_at,area:o.area,wallWidth:o.wall_width,wallHeight:o.wall_height,spaceNotes:o.space_notes,spacePhotoUrl:photo,source:o.source,followUpAt:o.follow_up_at,followUpNote:o.follow_up_note}}));const fire:UnifiedOrder[]=(f.data||[]).map((o:any)=>({id:o.id,product:'fire',customerName:o.customer_name||'عميل',customerPhone:o.customer_phone||'بدون رقم',selection:o.size_name||'مقاس غير محدد',total:o.total,status:o.status,createdAt:o.created_at,source:'fire',followUpAt:o.follow_up_at,followUpNote:o.follow_up_note}));setOrders([...coffee,...fire].sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt)));setLastUpdated(new Date().toLocaleTimeString('ar-KW'));setLoading(false)};
- useEffect(()=>{load();const t=window.setInterval(load,15000);window.addEventListener('focus',load);return()=>{window.clearInterval(t);window.removeEventListener('focus',load)}},[]);
- const updateStatus=async(o:UnifiedOrder,status:string)=>{setUpdatingOrder(`${o.product}-${o.id}`);const{error:x}=await supabase.from(tableFor(o)).update({status}).eq('id',o.id);if(x)setError('تعذر تحديث حالة الطلب');else setOrders(v=>v.map(i=>i.id===o.id&&i.product===o.product?{...i,status}:i));setUpdatingOrder('')};
- const setReminder=async(o:UnifiedOrder,days:number)=>{const d=new Date();d.setDate(d.getDate()+days);d.setHours(10,0,0,0);const note=days===1?'متابعة غدًا':'متابعة بعد 3 أيام';const{error:x}=await supabase.from(tableFor(o)).update({follow_up_at:d.toISOString(),follow_up_note:note}).eq('id',o.id);if(x){setError('تعذر حفظ التذكير');return}setOrders(v=>v.map(i=>i.id===o.id&&i.product===o.product?{...i,followUpAt:d.toISOString(),followUpNote:note}:i))};
- const phone=(o:UnifiedOrder)=>o.customerPhone.replace(/\D/g,'');
- const waUrl=(o:UnifiedOrder,message:string)=>phone(o)?`https://wa.me/${phone(o)}?text=${encodeURIComponent(message)}`:'';
- const normalWa=(o:UnifiedOrder)=>waUrl(o,`مرحباً ${o.customerName}، معك ماركوز هوم بخصوص ${productLabel[o.product]}.`);
- const photoWa=(o:UnifiedOrder)=>waUrl(o,`مرحباً ${o.customerName}، لتأكيد المقاس والتصميم بدون معاينة مبدئيًا، ممكن ترسل لنا صورة واضحة للمكان بالكامل مع عرض الحائط بالمتر${o.wallHeight?' وارتفاعه التقريبي':''}؟ وبعدها نراجع لك التصميم والسعر مباشرة.`);
- const linkWa=(o:UnifiedOrder)=>waUrl(o,`مرحباً ${o.customerName}، هذا رابط ${productLabel[o.product]} من ماركوز هوم:\n${productPage[o.product]}\nلو حاب تكمل، أرسل لنا المقاس وصورة المكان.`);
- const customers=useMemo(()=>{const m=new Map<string,{name:string;phone:string;orders:number;total:number;products:Set<Product>;last:string}>();orders.forEach(o=>{const p=o.customerPhone.replace(/\D/g,'')||o.customerPhone,c=m.get(p);if(c){c.orders++;c.total+=o.total||0;c.products.add(o.product);if(Date.parse(o.createdAt)>Date.parse(c.last))c.last=o.createdAt}else m.set(p,{name:o.customerName,phone:o.customerPhone,orders:1,total:o.total||0,products:new Set([o.product]),last:o.createdAt})});return[...m.values()].sort((a,b)=>Date.parse(b.last)-Date.parse(a.last))},[orders]);
- const filtered=useMemo(()=>orders.filter(o=>(productFilter==='all'||o.product===productFilter)&&(!query.trim()||`${o.customerName} ${o.customerPhone} ${o.selection} ${o.area||''}`.toLowerCase().includes(query.trim().toLowerCase()))),[orders,productFilter,query]);
- const followups=useMemo(()=>orders.filter(o=>o.followUpAt).sort((a,b)=>Date.parse(a.followUpAt||'')-Date.parse(b.followUpAt||'')),[orders]);
- const dueCount=followups.filter(o=>Date.parse(o.followUpAt||'')<=Date.now()).length;
- const newCount=orders.filter(o=>o.status==='new'||o.status==='needs_photo').length;
- const tabs=[['home','الرئيسية'],['orders','الطلبات'],['customers','العملاء'],['products','الأقسام والمنتجات'],['followup','المتابعة'],['slack','Slack']]as const;
- const orderCard=(o:UnifiedOrder)=><div className="unified-order-card" key={`${o.product}-${o.id}`}><div className="unified-order-main"><span className={`product-pill ${o.product}`}>{productLabel[o.product]}</span><strong>{o.customerName}<small>{o.customerPhone}</small></strong><span>{o.selection}{o.area?` — ${o.area}`:''}{o.wallHeight?` — ارتفاع ${o.wallHeight}م`:''}</span><b>{o.total===null?'حسب الطلب':`${o.total} د.ك`}</b><select value={o.status} disabled={updatingOrder===`${o.product}-${o.id}`} onChange={e=>updateStatus(o,e.target.value)}><option value="new">جديد</option><option value="needs_photo">تحتاج صورة</option><option value="ready_for_review">جاهز للمراجعة</option><option value="contacted">تم التواصل</option><option value="confirmed">مؤكد</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option></select><time>{new Date(o.createdAt).toLocaleString('ar-KW')}</time></div><div className="order-actions">{normalWa(o)&&<a href={normalWa(o)} target="_blank" rel="noreferrer">واتساب</a>}{photoWa(o)&&<a href={photoWa(o)} target="_blank" rel="noreferrer">طلب صورة + مقاس</a>}{linkWa(o)&&<a href={linkWa(o)} target="_blank" rel="noreferrer">إرسال رابط</a>}<button onClick={()=>setReminder(o,1)}>تذكير غدًا</button><button onClick={()=>setReminder(o,3)}>بعد 3 أيام</button>{o.spacePhotoUrl&&<a href={o.spacePhotoUrl} target="_blank" rel="noreferrer">صورة المكان</a>}</div>{o.followUpAt&&<small className="followup-label">متابعة: {new Date(o.followUpAt).toLocaleString('ar-KW')} {o.followUpNote?`— ${o.followUpNote}`:''}</small>}{o.spaceNotes&&<small>{o.spaceNotes}</small>}</div>;
- return<main className="admin-shell unified-admin" dir="rtl"><header className="admin-header unified-header"><div><strong>لوحة ماركوز هوم الموحدة</strong><small>إدارة كل الأقسام من مكان واحد</small></div><div><button onClick={installAdmin}>تثبيت اللوحة</button><button onClick={onLogout}>تسجيل الخروج</button></div></header><div className="admin-content"><nav className="unified-nav">{tabs.map(([k,l])=><button key={k} className={tab===k?'active':''} onClick={()=>setTab(k as any)}>{l}</button>)}</nav>
- {tab==='home'&&<><section className="unified-stats"><article><small>كل الطلبات</small><strong>{orders.length}</strong></article><article><small>تحتاج متابعة</small><strong>{newCount}</strong></article><article><small>متابعات مستحقة</small><strong>{dueCount}</strong></article><article><small>العملاء</small><strong>{customers.length}</strong></article><article><small>ركن القهوة</small><strong>{orders.filter(o=>o.product==='coffee').length}</strong></article><article><small>الفير</small><strong>{orders.filter(o=>o.product==='fire').length}</strong></article></section><section className="admin-card"><h2>متابعة سريعة</h2><p className="form-hint">الأولوية للمقاس وصورة المكان. المعاينة تكون آخر حل فقط عند الحاجة.</p><button onClick={()=>setTab('orders')}>فتح الطلبات</button></section></>}
- {tab==='orders'&&<section className="admin-card"><div className="card-title unified-title"><div><h2>كل الطلبات</h2><small>آخر تحديث {lastUpdated} — تلقائي كل 15 ثانية</small></div><button onClick={load}>{loading?'جاري التحديث...':'تحديث الآن'}</button></div><div className="unified-filters"><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث بالاسم أو الهاتف أو المنطقة"/><select value={productFilter} onChange={e=>setProductFilter(e.target.value as any)}><option value="all">كل الأقسام</option><option value="coffee">ركن القهوة</option><option value="fire">الفير</option><option value="assistant">تصميم / مساعد</option></select></div>{error&&<p className="admin-error">{error}</p>}<div className="unified-orders">{filtered.map(orderCard)}</div></section>}
- {tab==='customers'&&<section className="admin-card"><h2>العملاء</h2><div className="unified-customers">{customers.map(c=><div key={c.phone}><strong>{c.name}<small>{c.phone}</small></strong><span>{c.orders} طلب</span><span>{[...c.products].map(p=>productLabel[p]).join('، ')}</span><b>{c.total} د.ك</b><time>{new Date(c.last).toLocaleDateString('ar-KW')}</time>{c.phone.replace(/\D/g,'')&&<a className="customer-whatsapp" href={`https://wa.me/${c.phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer">واتساب</a>}</div>)}</div></section>}
- {tab==='products'&&<section className="admin-card"><h2>الأقسام والمنتجات</h2><p className="form-hint">هذه هي لوحة ماركوز هوم الرئيسية. أي قسم جديد يضاف هنا، وليس في لوحة منفصلة.</p><div className="unified-stats"><article><small>ركن القهوة</small><strong>نشط</strong></article><article><small>الفير المعطر</small><strong>نشط</strong></article><article><small>تصميم 198 / الخلفيات</small><strong>نشط</strong></article><article><small>قسم جديد</small><strong>يضاف هنا</strong></article></div></section>}
- {tab==='followup'&&<section className="admin-card"><h2>المتابعة والتذكيرات</h2><p className="form-hint">هنا تظهر كل الطلبات التي حددت لها موعد متابعة. المستحق يظهر أولًا.</p><div className="unified-orders">{followups.length?followups.map(orderCard):<p className="empty">لا توجد تذكيرات مسجلة حاليًا.</p>}</div></section>}
- {tab==='slack'&&<section className="admin-card"><h2>Slack</h2><p className="form-hint">قناة المتابعة الرئيسية: #طلبات-الديكور. اللوحة للتحكم، وSlack للإشعارات السريعة.</p><a className="customer-whatsapp" href={`slack://channel?id=${slackChannel}`}>فتح قناة طلبات الديكور</a><a href="https://app.slack.com/" target="_blank" rel="noreferrer">فتح Slack على الويب</a><p className="form-hint">التفعيل التلقائي لإرسال كل طلب جديد إلى Slack يحتاج Bot/Webhook واحد يتخزن في Supabase. لا يتم وضع أي مفتاح داخل الموقع.</p></section>}
- </div></main>;
+function Dashboard({onLogout}:{onLogout:()=>void}){
+  const[orders,setOrders]=useState<UnifiedOrder[]>([]),[loading,setLoading]=useState(false),[error,setError]=useState(''),[lastUpdated,setLastUpdated]=useState('');
+  const[query,setQuery]=useState(''),[productFilter,setProductFilter]=useState<'all'|Product>('all'),[tab,setTab]=useState<'home'|'orders'|'customers'>('home');
+  const[installPrompt,setInstallPrompt]=useState<any>(null),[updating,setUpdating]=useState('');
+
+  useEffect(()=>{const h=(e:any)=>{e.preventDefault();setInstallPrompt(e)};window.addEventListener('beforeinstallprompt',h);return()=>window.removeEventListener('beforeinstallprompt',h)},[]);
+  const installAdmin=async()=>{if(installPrompt){await installPrompt.prompt();setInstallPrompt(null);return}alert('على آيفون: Safari ← مشاركة ← إضافة إلى الشاشة الرئيسية. على أندرويد/Chrome: اختر تثبيت التطبيق.')};
+
+  const load=async()=>{
+    setLoading(true);setError('');
+    const[o,d,f]=await Promise.all([
+      supabase.from('orders').select('*').order('created_at',{ascending:false}),
+      supabase.from('designs').select('id,name_ar'),
+      supabase.from('fire_orders').select('*').order('created_at',{ascending:false})
+    ]);
+    if(o.error||f.error){setError('تعذر تحميل بعض الطلبات.');setLoading(false);return}
+    const designNames=new Map((d.data||[]).map((x:any)=>[x.id,x.name_ar]));
+    const normal:UnifiedOrder[]=await Promise.all((o.data||[]).map(async(x:any)=>{
+      const assistant=x.source==='voice_assistant'||x.source==='assistant';
+      let photoUrl='';
+      if(x.place_photo_path){const s=await supabase.storage.from('customer-places').createSignedUrl(x.place_photo_path,3600);photoUrl=s.data?.signedUrl||''}
+      return{
+        id:x.id,product:assistant?'assistant':'coffee',customerName:x.customer_name||'عميل',customerPhone:x.customer_phone||'بدون رقم',
+        selection:assistant?(x.wall_width?`حائط ${x.wall_width}م`:'طلب تصميم'):(designNames.get(x.design_id)||(x.installation?'شامل التركيب':'بدون تركيب')),
+        total:x.total??null,status:x.status||'new',createdAt:x.created_at,area:x.area,wallWidth:x.wall_width,wallHeight:x.wall_height,
+        notes:x.customer_notes||x.assistant_summary||null,photoUrl,source:x.source,followUpAt:x.follow_up_at,followUpNote:x.follow_up_note
+      };
+    }));
+    const fire:UnifiedOrder[]=(f.data||[]).map((x:any)=>({
+      id:x.id,product:'fire',customerName:x.customer_name||'عميل',customerPhone:x.customer_phone||'بدون رقم',selection:x.size_name||'مقاس غير محدد',
+      total:x.total??null,status:x.status||'new',createdAt:x.created_at,source:'fire',followUpAt:x.follow_up_at,followUpNote:x.follow_up_note
+    }));
+    setOrders([...normal,...fire].sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt)));
+    setLastUpdated(new Date().toLocaleTimeString('ar-KW'));setLoading(false);
+  };
+
+  useEffect(()=>{void load();const t=window.setInterval(()=>void load(),10000);window.addEventListener('focus',load);return()=>{window.clearInterval(t);window.removeEventListener('focus',load)}},[]);
+
+  const updateStatus=async(o:UnifiedOrder,status:string)=>{
+    setUpdating(o.id);const table=o.product==='fire'?'fire_orders':'orders';const{error:x}=await supabase.from(table).update({status}).eq('id',o.id);
+    if(x)setError('تعذر تحديث حالة الطلب');else setOrders(v=>v.map(i=>i.id===o.id&&i.product===o.product?{...i,status}:i));setUpdating('');
+  };
+
+  const whatsapp=(o:UnifiedOrder)=>{const p=o.customerPhone.replace(/\D/g,'');if(!p)return'';const msg=`مرحباً ${o.customerName}، معك ماركوز هوم بخصوص ${productLabel[o.product]}.`;return`https://wa.me/${p}?text=${encodeURIComponent(msg)}`};
+  const filtered=useMemo(()=>orders.filter(o=>(productFilter==='all'||o.product===productFilter)&&(!query.trim()||`${o.customerName} ${o.customerPhone} ${o.selection} ${o.area||''}`.toLowerCase().includes(query.trim().toLowerCase()))),[orders,productFilter,query]);
+  const customers=useMemo(()=>{const m=new Map<string,{name:string;phone:string;count:number;last:string}>();orders.forEach(o=>{const k=o.customerPhone||o.id,old=m.get(k);if(old){old.count++;if(Date.parse(o.createdAt)>Date.parse(old.last))old.last=o.createdAt}else m.set(k,{name:o.customerName,phone:o.customerPhone,count:1,last:o.createdAt})});return[...m.values()].sort((a,b)=>Date.parse(b.last)-Date.parse(a.last))},[orders]);
+  const newCount=orders.filter(o=>['new','needs_photo','measurements_received','ready_for_review'].includes(o.status)).length;
+  const assistantCount=orders.filter(o=>o.product==='assistant').length;
+
+  return<main className="admin-shell unified-admin" dir="rtl">
+    <header className="admin-header unified-header"><div><strong>لوحة طلبات ماركوز هوم</strong><small>تحديث تلقائي كل 10 ثواني</small></div><div><button onClick={installAdmin}>تثبيت اللوحة</button><a href={slackUrl} target="_blank" rel="noreferrer">فتح Slack</a><button onClick={onLogout}>تسجيل الخروج</button></div></header>
+    <div className="admin-content">
+      <nav className="unified-nav"><button className={tab==='home'?'active':''} onClick={()=>setTab('home')}>الرئيسية</button><button className={tab==='orders'?'active':''} onClick={()=>setTab('orders')}>الطلبات</button><button className={tab==='customers'?'active':''} onClick={()=>setTab('customers')}>العملاء</button></nav>
+      {tab==='home'&&<><section className="unified-stats"><article><small>كل الطلبات</small><strong>{orders.length}</strong></article><article><small>طلبات جديدة / مراجعة</small><strong>{newCount}</strong></article><article><small>طلبات مساعد ماركوز</small><strong>{assistantCount}</strong></article><article><small>العملاء</small><strong>{customers.length}</strong></article></section><section className="admin-card"><h2>آخر حالة</h2><p>آخر تحديث: {lastUpdated||'—'}</p><button onClick={()=>void load()}>{loading?'جاري التحديث...':'تحديث الآن'}</button></section></>}
+      {tab==='orders'&&<section className="admin-card"><div className="card-title unified-title"><div><h2>الطلبات</h2><small>أي طلب من المساعد يظهر هنا بعد التسجيل مباشرة</small></div><button onClick={()=>void load()}>{loading?'جاري التحديث...':'تحديث الآن'}</button></div>
+        <div className="unified-filters"><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث بالاسم أو الهاتف أو المنطقة"/><select value={productFilter} onChange={e=>setProductFilter(e.target.value as any)}><option value="all">كل الأقسام</option><option value="assistant">مساعد ماركوز</option><option value="coffee">ركن القهوة</option><option value="fire">الفير</option></select></div>
+        {error&&<p className="admin-error">{error}</p>}<div className="unified-orders">{filtered.length===0?<p>لا توجد طلبات مطابقة.</p>:filtered.map(o=><div className="unified-order-card" key={`${o.product}-${o.id}`}>
+          <div className="unified-order-main"><span className={`product-pill ${o.product}`}>{productLabel[o.product]}</span><strong>{o.customerName}<small>{o.customerPhone}</small></strong><span>{o.selection}{o.area?` — ${o.area}`:''}{o.wallHeight?` — ارتفاع ${o.wallHeight}م`:''}</span><b>{o.total===null?'حسب الطلب':`${o.total} د.ك`}</b>
+          <select value={o.status} disabled={updating===o.id} onChange={e=>void updateStatus(o,e.target.value)}>{statusOptions.map(s=><option key={s} value={s}>{statusLabel[s]}</option>)}</select><time>{new Date(o.createdAt).toLocaleString('ar-KW')}</time></div>
+          <div className="order-actions">{whatsapp(o)&&<a href={whatsapp(o)} target="_blank" rel="noreferrer">واتساب العميل</a>}{o.photoUrl&&<a href={o.photoUrl} target="_blank" rel="noreferrer">صورة المكان</a>}<a href={slackUrl} target="_blank" rel="noreferrer">Slack</a></div>
+          {o.notes&&<small>{o.notes}</small>}
+        </div>)}</div>
+      </section>}
+      {tab==='customers'&&<section className="admin-card"><h2>العملاء</h2><div className="unified-customers">{customers.map(c=><div key={c.phone||c.name}><strong>{c.name}<small>{c.phone}</small></strong><span>{c.count} طلب</span><time>{new Date(c.last).toLocaleString('ar-KW')}</time></div>)}</div></section>}
+    </div>
+  </main>;
 }
