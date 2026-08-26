@@ -1,15 +1,20 @@
 {
-  "name": "ماركوز هوم - ركن القهوة",
-  "short_name": "ماركوز هوم",
-  "description": "اختيار وطلب ركن القهوة من ماركوز هوم",
+  "name": "Marco’s Home | ماركوز هوم",
+  "short_name": "Marco’s Home",
+  "description": "تطبيق ماركوز هوم الموحد للمنتجات والطلبات والتنفيذ",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#f5f7fb",
-  "theme_color": "#0a376a",
+  "background_color": "#ffffff",
+  "theme_color": "#177db7",
   "icons": [
-    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    {
+      "src": "/marcos-home-logo.jpg",
+      "sizes": "1365x1024",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
   ]
 }
