@@ -12,6 +12,16 @@ create table if not exists public.mh_staff_profiles (
   updated_at timestamptz not null default now()
 );
 
+insert into public.mh_staff_profiles (user_id, full_name, role)
+select id, 'Joseph Sobhy', 'admin'
+from auth.users
+where lower(email) = 'joseph.sobhy2022@gmail.com'
+on conflict (user_id) do update set
+  full_name = excluded.full_name,
+  role = 'admin',
+  active = true,
+  updated_at = now();
+
 create or replace function private.mh_has_role(allowed_roles text[])
 returns boolean
 language sql
