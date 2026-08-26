@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import DecorAdmin from './components/DecorAdmin';
+import OrderAccessPortal from './components/OrderAccessPortal';
 import './styles.css';
 
 const rootElement = document.getElementById('root');
@@ -11,6 +12,7 @@ if (!rootElement) {
 
 const root = ReactDOM.createRoot(rootElement);
 const isDecorAdmin = window.location.pathname.startsWith('/decor-admin');
+const isOrderPortal = window.location.pathname.startsWith('/order/');
 
 if (isDecorAdmin) {
   document.title = 'Marco’s Home | إدارة الديكورات';
@@ -23,7 +25,7 @@ if (isDecorAdmin) {
 
 root.render(
   <React.StrictMode>
-    {isDecorAdmin ? <DecorAdmin /> : <App />}
+    {isDecorAdmin ? <DecorAdmin /> : isOrderPortal ? <OrderAccessPortal /> : <App />}
   </React.StrictMode>
 );
 

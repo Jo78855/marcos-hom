@@ -2,8 +2,9 @@ import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../supabase';
 import './DecorAdmin.css';
+import './DecorAdminLinks.css';
 
-type Tab = 'dashboard' | 'orders' | 'customers' | 'installations' | 'catalog';
+type Tab = 'dashboard' | 'orders' | 'customers' | 'technicians' | 'installations' | 'catalog';
 
 type Customer = {
   id: string;
@@ -45,6 +46,8 @@ type CatalogItem = {
   price_with_installation: number | null;
   active: boolean;
 };
+
+type Technician = { id: string; name: string; phone: string; whatsapp: string | null; active: boolean };
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'مسودة',
@@ -123,6 +126,7 @@ function DecorWorkspace({ onLogout }: { onLogout: () => void }) {
   const [orders, setOrders] = useState<DecorOrder[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
+  const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showNewOrder, setShowNewOrder] = useState(false);
@@ -130,18 +134,20 @@ function DecorWorkspace({ onLogout }: { onLogout: () => void }) {
   const load = async () => {
     setLoading(true);
     setError('');
-    const [ordersResult, customersResult, catalogResult] = await Promise.all([
+    const [ordersResult, customersResult, catalogResult, techniciansResult] = await Promise.all([
       supabase.from('mh_orders').select('*, customer:mh_customers(*)').order('created_at', { ascending: false }),
       supabase.from('mh_customers').select('*').order('created_at', { ascending: false }),
       supabase.from('mh_catalog').select('*').order('category').order('name'),
+      supabase.from('mh_technicians').select('*').eq('active', true).order('name'),
     ]);
 
-    if (ordersResult.error || customersResult.error || catalogResult.error) {
+    if (ordersResult.error || customersResult.error || catalogResult.error || techniciansResult.error) {
       setError('قاعدة بيانات إدارة الديكورات لم تُجهّز بالكامل بعد.');
     }
     setOrders((ordersResult.data || []) as DecorOrder[]);
     setCustomers((customersResult.data || []) as Customer[]);
     setCatalog((catalogResult.data || []) as CatalogItem[]);
+    setTechnicians((techniciansResult.data || []) as Technician[]);
     setLoading(false);
   };
 
@@ -164,6 +170,25 @@ function DecorWorkspace({ onLogout }: { onLogout: () => void }) {
     setOrders(current => current.map(order => order.id === orderId ? { ...order, status } : order));
   };
 
+  const createAccessLink = async (order: DecorOrder, audience: 'customer' | 'technician', technicianId?: string) => {
+    setError('');
+    if (audience === 'technician' && !technicianId) return setError('اختر الفني أولًا.');
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    const token = Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('');
+    const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+    const tokenHash = `\\x${Array.from(new Uint8Array(hashBuffer), value => value.toString(16).padStart(2, '0')).join('')}`;
+    if (audience === 'technician' && technicianId) {
+      const assignment = await supabase.from('mh_assignments').upsert({ order_id: order.id, technician_id: technicianId, scheduled_at: order.installation_date }, { onConflict: 'order_id,technician_id' });
+      if (assignment.error) return setError('تعذر تعيين الفني للطلب.');
+    }
+    const created = await supabase.from('mh_order_access_links').insert({ order_id: order.id, audience, technician_id: technicianId || null, token_hash: tokenHash });
+    if (created.error) return setError('تعذر إنشاء الرابط الآمن.');
+    const path = audience === 'customer' ? '/order/customer' : '/order/technician';
+    const link = `${window.location.origin}${path}?token=${token}`;
+    try { await navigator.clipboard.writeText(link); alert('تم إنشاء الرابط ونسخه. أرسله عبر واتساب.'); }
+    catch { window.prompt('انسخ الرابط:', link); }
+  };
+
   return <main className="mh-app" dir="rtl">
     <aside className="mh-sidebar">
       <div className="mh-brand"><div className="mh-logo"><img src="/marcos-home-logo.jpg" alt="Marco’s Home" /></div><div><strong>Marco’s Home</strong><small>Decor Operations</small></div></div>
@@ -171,6 +196,7 @@ function DecorWorkspace({ onLogout }: { onLogout: () => void }) {
         <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>الرئيسية</button>
         <button className={tab === 'orders' ? 'active' : ''} onClick={() => setTab('orders')}>الطلبات</button>
         <button className={tab === 'customers' ? 'active' : ''} onClick={() => setTab('customers')}>العملاء</button>
+        <button className={tab === 'technicians' ? 'active' : ''} onClick={() => setTab('technicians')}>الفنيون</button>
         <button className={tab === 'installations' ? 'active' : ''} onClick={() => setTab('installations')}>التركيبات</button>
         <button className={tab === 'catalog' ? 'active' : ''} onClick={() => setTab('catalog')}>التصميمات والأسعار</button>
       </nav>
@@ -186,8 +212,9 @@ function DecorWorkspace({ onLogout }: { onLogout: () => void }) {
       {error && <div className="mh-banner">{error}</div>}
       {loading ? <div className="mh-loading">جاري تحميل البيانات...</div> : <>
         {tab === 'dashboard' && <Dashboard orders={orders} stats={stats} installations={installations} />}
-        {tab === 'orders' && <OrdersView orders={orders} onStatus={updateStatus} />}
+        {tab === 'orders' && <OrdersView orders={orders} technicians={technicians} onStatus={updateStatus} onLink={createAccessLink} />}
         {tab === 'customers' && <CustomersView customers={customers} orders={orders} />}
+        {tab === 'technicians' && <TechniciansView technicians={technicians} onCreated={load} />}
         {tab === 'installations' && <InstallationsView installations={installations} />}
         {tab === 'catalog' && <CatalogView catalog={catalog} />}
       </>}
@@ -210,10 +237,11 @@ function Dashboard({ orders, stats, installations }: { orders: DecorOrder[]; sta
   </div>;
 }
 
-function OrdersView({ orders, onStatus }: { orders: DecorOrder[]; onStatus: (id: string, status: string) => void }) {
+function OrdersView({ orders, technicians, onStatus, onLink }: { orders: DecorOrder[]; technicians: Technician[]; onStatus: (id: string, status: string) => void; onLink: (order: DecorOrder, audience: 'customer' | 'technician', technicianId?: string) => void }) {
   const [query, setQuery] = useState('');
+  const [selectedTechnicians, setSelectedTechnicians] = useState<Record<string, string>>({});
   const filtered = orders.filter(order => `${order.order_number} ${order.customer?.name || ''} ${order.customer?.phone || ''} ${order.service_type}`.toLowerCase().includes(query.toLowerCase()));
-  return <section className="mh-card"><div className="mh-toolbar"><input value={query} onChange={e => setQuery(e.target.value)} placeholder="ابحث برقم الطلب أو العميل أو الهاتف" /></div><div className="mh-orders-table">{filtered.map(order => <div className="mh-order-row" key={order.id}><div><strong>{order.order_number}</strong><span>{order.customer?.name || 'عميل'} · {order.customer?.phone || ''}</span></div><div><strong>{order.service_type}</strong><span>{order.width_m ? `${order.width_m} م` : 'مقاس غير محدد'} {order.color ? `· ${order.color}` : ''}</span></div><div><strong>{order.total === null ? 'حسب الطلب' : `${order.total} د.ك`}</strong><span>{order.installation ? 'مع تركيب' : 'بدون تركيب'}</span></div><select value={order.status} onChange={e => onStatus(order.id, e.target.value)}>{Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>)}{!filtered.length && <p className="mh-empty">لا توجد طلبات.</p>}</div></section>;
+  return <section className="mh-card"><div className="mh-toolbar"><input value={query} onChange={e => setQuery(e.target.value)} placeholder="ابحث برقم الطلب أو العميل أو الهاتف" /></div><div className="mh-orders-table">{filtered.map(order => <div className="mh-order-row" key={order.id}><div><strong>{order.order_number}</strong><span>{order.customer?.name || 'عميل'} · {order.customer?.phone || ''}</span></div><div><strong>{order.service_type}</strong><span>{order.width_m ? `${order.width_m} م` : 'مقاس غير محدد'} {order.color ? `· ${order.color}` : ''}</span></div><div><strong>{order.total === null ? 'حسب الطلب' : `${order.total} د.ك`}</strong><span>{order.installation ? 'مع تركيب' : 'بدون تركيب'}</span></div><select value={order.status} onChange={e => onStatus(order.id, e.target.value)}>{Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><div className="mh-link-actions"><button onClick={() => onLink(order, 'customer')}>نسخ رابط العميل</button><select value={selectedTechnicians[order.id] || ''} onChange={e => setSelectedTechnicians(current => ({ ...current, [order.id]: e.target.value }))}><option value="">اختر الفني</option>{technicians.map(technician => <option key={technician.id} value={technician.id}>{technician.name}</option>)}</select><button onClick={() => onLink(order, 'technician', selectedTechnicians[order.id])}>نسخ رابط الفني</button></div></div>)}{!filtered.length && <p className="mh-empty">لا توجد طلبات.</p>}</div></section>;
 }
 
 function OrderRows({ orders }: { orders: DecorOrder[] }) {
@@ -225,6 +253,20 @@ function CustomersView({ customers, orders }: { customers: Customer[]; orders: D
     const customerOrders = orders.filter(order => order.customer_id === customer.id);
     return <article key={customer.id}><strong>{customer.name}</strong><span>{customer.phone}</span><span>{customer.area || 'بدون منطقة'}</span><b>{customerOrders.length} طلب</b>{customer.whatsapp && <a href={`https://wa.me/${customer.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer">فتح واتساب</a>}</article>;
   })}{!customers.length && <p className="mh-empty">لا يوجد عملاء مسجلون.</p>}</div></section>;
+}
+
+function TechniciansView({ technicians, onCreated }: { technicians: Technician[]; onCreated: () => void }) {
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [error, setError] = useState('');
+  const submit = async (event: FormEvent) => {
+    event.preventDefault(); setError('');
+    const normalized = phone.replace(/\D/g, '');
+    const { error: insertError } = await supabase.from('mh_technicians').insert({ name: name.trim(), phone: normalized, whatsapp: normalized });
+    if (insertError) return setError('تعذر إضافة الفني.');
+    setName(''); setPhone(''); onCreated();
+  };
+  return <section className="mh-card"><form className="mh-technician-form" onSubmit={submit}><input required value={name} onChange={e => setName(e.target.value)} placeholder="اسم الفني" /><input required value={phone} onChange={e => setPhone(e.target.value)} placeholder="رقم واتساب" /><button className="primary">إضافة فني</button></form>{error && <div className="mh-error">{error}</div>}<div className="mh-customer-grid">{technicians.map(technician => <article key={technician.id}><strong>{technician.name}</strong><span>{technician.phone}</span><a href={`https://wa.me/${(technician.whatsapp || technician.phone).replace(/\D/g,'')}`} target="_blank" rel="noreferrer">فتح واتساب</a></article>)}{!technicians.length && <p className="mh-empty">أضف الفنيين مرة واحدة، ثم اختر الفني عند إنشاء رابط الطلب.</p>}</div></section>;
 }
 
 function InstallationsView({ installations }: { installations: DecorOrder[] }) {
@@ -278,5 +320,5 @@ function NewOrderModal({ onClose, onCreated }: { onClose: () => void; onCreated:
 }
 
 function tabTitle(tab: Tab) {
-  return ({ dashboard: 'الرئيسية', orders: 'الطلبات', customers: 'العملاء', installations: 'التركيبات', catalog: 'التصميمات والأسعار' } as Record<Tab, string>)[tab];
+  return ({ dashboard: 'الرئيسية', orders: 'الطلبات', customers: 'العملاء', technicians: 'الفنيون', installations: 'التركيبات', catalog: 'التصميمات والأسعار' } as Record<Tab, string>)[tab];
 }
