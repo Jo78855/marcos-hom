@@ -26,11 +26,13 @@ type DecorOrder = {
   color: string | null;
   installation: boolean;
   total: number | null;
-  deposit: number | null;
+  paid_amount: number;
+  payment_status: string;
   balance: number | null;
   status: string;
   installation_date: string | null;
-  notes: string | null;
+  internal_notes: string | null;
+  customer_notes: string | null;
   created_at: string;
   customer?: Customer | null;
 };
@@ -45,15 +47,18 @@ type CatalogItem = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  new: 'طلب جديد',
-  contacted: 'تم التواصل',
-  measurement: 'معاينة',
-  quoted: 'عرض سعر',
-  confirmed: 'تم التأكيد',
-  preparing: 'جاري التجهيز',
-  scheduled: 'محدد للتركيب',
-  completed: 'تم التنفيذ',
-  collected: 'تم التحصيل',
+  draft: 'مسودة',
+  awaiting_customer: 'بانتظار تأكيد العميل',
+  confirmed: 'مؤكد',
+  scheduled: 'مجدول',
+  technician_assigned: 'تم تعيين الفني',
+  en_route: 'في الطريق',
+  arrived: 'وصل',
+  in_progress: 'قيد التنفيذ',
+  blocked: 'توجد مشكلة',
+  technician_done: 'منتهي فنيًا',
+  awaiting_customer_handover: 'بانتظار استلام العميل',
+  completed: 'مستلم ومغلق',
   cancelled: 'ملغي',
 };
 
@@ -102,7 +107,7 @@ function DecorLogin() {
 
   return <main className="mh-login" dir="rtl">
     <form onSubmit={submit}>
-      <div className="mh-logo">MH</div>
+      <div className="mh-logo"><img src="/marcos-home-logo.jpg" alt="Marco’s Home" /></div>
       <h1>Marco’s Home</h1>
       <p>إدارة الديكورات والطلبات والتركيبات</p>
       <label>البريد الإلكتروني<input type="email" value={email} onChange={e => setEmail(e.target.value)} required /></label>
@@ -143,9 +148,9 @@ function DecorWorkspace({ onLogout }: { onLogout: () => void }) {
   useEffect(() => { load(); }, []);
 
   const stats = useMemo(() => ({
-    newOrders: orders.filter(o => ['new', 'contacted'].includes(o.status)).length,
+    newOrders: orders.filter(o => ['draft', 'awaiting_customer'].includes(o.status)).length,
     scheduled: orders.filter(o => o.status === 'scheduled').length,
-    active: orders.filter(o => !['completed', 'collected', 'cancelled'].includes(o.status)).length,
+    active: orders.filter(o => !['completed', 'cancelled'].includes(o.status)).length,
     receivables: orders.reduce((sum, order) => sum + Number(order.balance || 0), 0),
   }), [orders]);
 
@@ -161,7 +166,7 @@ function DecorWorkspace({ onLogout }: { onLogout: () => void }) {
 
   return <main className="mh-app" dir="rtl">
     <aside className="mh-sidebar">
-      <div className="mh-brand"><div className="mh-logo">MH</div><div><strong>Marco’s Home</strong><small>Decor Operations</small></div></div>
+      <div className="mh-brand"><div className="mh-logo"><img src="/marcos-home-logo.jpg" alt="Marco’s Home" /></div><div><strong>Marco’s Home</strong><small>Decor Operations</small></div></div>
       <nav>
         <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>الرئيسية</button>
         <button className={tab === 'orders' ? 'active' : ''} onClick={() => setTab('orders')}>الطلبات</button>
@@ -231,7 +236,7 @@ function CatalogView({ catalog }: { catalog: CatalogItem[] }) {
 }
 
 function NewOrderModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ name: '', phone: '', area: '', address: '', service: SERVICES[0], width: '', height: '2.90', color: '', installation: true, total: '', deposit: '', installationDate: '', notes: '' });
+  const [form, setForm] = useState({ name: '', phone: '', area: '', address: '', service: SERVICES[0], width: '', height: '2.90', color: '', installation: true, total: '', installationDate: '', notes: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -249,7 +254,6 @@ function NewOrderModal({ onClose, onCreated }: { onClose: () => void; onCreated:
       customerId = created.data.id;
     }
     const total = form.total ? Number(form.total) : null;
-    const deposit = form.deposit ? Number(form.deposit) : 0;
     const orderNumber = `MH-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
     const createdOrder = await supabase.from('mh_orders').insert({
       order_number: orderNumber,
@@ -260,17 +264,17 @@ function NewOrderModal({ onClose, onCreated }: { onClose: () => void; onCreated:
       color: form.color || null,
       installation: form.installation,
       total,
-      deposit,
-      balance: total === null ? null : Math.max(total - deposit, 0),
-      status: form.installationDate ? 'scheduled' : 'new',
+      paid_amount: 0,
+      payment_status: 'unpaid',
+      status: form.installationDate ? 'scheduled' : 'draft',
       installation_date: form.installationDate ? new Date(form.installationDate).toISOString() : null,
-      notes: form.notes || null,
+      internal_notes: form.notes || null,
     });
     if (createdOrder.error) { setError('تعذر حفظ الطلب.'); setBusy(false); return; }
     onCreated();
   };
 
-  return <div className="mh-modal-backdrop" dir="rtl"><form className="mh-modal" onSubmit={submit}><div className="mh-modal-head"><div><h2>طلب ديكور جديد</h2><p>سجل الطلب مرة واحدة وسيظهر في المتابعة والتركيبات.</p></div><button type="button" onClick={onClose}>×</button></div><div className="mh-form-grid"><label>اسم العميل<input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label>الهاتف / واتساب<input required value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></label><label>المنطقة<input value={form.area} onChange={e => setForm({ ...form, area: e.target.value })} /></label><label>العنوان<input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} /></label><label>نوع الخدمة<select value={form.service} onChange={e => setForm({ ...form, service: e.target.value })}>{SERVICES.map(service => <option key={service}>{service}</option>)}</select></label><label>عرض الحائط بالمتر<input type="number" step="0.01" value={form.width} onChange={e => setForm({ ...form, width: e.target.value })} /></label><label>الارتفاع بالمتر<input type="number" step="0.01" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} /></label><label>اللون<input value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} /></label><label>السعر الإجمالي<input type="number" step="0.001" value={form.total} onChange={e => setForm({ ...form, total: e.target.value })} /></label><label>العربون<input type="number" step="0.001" value={form.deposit} onChange={e => setForm({ ...form, deposit: e.target.value })} /></label><label>موعد التركيب<input type="datetime-local" value={form.installationDate} onChange={e => setForm({ ...form, installationDate: e.target.value })} /></label><label className="mh-checkbox"><input type="checkbox" checked={form.installation} onChange={e => setForm({ ...form, installation: e.target.checked })} /> شامل التركيب</label><label className="wide">ملاحظات<textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></label></div>{error && <div className="mh-error">{error}</div>}<div className="mh-modal-actions"><button type="button" onClick={onClose}>إلغاء</button><button className="primary" disabled={busy}>{busy ? 'جاري الحفظ...' : 'حفظ الطلب'}</button></div></form></div>;
+  return <div className="mh-modal-backdrop" dir="rtl"><form className="mh-modal" onSubmit={submit}><div className="mh-modal-head"><div><h2>طلب ديكور جديد</h2><p>سجل الطلب مرة واحدة وسيظهر في المتابعة والتركيبات.</p></div><button type="button" onClick={onClose}>×</button></div><div className="mh-form-grid"><label>اسم العميل<input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label>الهاتف / واتساب<input required value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></label><label>المنطقة<input value={form.area} onChange={e => setForm({ ...form, area: e.target.value })} /></label><label>العنوان<input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} /></label><label>نوع الخدمة<select value={form.service} onChange={e => setForm({ ...form, service: e.target.value })}>{SERVICES.map(service => <option key={service}>{service}</option>)}</select></label><label>عرض الحائط بالمتر<input type="number" step="0.01" value={form.width} onChange={e => setForm({ ...form, width: e.target.value })} /></label><label>الارتفاع بالمتر<input type="number" step="0.01" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} /></label><label>اللون<input value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} /></label><label>السعر الإجمالي<input type="number" step="0.001" value={form.total} onChange={e => setForm({ ...form, total: e.target.value })} /></label><label>موعد التركيب<input type="datetime-local" value={form.installationDate} onChange={e => setForm({ ...form, installationDate: e.target.value })} /></label><label className="mh-checkbox"><input type="checkbox" checked={form.installation} onChange={e => setForm({ ...form, installation: e.target.checked })} /> شامل التركيب</label><label className="wide">ملاحظات<textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></label></div>{error && <div className="mh-error">{error}</div>}<div className="mh-modal-actions"><button type="button" onClick={onClose}>إلغاء</button><button className="primary" disabled={busy}>{busy ? 'جاري الحفظ...' : 'حفظ الطلب'}</button></div></form></div>;
 }
 
 function tabTitle(tab: Tab) {
