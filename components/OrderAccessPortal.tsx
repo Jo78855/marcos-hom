@@ -24,6 +24,13 @@ type PortalData = {
   technician?: { name: string } | null;
   items: Array<{ name: string; description: string | null; quantity: number }>;
   events: Array<{ status: string; note: string | null; created_at: string }>;
+  confirmations: Array<{
+    confirmation_type: 'details' | 'handover';
+    accepted: boolean;
+    rating: number | null;
+    comment: string | null;
+    created_at: string;
+  }>;
 };
 
 const STATUS: Record<string, string> = {
@@ -40,6 +47,7 @@ export default function OrderAccessPortal() {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
   const [rating, setRating] = useState(5);
+  const [accepted, setAccepted] = useState(false);
 
   const load = async () => {
     if (!token) return setError('الرابط غير مكتمل. اطلب رابطًا جديدًا من ماركوز هوم.');
@@ -63,7 +71,7 @@ export default function OrderAccessPortal() {
     const { error: rpcError } = await supabase.rpc('mh_customer_confirm_order', {
       raw_token: token, confirmation_kind: type, customer_rating: type === 'handover' ? rating : null, customer_comment: note || null,
     });
-    if (rpcError) setError('تعذر تسجيل التأكيد. حاول مرة أخرى.'); else { setNote(''); await load(); }
+    if (rpcError) setError('تعذر تسجيل التأكيد. حاول مرة أخرى.'); else { setNote(''); setAccepted(false); await load(); }
     setBusy(false);
   };
 
@@ -72,6 +80,9 @@ export default function OrderAccessPortal() {
 
   const order = data.order;
   const isCustomer = data.audience === 'customer';
+  const isHandover = order.status === 'awaiting_customer_handover' || order.status === 'technician_done';
+  const detailsConfirmation = data.confirmations?.find(item => item.confirmation_type === 'details' && item.accepted);
+  const handoverConfirmation = data.confirmations?.find(item => item.confirmation_type === 'handover' && item.accepted);
   return <main className="portal-shell" dir="rtl">
     <PortalBrand />
     <section className="portal-hero"><span>{isCustomer ? 'رابط العميل الآمن' : `مهمة الفني: ${data.technician?.name || ''}`}</span><h1>{order.order_number}</h1><b>{STATUS[order.status] || order.status}</b></section>
@@ -93,11 +104,18 @@ export default function OrderAccessPortal() {
       </dl></article>}
     </section>
     {!!data.items.length && <section className="portal-card"><h2>مكونات الطلب</h2>{data.items.map((item, index) => <div className="portal-item" key={index}><strong>{item.name}</strong><span>{item.quantity} × {item.description || ''}</span></div>)}</section>}
-    <section className="portal-card portal-actions"><h2>{isCustomer ? 'التأكيد والاستلام' : 'تحديث التنفيذ'}</h2>
+    {isCustomer && order.customer_notes && <section className="portal-card portal-agreement"><h2>الملاحظات المتفق عليها</h2><p>{order.customer_notes}</p></section>}
+    {isCustomer && <section className="portal-card portal-documentation"><h2>سجل التوثيق</h2><p>كل تأكيد يُحفظ تلقائيًا برقم الطلب وتاريخه ووقت تنفيذه.</p><div className="portal-proof-grid">
+      <div className={detailsConfirmation ? 'portal-proof done' : 'portal-proof'}><strong>تأكيد تفاصيل الطلب</strong><span>{detailsConfirmation ? `تم التوثيق: ${new Date(detailsConfirmation.created_at).toLocaleString('ar-KW')}` : 'لم يؤكد العميل بعد'}</span>{detailsConfirmation?.comment && <small>ملاحظة العميل: {detailsConfirmation.comment}</small>}</div>
+      <div className={handoverConfirmation ? 'portal-proof done' : 'portal-proof'}><strong>استلام الأعمال</strong><span>{handoverConfirmation ? `تم الاستلام: ${new Date(handoverConfirmation.created_at).toLocaleString('ar-KW')}` : 'بانتظار انتهاء التنفيذ'}</span>{handoverConfirmation?.rating && <small>التقييم: {handoverConfirmation.rating} من 5</small>}{handoverConfirmation?.comment && <small>رأي العميل: {handoverConfirmation.comment}</small>}</div>
+    </div></section>}
+    <section className="portal-card portal-actions"><h2>{isCustomer ? (isHandover ? 'استلام وتقييم الأعمال' : 'تأكيد تفاصيل الاتفاق') : 'تحديث التنفيذ'}</h2>
+      {isCustomer && <p className="portal-action-note">راجع المكونات والمقاسات والملاحظات أعلاه قبل الضغط على التأكيد.</p>}
       <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="أضف ملاحظة اختيارية" />
-      {isCustomer ? <form onSubmit={e => customerConfirm(e, order.status === 'awaiting_customer_handover' || order.status === 'technician_done' ? 'handover' : 'details')}>
-        {(order.status === 'awaiting_customer_handover' || order.status === 'technician_done') && <label>تقييم الخدمة<select value={rating} onChange={e => setRating(Number(e.target.value))}>{[5,4,3,2,1].map(value => <option key={value} value={value}>{value} نجوم</option>)}</select></label>}
-        <button disabled={busy}>{order.status === 'awaiting_customer_handover' || order.status === 'technician_done' ? 'تأكيد استلام الأعمال' : 'تأكيد تفاصيل الطلب'}</button>
+      {isCustomer ? <form onSubmit={e => customerConfirm(e, isHandover ? 'handover' : 'details')}>
+        {isHandover && <label>تقييم الخدمة<select value={rating} onChange={e => setRating(Number(e.target.value))}>{[5,4,3,2,1].map(value => <option key={value} value={value}>{value} نجوم</option>)}</select></label>}
+        <label className="portal-consent"><input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} required /><span>{isHandover ? 'أقر أنني استلمت الأعمال وأثبت رأيي أعلاه.' : 'راجعت المكونات والمقاسات والملاحظات وأوافق عليها.'}</span></label>
+        <button disabled={busy || !accepted}>{isHandover ? 'تأكيد استلام الأعمال وتوثيقه' : 'تأكيد تفاصيل الطلب وتوثيقها'}</button>
       </form> : <div className="portal-buttons"><button disabled={busy} onClick={() => technicianStatus('en_route')}>في الطريق</button><button disabled={busy} onClick={() => technicianStatus('arrived')}>وصلت</button><button disabled={busy} onClick={() => technicianStatus('in_progress')}>بدأ التنفيذ</button><button disabled={busy} onClick={() => technicianStatus('blocked')}>توجد مشكلة</button><button className="done" disabled={busy} onClick={() => technicianStatus('technician_done')}>انتهى العمل</button></div>}
     </section>
     {!!data.events.length && <section className="portal-card"><h2>سجل الحالة</h2>{data.events.map((event, index) => <div className="portal-event" key={index}><b>{STATUS[event.status] || event.status}</b><span>{new Date(event.created_at).toLocaleString('ar-KW')}{event.note ? ` — ${event.note}` : ''}</span></div>)}</section>}

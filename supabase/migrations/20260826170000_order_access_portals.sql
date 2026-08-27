@@ -24,7 +24,8 @@ begin
       else jsonb_build_object('name',c.name,'phone',c.phone,'area',c.area,'address',c.address) end,
     'technician', case when t.id is null then null else jsonb_build_object('name',t.name) end,
     'items', coalesce((select jsonb_agg(jsonb_build_object('name',i.name,'description',i.description,'quantity',i.quantity) order by i.sort_order) from public.mh_order_items i where i.order_id=o.id),'[]'::jsonb),
-    'events', coalesce((select jsonb_agg(jsonb_build_object('status',e.status,'note',e.note,'created_at',e.created_at) order by e.created_at desc) from (select * from public.mh_status_events where order_id=o.id order by created_at desc limit 20) e),'[]'::jsonb)
+    'events', coalesce((select jsonb_agg(jsonb_build_object('status',e.status,'note',e.note,'created_at',e.created_at) order by e.created_at desc) from (select * from public.mh_status_events where order_id=o.id order by created_at desc limit 20) e),'[]'::jsonb),
+    'confirmations', coalesce((select jsonb_agg(jsonb_build_object('confirmation_type',cf.confirmation_type,'accepted',cf.accepted,'rating',cf.rating,'comment',cf.comment,'created_at',cf.created_at) order by cf.created_at desc) from public.mh_customer_confirmations cf where cf.order_id=o.id),'[]'::jsonb)
   ) into result
   from public.mh_orders o join public.mh_customers c on c.id=o.customer_id
   left join public.mh_technicians t on t.id=access_record.technician_id where o.id=access_record.order_id;
