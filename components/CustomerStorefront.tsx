@@ -13,8 +13,9 @@ const coffeeImages=[
   ['/coffee/black-lightwood.webp','أسود مع خشب فاتح'],['/coffee/darkgray-chevron.webp','رمادي غامق'],
   ['/coffee/lightgray-chevron.webp','رمادي فاتح'],['/coffee/lightwood-chevron.webp','خشبي فاتح'],['/coffee/honey-wood.webp','عسلي ماركوز هوم']
 ];
-const uniqueProducts=(items:Product[])=>{const seen=new Set<string>();return items.filter(item=>{const key=item.name_ar.replace(/\s+/g,' ').trim();if(seen.has(key))return false;seen.add(key);return true})};
-const mergeProducts=(remote:Product[])=>{const map=new Map<string,Product>(),key=(code:string)=>code.replace(/_/g,'-');websiteProducts.forEach(item=>map.set(key(item.code),item));remote.forEach(item=>map.set(key(item.code),item));return [...map.values()].sort((a,b)=>a.sort_order-b.sort_order)};
+const productKey=(item:Product)=>{const value=`${item.code} ${item.name_ar}`.replace(/[_-]/g,' ').replace(/\s+/g,' ').trim().toLowerCase();if(value.includes('fire')||value.includes('فاير'))return'fire';if(value.includes('coffee')||value.includes('قهوة'))return'coffee';if(value.includes('wpc')||value.includes('عمود')||value.includes('أعمدة')||value.includes('فواصل'))return'wpc';return item.name_ar.replace(/\s+/g,' ').trim()};
+const uniqueProducts=(items:Product[])=>{const seen=new Set<string>();return items.filter(item=>{const key=productKey(item);if(seen.has(key))return false;seen.add(key);return true})};
+const mergeProducts=(remote:Product[])=>{const map=new Map<string,Product>();websiteProducts.forEach(item=>map.set(productKey(item),item));remote.forEach(item=>map.set(productKey(item),item));return [...map.values()].sort((a,b)=>a.sort_order-b.sort_order)};
 
 export default function CustomerStorefront(){
   const[products,setProducts]=useState<Product[]>(websiteProducts),[offer,setOffer]=useState<Offer|null>(null),[category,setCategory]=useState('الكل');
