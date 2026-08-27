@@ -19,9 +19,19 @@ type Customer = {
   created_at: string;
 };
 
+type CustomerConfirmation = {
+  id: string;
+  confirmation_type: 'details' | 'handover';
+  accepted: boolean;
+  rating: number | null;
+  comment: string | null;
+  created_at: string;
+};
+
 type DecorOrder = {
   id: string;
   order_number: string;
+  source: string;
   customer_id: string;
   service_type: string;
   width_m: number | null;
@@ -38,6 +48,7 @@ type DecorOrder = {
   customer_notes: string | null;
   created_at: string;
   customer?: Customer | null;
+  confirmations?: CustomerConfirmation[];
 };
 
 type CatalogItem = {
@@ -137,7 +148,7 @@ function DecorWorkspace({ onLogout }: { onLogout: () => void }) {
     setLoading(true);
     setError('');
     const [ordersResult, customersResult, catalogResult, techniciansResult] = await Promise.all([
-      supabase.from('mh_orders').select('*, customer:mh_customers(*)').order('created_at', { ascending: false }),
+      supabase.from('mh_orders').select('*, customer:mh_customers(*), confirmations:mh_customer_confirmations(*)').order('created_at', { ascending: false }),
       supabase.from('mh_customers').select('*').order('created_at', { ascending: false }),
       supabase.from('mh_catalog').select('*').order('category').order('name'),
       supabase.from('mh_technicians').select('*').eq('active', true).order('name'),
@@ -246,11 +257,15 @@ function OrdersView({ orders, technicians, onStatus, onLink }: { orders: DecorOr
   const [query, setQuery] = useState('');
   const [selectedTechnicians, setSelectedTechnicians] = useState<Record<string, string>>({});
   const filtered = orders.filter(order => `${order.order_number} ${order.customer?.name || ''} ${order.customer?.phone || ''} ${order.service_type}`.toLowerCase().includes(query.toLowerCase()));
-  return <section className="mh-card"><div className="mh-toolbar"><input value={query} onChange={e => setQuery(e.target.value)} placeholder="ابحث برقم الطلب أو العميل أو الهاتف" /></div><div className="mh-orders-table">{filtered.map(order => <div className="mh-order-row" key={order.id}><div><strong>{order.order_number}</strong><span>{order.customer?.name || 'عميل'} · {order.customer?.phone || ''}</span></div><div><strong>{order.service_type}</strong><span>{order.width_m ? `${order.width_m} م` : 'مقاس غير محدد'} {order.color ? `· ${order.color}` : ''}</span></div><div><strong>{order.total === null ? 'حسب الطلب' : `${order.total} د.ك`}</strong><span>{order.installation ? 'مع تركيب' : 'بدون تركيب'}</span></div><select value={order.status} onChange={e => onStatus(order.id, e.target.value)}>{Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><div className="mh-link-actions"><button onClick={() => onLink(order, 'customer')}>نسخ رابط العميل</button><select value={selectedTechnicians[order.id] || ''} onChange={e => setSelectedTechnicians(current => ({ ...current, [order.id]: e.target.value }))}><option value="">اختر الفني</option>{technicians.map(technician => <option key={technician.id} value={technician.id}>{technician.name}</option>)}</select><button onClick={() => onLink(order, 'technician', selectedTechnicians[order.id])}>نسخ رابط الفني</button></div></div>)}{!filtered.length && <p className="mh-empty">لا توجد طلبات.</p>}</div></section>;
+  return <section className="mh-card"><div className="mh-toolbar"><input value={query} onChange={e => setQuery(e.target.value)} placeholder="ابحث برقم الطلب أو العميل أو الهاتف" /></div><div className="mh-orders-table">{filtered.map(order => {
+    const handover = order.confirmations?.find(item => item.confirmation_type === 'handover' && item.accepted);
+    const details = order.confirmations?.find(item => item.confirmation_type === 'details' && item.accepted);
+    return <div className="mh-order-row" key={order.id}><div><strong>{order.order_number}</strong><span>{order.customer?.name || 'عميل'} · {order.customer?.phone || ''}{order.source === 'voice_assistant' ? ' · عبر المساعد' : ''}</span></div><div><strong>{order.service_type}</strong><span>{order.width_m ? `${order.width_m} م` : 'مقاس غير محدد'} {order.color ? `· ${order.color}` : ''}</span></div><div><strong>{order.total === null ? 'حسب الطلب' : `${order.total} د.ك`}</strong><span>{order.installation ? 'مع تركيب' : 'بدون تركيب'}</span></div><select value={order.status} onChange={e => onStatus(order.id, e.target.value)}>{Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>{(handover || details) && <div className={handover ? 'mh-order-proof received' : 'mh-order-proof'}><strong>{handover ? '✓ العميل استلم الأعمال' : '✓ العميل أكد التفاصيل'}</strong><span>{new Date((handover || details)!.created_at).toLocaleString('ar-KW')}</span>{handover?.rating && <b>التقييم: {handover.rating} / 5</b>}{(handover || details)?.comment && <small>{(handover || details)?.comment}</small>}</div>}<div className="mh-link-actions"><button onClick={() => onLink(order, 'customer')}>نسخ رابط العميل</button><select value={selectedTechnicians[order.id] || ''} onChange={e => setSelectedTechnicians(current => ({ ...current, [order.id]: e.target.value }))}><option value="">اختر الفني</option>{technicians.map(technician => <option key={technician.id} value={technician.id}>{technician.name}</option>)}</select><button onClick={() => onLink(order, 'technician', selectedTechnicians[order.id])}>نسخ رابط الفني</button></div></div>;
+  })}{!filtered.length && <p className="mh-empty">لا توجد طلبات.</p>}</div></section>;
 }
 
 function OrderRows({ orders }: { orders: DecorOrder[] }) {
-  return <div className="mh-orders-table">{orders.map(order => <div className="mh-order-row compact" key={order.id}><div><strong>{order.order_number}</strong><span>{order.customer?.name || 'عميل'}</span></div><div><strong>{order.service_type}</strong><span>{STATUS_LABELS[order.status] || order.status}</span></div><div><strong>{order.total === null ? 'حسب الطلب' : `${order.total} د.ك`}</strong><span>{order.customer?.area || ''}</span></div></div>)}{!orders.length && <p className="mh-empty">لا توجد طلبات حتى الآن.</p>}</div>;
+  return <div className="mh-orders-table">{orders.map(order => <div className="mh-order-row compact" key={order.id}><div><strong>{order.order_number}</strong><span>{order.customer?.name || 'عميل'}{order.source === 'voice_assistant' ? ' · عبر المساعد' : ''}</span></div><div><strong>{order.service_type}</strong><span>{STATUS_LABELS[order.status] || order.status}</span></div><div><strong>{order.total === null ? 'حسب الطلب' : `${order.total} د.ك`}</strong><span>{order.customer?.area || ''}</span></div></div>)}{!orders.length && <p className="mh-empty">لا توجد طلبات حتى الآن.</p>}</div>;
 }
 
 function CustomersView({ customers, orders }: { customers: Customer[]; orders: DecorOrder[] }) {
