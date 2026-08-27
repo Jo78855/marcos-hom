@@ -1,0 +1,37 @@
+.order-actions select {
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #344054;
+  border-radius: 9px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.unified-confirmation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  background: #ecfdf3;
+  border: 1px solid #abefc6;
+  color: #067647;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.unified-confirmation small {
+  width: 100%;
+  color: #344054;
+}
+
+@media (max-width: 520px) {
+  .order-actions select {
+    width: 100%;
+  }
+
+  .unified-confirmation {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
