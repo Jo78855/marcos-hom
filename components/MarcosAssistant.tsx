@@ -95,9 +95,9 @@ export default function MarcosAssistant({embedded=false}:{embedded?:boolean}){
   const speak=async(text:string)=>{try{if(audioRef.current){audioRef.current.pause();audioRef.current=null}const{data,error}=await supabase.functions.invoke('marcos-tts',{body:{text}});if(error||!(data instanceof Blob))throw error||new Error('No audio');const url=URL.createObjectURL(data),audio=new Audio(url);audioRef.current=audio;audio.onended=()=>{URL.revokeObjectURL(url);audioRef.current=null};await audio.play()}catch{browserSpeak(text)}};
 
   const createAssistantOrder=async(args:Partial<AssistantOrderArgs>):Promise<AssistantOrderResult>=>{
-    const name=String(args.customer_name??'').trim(),phone=latinDigits(args.customer_phone).replace(/[^+\d]/g,''),customerArea=String(args.customer_area??'').trim(),service=String(args.requested_service??'').trim();
+    const spokenName=String(args.customer_name??'').trim(),name=spokenName.length>=2?spokenName:'عميل المساعد',phone=latinDigits(args.customer_phone).replace(/[^+\d]/g,''),customerArea=String(args.customer_area??'').trim(),service=String(args.requested_service??'').trim();
     const width=toMeters(parseUserNumber(args.wall_width)),height=args.wall_height==null?null:toMeters(parseUserNumber(args.wall_height));
-    const missing=[!name&&'الاسم',!phone&&'رقم الهاتف',!customerArea&&'المنطقة',!service&&'المنتج',(!width||width<=0)&&'عرض الحائط'].filter(Boolean);
+    const missing=[!phone&&'رقم الهاتف',!customerArea&&'المنطقة',!service&&'المنتج',(!width||width<=0)&&'عرض الحائط'].filter(Boolean);
     if(missing.length)return{ok:false,error:`أكمل ${missing.join('، ')} ثم أكد الطلب مرة أخرى.`};
     const{data,error}=await supabase.rpc('mh_create_assistant_order',{customer_name:name,customer_phone:phone,customer_area:customerArea,wall_width:width,wall_height:height,wants_installation:args.wants_installation!==false,quoted_total:args.quoted_total==null?null:parseUserNumber(args.quoted_total),requested_service:service,customer_note:String(args.customer_note??'').trim()||null,photo_path:String(args.photo_path??'').trim()||null,confirmed_by_customer:true});
     if(error){console.error('Assistant order RPC failed',error);return{ok:false,error:'تعذر الحفظ في لوحة التحكم الآن. حاول مرة أخرى بدون الصورة، ولن نفقد البيانات المكتوبة.'}};
