@@ -15,7 +15,10 @@ const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error("Could not find root element to mount to");
 
 const root = ReactDOM.createRoot(rootElement);
-const path = window.location.pathname;
+const previewBase = window.location.hostname.endsWith('github.io') ? '/marcos-hom' : '';
+const path = previewBase && window.location.pathname.startsWith(previewBase)
+  ? window.location.pathname.slice(previewBase.length) || '/'
+  : window.location.pathname;
 const isFire = window.location.hostname.startsWith('fire.') || path.startsWith('/fire');
 const isAdmin = path.startsWith('/admin');
 const isDecorAdmin = path.startsWith('/decor-admin');
