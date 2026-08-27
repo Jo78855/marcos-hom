@@ -4,14 +4,14 @@
   "description": "تطبيق ماركوز هوم الموحد للمنتجات والطلبات والتنفيذ",
   "lang": "ar",
   "dir": "rtl",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#177db7",
   "icons": [
     {
-      "src": "/marcos-home-logo.jpg",
+      "src": "./marcos-home-logo.jpg",
       "sizes": "1365x1024",
       "type": "image/jpeg",
       "purpose": "any"
