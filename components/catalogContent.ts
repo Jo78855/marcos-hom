@@ -11,6 +11,7 @@ export type CatalogProduct = {
 };
 
 export type GalleryImage = {src:string;name:string;category:string};
+export type CatalogSection = {key:string;title:string;eyebrow:string;description:string;cover:string;galleryCategories:string[]};
 
 export const websiteProducts:CatalogProduct[] = [
   {id:-1,code:'design-130',category_ar:'خلفيات شاشة',name_ar:'تصميم 130',description_ar:'لوح شاشة 2×1.20م بإضاءة خلفية، طاولة معلقة 2م ولوح رأسي حتى ارتفاع 2.90م.',price_text_ar:'يبدأ من 98 د.ك شامل التوريد والتركيب',details_ar:'قابل لتعديل اللون والمقاس بعد مراجعة صورة الحائط.',active:true,sort_order:1},
@@ -64,6 +65,28 @@ export const galleryImages:GalleryImage[] = [
   {src:'/catalog/fire/flame-1.webp',name:'لهب مائي ثلاثي الأبعاد',category:'الفاير'},
   {src:'/catalog/fire/flame-2.webp',name:'الفاير للمساحات الداخلية',category:'الفاير'},
 ];
+
+export const catalogSections:CatalogSection[] = [
+  {key:'tv-walls',title:'خلفيات الشاشة',eyebrow:'تصميمات متكاملة',description:'تصميم 130 وتصميم 198، ألواح الشاشة والطاولات والكبائن الجانبية بالمقاسات والألوان.',cover:'/catalog/design-198/beige-wood.webp',galleryCategories:['تصميم 198','خلفيات الشاشة']},
+  {key:'coffee',title:'ركن القهوة',eyebrow:'سبعة ألوان',description:'أفكار ركن القهوة مع اللوح الديكوري والكبت المعلق، بدون تركيب أو مع التركيب.',cover:'/coffee/brown-travertine.webp',galleryCategories:[]},
+  {key:'tables',title:'طاولات الشاشة',eyebrow:'مقاسات وألوان',description:'طاولات تلفزيون معلقة بمقاسات مختلفة ودرجات خشبية ومحايدة تناسب الأثاث.',cover:'/catalog/tables/walnut.webp',galleryCategories:['طاولات الشاشة','تنفيذ الطاولات']},
+  {key:'bedroom',title:'خلفيات السرير',eyebrow:'غرف النوم',description:'تكوينات هادئة بدرجات خشبية ومحايدة وإضاءة دافئة حسب مساحة الغرفة.',cover:'/catalog/works/bedroom-wall.jpeg',galleryCategories:['خلفيات السرير']},
+  {key:'parquet',title:'أرضيات الباركيه',eyebrow:'درجات خشبية',description:'اختيارات باركيه تضيف دفئًا للمكان، مع حساب المساحة والكمية المناسبة.',cover:'/catalog/parquet/room-main.jpeg',galleryCategories:['الباركيه']},
+  {key:'wpc',title:'فواصل وأعمدة WPC',eyebrow:'تقسيم المساحات',description:'فواصل بديل الخشب بدرجات متعددة، مع حساب عدد الأعمدة وخيار التركيب.',cover:'/catalog/wpc/main.jpg',galleryCategories:['أعمدة WPC']},
+  {key:'fire',title:'جهاز Fire Blaze',eyebrow:'لهب مائي معطر',description:'خمسة مقاسات تعمل بالماء والكهرباء، مع إمكانية إضافة الزيت العطري.',cover:'/catalog/fire/product-main.webp',galleryCategories:['الفاير']},
+];
+
+export const sectionForProduct = (code:string,name:string) => {
+  const value=`${code} ${name}`.toLowerCase();
+  if(value.includes('coffee')||value.includes('قهوة'))return'coffee';
+  if(value.includes('fire')||value.includes('فاير'))return'fire';
+  if(value.includes('wpc')||value.includes('عمود')||value.includes('أعمدة')||value.includes('فواصل'))return'wpc';
+  if(value.includes('parquet')||value.includes('باركيه')||value.includes('أرض'))return'parquet';
+  if(value.includes('bedroom')||value.includes('سرير'))return'bedroom';
+  if(value.includes('cabinet')||value.includes('كبد')||value.includes('198')||value.includes('130')||value.includes('foam')||value.includes('فوم')||value.includes('تعليق'))return'tv-walls';
+  if(value.includes('table')||value.includes('console')||value.includes('طاولة'))return'tables';
+  return'tv-walls';
+};
 
 export const imageForProduct = (code:string,name:string) => {
   const value=`${code} ${name}`.toLowerCase();
