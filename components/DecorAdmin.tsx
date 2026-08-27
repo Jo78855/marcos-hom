@@ -186,7 +186,8 @@ function DecorWorkspace({ onLogout }: { onLogout: () => void }) {
     const created = await supabase.from('mh_order_access_links').insert({ order_id: order.id, audience, technician_id: technicianId || null, token_hash: tokenHash });
     if (created.error) return setError('تعذر إنشاء الرابط الآمن.');
     const path = audience === 'customer' ? '/order/customer' : '/order/technician';
-    const link = `${window.location.origin}${path}?token=${token}`;
+    const previewBase = window.location.hostname.endsWith('github.io') ? '/marcos-hom' : '';
+    const link = `${window.location.origin}${previewBase}${path}?token=${token}`;
     try { await navigator.clipboard.writeText(link); alert('تم إنشاء الرابط ونسخه. أرسله عبر واتساب.'); }
     catch { window.prompt('انسخ الرابط:', link); }
   };
