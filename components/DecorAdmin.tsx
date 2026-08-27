@@ -185,9 +185,11 @@ function DecorWorkspace({ onLogout }: { onLogout: () => void }) {
     }
     const created = await supabase.from('mh_order_access_links').insert({ order_id: order.id, audience, technician_id: technicianId || null, token_hash: tokenHash });
     if (created.error) return setError('تعذر إنشاء الرابط الآمن.');
+    await supabase.from('mh_orders').update({ status: audience === 'customer' ? 'awaiting_customer' : 'technician_assigned' }).eq('id', order.id);
     const path = audience === 'customer' ? '/order/customer' : '/order/technician';
     const previewBase = window.location.hostname.endsWith('github.io') ? '/marcos-hom' : '';
     const link = `${window.location.origin}${previewBase}${path}?token=${token}`;
+    await load();
     try { await navigator.clipboard.writeText(link); alert('تم إنشاء الرابط ونسخه. أرسله عبر واتساب.'); }
     catch { window.prompt('انسخ الرابط:', link); }
   };
@@ -281,7 +283,7 @@ function CatalogView({ catalog }: { catalog: CatalogItem[] }) {
 }
 
 function NewOrderModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ name: '', phone: '', area: '', address: '', service: SERVICES[0], width: '', height: '2.90', color: '', installation: true, total: '', installationDate: '', notes: '' });
+  const [form, setForm] = useState({ name: '', phone: '', area: '', address: '', service: SERVICES[0], width: '', height: '2.90', color: '', installation: true, total: '', installationDate: '', components: '', customerNotes: '', internalNotes: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -313,13 +315,22 @@ function NewOrderModal({ onClose, onCreated }: { onClose: () => void; onCreated:
       payment_status: 'unpaid',
       status: form.installationDate ? 'scheduled' : 'draft',
       installation_date: form.installationDate ? new Date(form.installationDate).toISOString() : null,
-      internal_notes: form.notes || null,
+      customer_notes: form.customerNotes || null,
+      internal_notes: form.internalNotes || null,
+    }).select('id').single();
+    if (createdOrder.error || !createdOrder.data) { setError('تعذر حفظ الطلب.'); setBusy(false); return; }
+    const items = form.components.split('\n').map(line => line.trim()).filter(Boolean).map((line, index) => {
+      const match = line.match(/^(\d+(?:\.\d+)?)\s*[x×*]\s*(.+)$/i);
+      return { order_id: createdOrder.data.id, name: match ? match[2].trim() : line, quantity: match ? Number(match[1]) : 1, sort_order: index };
     });
-    if (createdOrder.error) { setError('تعذر حفظ الطلب.'); setBusy(false); return; }
+    if (items.length) {
+      const itemResult = await supabase.from('mh_order_items').insert(items);
+      if (itemResult.error) { setError('تم حفظ الطلب، لكن تعذر حفظ المكونات.'); setBusy(false); return; }
+    }
     onCreated();
   };
 
-  return <div className="mh-modal-backdrop" dir="rtl"><form className="mh-modal" onSubmit={submit}><div className="mh-modal-head"><div><h2>طلب ديكور جديد</h2><p>سجل الطلب مرة واحدة وسيظهر في المتابعة والتركيبات.</p></div><button type="button" onClick={onClose}>×</button></div><div className="mh-form-grid"><label>اسم العميل<input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label>الهاتف / واتساب<input required value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></label><label>المنطقة<input value={form.area} onChange={e => setForm({ ...form, area: e.target.value })} /></label><label>العنوان<input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} /></label><label>نوع الخدمة<select value={form.service} onChange={e => setForm({ ...form, service: e.target.value })}>{SERVICES.map(service => <option key={service}>{service}</option>)}</select></label><label>عرض الحائط بالمتر<input type="number" step="0.01" value={form.width} onChange={e => setForm({ ...form, width: e.target.value })} /></label><label>الارتفاع بالمتر<input type="number" step="0.01" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} /></label><label>اللون<input value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} /></label><label>السعر الإجمالي<input type="number" step="0.001" value={form.total} onChange={e => setForm({ ...form, total: e.target.value })} /></label><label>موعد التركيب<input type="datetime-local" value={form.installationDate} onChange={e => setForm({ ...form, installationDate: e.target.value })} /></label><label className="mh-checkbox"><input type="checkbox" checked={form.installation} onChange={e => setForm({ ...form, installation: e.target.checked })} /> شامل التركيب</label><label className="wide">ملاحظات<textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></label></div>{error && <div className="mh-error">{error}</div>}<div className="mh-modal-actions"><button type="button" onClick={onClose}>إلغاء</button><button className="primary" disabled={busy}>{busy ? 'جاري الحفظ...' : 'حفظ الطلب'}</button></div></form></div>;
+  return <div className="mh-modal-backdrop" dir="rtl"><form className="mh-modal" onSubmit={submit}><div className="mh-modal-head"><div><h2>طلب ديكور جديد</h2><p>سجل الطلب مرة واحدة وسيظهر في المتابعة والتركيبات.</p></div><button type="button" onClick={onClose}>×</button></div><div className="mh-form-grid"><label>اسم العميل<input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label>الهاتف / واتساب<input required value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></label><label>المنطقة<input value={form.area} onChange={e => setForm({ ...form, area: e.target.value })} /></label><label>العنوان<input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} /></label><label>نوع الخدمة<select value={form.service} onChange={e => setForm({ ...form, service: e.target.value })}>{SERVICES.map(service => <option key={service}>{service}</option>)}</select></label><label>عرض الحائط بالمتر<input type="number" step="0.01" value={form.width} onChange={e => setForm({ ...form, width: e.target.value })} /></label><label>الارتفاع بالمتر<input type="number" step="0.01" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} /></label><label>اللون<input value={form.color} onChange={e => setForm({ ...form, color: e.target.value })} /></label><label>السعر الإجمالي<input type="number" step="0.001" value={form.total} onChange={e => setForm({ ...form, total: e.target.value })} /></label><label>موعد التركيب<input type="datetime-local" value={form.installationDate} onChange={e => setForm({ ...form, installationDate: e.target.value })} /></label><label className="mh-checkbox"><input type="checkbox" checked={form.installation} onChange={e => setForm({ ...form, installation: e.target.checked })} /> شامل التركيب</label><label className="wide">مكونات التنفيذ — كل مكوّن في سطر<textarea value={form.components} onChange={e => setForm({ ...form, components: e.target.value })} placeholder={'طاولة 3 متر\nكبت رأسي\n4 × لوح فوم بورد'} /></label><label className="wide">ملاحظات الاتفاق الظاهرة للعميل والفني<textarea value={form.customerNotes} onChange={e => setForm({ ...form, customerNotes: e.target.value })} /></label><label className="wide">ملاحظات داخلية للإدارة فقط<textarea value={form.internalNotes} onChange={e => setForm({ ...form, internalNotes: e.target.value })} /></label></div>{error && <div className="mh-error">{error}</div>}<div className="mh-modal-actions"><button type="button" onClick={onClose}>إلغاء</button><button className="primary" disabled={busy}>{busy ? 'جاري الحفظ...' : 'حفظ الطلب'}</button></div></form></div>;
 }
 
 function tabTitle(tab: Tab) {
