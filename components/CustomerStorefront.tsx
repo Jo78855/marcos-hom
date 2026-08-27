@@ -14,7 +14,7 @@ const coffeeImages=[
   ['/coffee/lightgray-chevron.webp','رمادي فاتح'],['/coffee/lightwood-chevron.webp','خشبي فاتح'],['/coffee/honey-wood.webp','عسلي ماركوز هوم']
 ];
 const uniqueProducts=(items:Product[])=>{const seen=new Set<string>();return items.filter(item=>{const key=item.name_ar.replace(/\s+/g,' ').trim();if(seen.has(key))return false;seen.add(key);return true})};
-const mergeProducts=(remote:Product[])=>{const map=new Map<string,Product>();websiteProducts.forEach(item=>map.set(item.name_ar,item));remote.forEach(item=>map.set(item.name_ar,item));return [...map.values()].sort((a,b)=>a.sort_order-b.sort_order)};
+const mergeProducts=(remote:Product[])=>{const map=new Map<string,Product>(),key=(code:string)=>code.replace(/_/g,'-');websiteProducts.forEach(item=>map.set(key(item.code),item));remote.forEach(item=>map.set(key(item.code),item));return [...map.values()].sort((a,b)=>a.sort_order-b.sort_order)};
 
 export default function CustomerStorefront(){
   const[products,setProducts]=useState<Product[]>(websiteProducts),[offer,setOffer]=useState<Offer|null>(null),[category,setCategory]=useState('الكل');
