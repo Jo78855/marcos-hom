@@ -13,8 +13,13 @@
     <link rel="apple-touch-icon" href="/marcos-home-logo.jpg" />
     <title>Marco’s Home | ماركوز هوم</title>
     <script>
-      if (location.pathname.startsWith('/admin/overview')) {
-        document.getElementById('app-manifest').setAttribute('href','/admin-manifest.webmanifest');
+      const appBase = location.hostname.endsWith('github.io') ? '/marcos-hom' : '';
+      const appPath = appBase && location.pathname.startsWith(appBase) ? location.pathname.slice(appBase.length) || '/' : location.pathname;
+      document.getElementById('app-manifest').setAttribute('href', `${appBase}/manifest.webmanifest`);
+      document.querySelector('link[rel="icon"]').setAttribute('href', `${appBase}/marcos-home-logo.jpg`);
+      document.querySelector('link[rel="apple-touch-icon"]').setAttribute('href', `${appBase}/marcos-home-logo.jpg`);
+      if (appPath.startsWith('/admin/overview')) {
+        document.getElementById('app-manifest').setAttribute('href',`${appBase}/admin-manifest.webmanifest`);
         document.title = 'ماركوز هوم | لوحة التحكم';
       }
     </script>
@@ -43,7 +48,12 @@
 </head>
   <body class="notranslate" translate="no">
     <div id="root"></div>
-    <script src="/realtime-only.js?v=1" defer></script>
+    <script>
+      const realtimeScript = document.createElement('script');
+      realtimeScript.src = `${appBase}/realtime-only.js?v=1`;
+      realtimeScript.defer = true;
+      document.head.appendChild(realtimeScript);
+    </script>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
