@@ -15,6 +15,12 @@
       "sizes": "1365x1024",
       "type": "image/jpeg",
       "purpose": "any"
+    },
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

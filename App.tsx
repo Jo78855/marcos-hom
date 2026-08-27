@@ -4,6 +4,7 @@ import FireAdmin from './components/FireAdmin';
 import FireStorefront from './components/FireStorefront';
 import UnifiedAdmin from './components/UnifiedAdmin';
 import MarcosAssistant from './components/MarcosAssistant';
+import CustomerStorefront from './components/CustomerStorefront';
 import { supabase } from './supabase';
 
 type Design = { id: string; name_ar: string; image_url: string };
@@ -41,7 +42,7 @@ export default function App() {
   if (isFireApp && window.location.pathname.startsWith('/admin')) return <FireAdmin />;
   if (isFireApp) return <FireStorefront />;
   if (window.location.pathname.startsWith('/admin')) return <Admin />;
-  return <Storefront />;
+  return <CustomerStorefront />;
 }
 
 function Storefront() {

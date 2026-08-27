@@ -1,4 +1,4 @@
-const CACHE_NAME = 'marcos-home-v4';
+const CACHE_NAME = 'marcos-home-v5';
 const BASE = new URL(self.registration.scope).pathname.replace(/\/$/, '');
 const MANIFEST = self.location.hostname.startsWith('fire.') ? `${BASE}/fire-manifest.webmanifest` : `${BASE}/manifest.webmanifest`;
 const APP_SHELL = [`${BASE}/`, MANIFEST, `${BASE}/marcos-home-logo.jpg`];
