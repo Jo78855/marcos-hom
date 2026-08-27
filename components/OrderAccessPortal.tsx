@@ -2,6 +2,8 @@ import React, { FormEvent, useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import './OrderAccessPortal.css';
 
+const logoPath = window.location.hostname.endsWith('github.io') ? '/marcos-hom/marcos-home-logo.jpg' : '/marcos-home-logo.jpg';
+
 type PortalData = {
   audience: 'customer' | 'technician';
   order: {
@@ -102,4 +104,4 @@ export default function OrderAccessPortal() {
   </main>;
 }
 
-function PortalBrand() { return <header className="portal-brand"><img src="/marcos-home-logo.jpg" alt="Marco’s Home" /><div><strong>Marco’s Home</strong><span>تنفيذ موثّق وواضح</span></div></header>; }
+function PortalBrand() { return <header className="portal-brand"><img src={logoPath} alt="Marco’s Home" /><div><strong>Marco’s Home</strong><span>تنفيذ موثّق وواضح</span></div></header>; }
