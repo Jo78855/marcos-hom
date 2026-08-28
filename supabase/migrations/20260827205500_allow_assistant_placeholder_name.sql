@@ -36,7 +36,8 @@ begin
   if length(normalized_phone) < 8 or length(normalized_phone) > 15 then raise exception 'invalid customer phone'; end if;
   if length(clean_area) < 2 or length(clean_area) > 120 then raise exception 'invalid customer area'; end if;
   if length(clean_service) < 2 or length(clean_service) > 160 then raise exception 'invalid requested service'; end if;
-  if wall_width is null or wall_width < 0.1 or wall_width > 100 then raise exception 'invalid wall width'; end if;
+  if clean_service !~* '(فاير|fire)' and wall_width is null then raise exception 'invalid wall width'; end if;
+  if wall_width is not null and (wall_width < 0.1 or wall_width > 100) then raise exception 'invalid wall width'; end if;
   if wall_height is not null and (wall_height < 0.1 or wall_height > 100) then raise exception 'invalid wall height'; end if;
   if quoted_total is not null and (quoted_total < 0 or quoted_total > 100000) then raise exception 'invalid quoted total'; end if;
   if clean_note is not null and length(clean_note) > 1500 then raise exception 'customer note too long'; end if;
