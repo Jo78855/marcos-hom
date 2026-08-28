@@ -19,17 +19,24 @@ const toMeters=(value:number|null|undefined)=>value==null||!Number.isFinite(Numb
 const rangeLabel=(o:Offer)=>o.max_width?`من ${o.min_width} إلى ${o.max_width} متر`:`من ${o.min_width} متر فأكثر`;
 const offerForWidth=(w:number,offers:Offer[])=>offers.find(o=>w>=Number(o.min_width)&&(o.max_width==null||w<=Number(o.max_width)));
 const norm=(s:string)=>s.toLowerCase().replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/[؟?،,.]/g,' ').replace(/\s+/g,' ').trim();
-const isFireService=(service:string)=>/فاير|fire/.test(norm(service));
+const isFireService=(service:string)=>/فاير|فير|fire/.test(norm(service));
+const FIRE_PRICES:Record<string,number>={'40':85,'70':135,'100':180,'120':220,'150':270};
+const fireSizeFromText=(text:string)=>{
+  const normalized=latinDigits(text);
+  const match=normalized.match(/(?:مقاس|حجم)?\s*(40|70|100|120|150)\s*(?:سم|سنت(?:ي|يمتر)?|cm)?/i);
+  return match?.[1]||'';
+};
 const productMatch=(text:string,products:Product[])=>{const q=norm(text);return products.find(p=>[p.name_ar,...(p.aliases_ar||[])].some(a=>q.includes(norm(a))))};
 const serviceFromText=(text:string,products:Product[])=>{
-  const q=norm(text),matched=productMatch(text,products)?.name_ar;
-  if(matched)return matched;
+  const q=norm(text);
   if(/198/.test(q))return'تصميم 198';
   if(/قهوه|كوفي|ركن/.test(q))return'ركن القهوة';
   if(/طاول|شاشه|تلفزيون/.test(q))return'طاولة شاشة';
   if(/wpc|عمود|اعمد/.test(q))return'أعمدة WPC';
-  if(/فاير|مدفأ|مدفا/.test(q))return'جهاز الفاير';
+  if(/فاير|فير|مدفأ|مدفا|fire/.test(q))return'جهاز الفاير';
   if(/فوم|foam/.test(q))return'ألواح فوم بورد';
+  const matched=productMatch(text,products)?.name_ar;
+  if(matched)return matched;
   return'';
 };
 const speechNumber=(text:string,label:RegExp)=>{
@@ -82,7 +89,7 @@ export default function MarcosAssistant({embedded=false}:{embedded?:boolean}){
   const[open,setOpen]=useState(embedded),[listening,setListening]=useState(false),[input,setInput]=useState('');
   const[offers,setOffers]=useState<Offer[]>([]),[products,setProducts]=useState<Product[]>([]);
   const[bookingOpen,setBookingOpen]=useState(false),[bookingBusy,setBookingBusy]=useState(false),[bookingNotice,setBookingNotice]=useState(''),[selectedService,setSelectedService]=useState('');
-  const[customerName,setCustomerName]=useState(''),[customerPhone,setCustomerPhone]=useState(''),[area,setArea]=useState(''),[wallWidth,setWallWidth]=useState(''),[wallHeight,setWallHeight]=useState(''),[customerNotes,setCustomerNotes]=useState('');
+  const[customerName,setCustomerName]=useState(''),[customerPhone,setCustomerPhone]=useState(''),[area,setArea]=useState(''),[wallWidth,setWallWidth]=useState(''),[wallHeight,setWallHeight]=useState(''),[customerNotes,setCustomerNotes]=useState(''),[fireSize,setFireSize]=useState('');
   const[placePhoto,setPlacePhoto]=useState<File|null>(null);
   const[installation,setInstallation]=useState(true);
   const[messages,setMessages]=useState<Msg[]>([{role:'assistant',text:'أهلاً وسهلاً بك في ماركوز هوم. تقدر تسأل عن الأسعار والتصميمات، ولو عايز نحدد المناسب لمكانك ابعت المقاس وصورة الحائط.'}]);
@@ -121,10 +128,10 @@ export default function MarcosAssistant({embedded=false}:{embedded?:boolean}){
   };
 
   const prepareOrderFromSpeech=(transcript:string)=>{
-    const q=norm(transcript),isOrder=/احجز|حجز|اطلب|عايز اطلب|اريد اطلب|طلب/.test(q);
-    if(!isOrder&&!bookingOpen)return;
-    setBookingOpen(true);
-    const service=serviceFromText(transcript,products);if(service)setSelectedService(service);
+    const q=norm(transcript),service=serviceFromText(transcript,products),isOrder=/احجز|حجز|اطلب|عايز|اريد|أريد|طلب/.test(q);
+    if(!bookingOpen&&!isOrder&&!service)return;
+    setBookingOpen(true);if(service)setSelectedService(service);
+    const detectedFireSize=fireSizeFromText(transcript);if(detectedFireSize&&(isFireService(service)||isFireService(selectedService))){setFireSize(detectedFireSize);setCustomerNotes(v=>v.includes(`${detectedFireSize} سم`)?v:[v,`مقاس جهاز الفاير: ${detectedFireSize} سم`].filter(Boolean).join(' | '))}
     const width=speechNumber(transcript,/(?:العرض|عرض)\D{0,12}(\d+(?:[.,]\d+)?)/i);if(width)setWallWidth(width);
     const height=speechNumber(transcript,/(?:الارتفاع|ارتفاع|الطول|طول)\D{0,12}(\d+(?:[.,]\d+)?)/i);if(height)setWallHeight(height);
     const phone=speechNumber(transcript,/(?:الهاتف|التليفون|التلفون|رقم(?:ي| الهاتف)?)\D{0,12}([+]?\d[\d\s-]{6,18})/i).replace(/[\s-]/g,'');if(phone)setCustomerPhone(phone);
@@ -153,21 +160,21 @@ export default function MarcosAssistant({embedded=false}:{embedded?:boolean}){
     }catch(err){console.error('Realtime voice failed',err);stopRealtime();setRealtimeState('error');setRealtimeNotice('تعذر تشغيل الصوت. تأكد من السماح للميكروفون ثم اضغط مرة أخرى.');setTimeout(()=>setRealtimeState('idle'),3000)}
   };
 
-  const submit=(raw=input)=>{const text=raw.trim();if(!text)return;let reply:string;if(/احجز|حجز|اطلب|طلب/.test(norm(text))){prepareOrderFromSpeech(text);reply='أكيد. فتحت لك بطاقة الطلب بالأسفل. راجع البيانات واضغط «تأكيد وحفظ الطلب». الطلب لا يُعتبر مسجلًا إلا بعد ظهور رقم يبدأ بـ MH-.'}else if(/معاينه|معاينة|زيارة|مقاس|صوره|صورة/.test(norm(text))){setBookingOpen(true);prepareOrderFromSpeech(text);reply='تمام. ابعت المقاسات وصورة واضحة للمكان، واكتب الاسم ورقم الهاتف والمنطقة عشان الفريق يراجع التفاصيل ويتواصل معك عند الحاجة.'}else reply=answerFor(text,offers,products);setMessages(v=>[...v,{role:'user',text},{role:'assistant',text:reply}]);setInput('');void speak(reply)};
+  const submit=(raw=input)=>{const text=raw.trim();if(!text)return;let reply:string;if(/احجز|حجز|اطلب|طلب|عايز|اريد|أريد/.test(norm(text))){prepareOrderFromSpeech(text);reply='أكيد. فتحت لك بطاقة الطلب بالأسفل. راجع البيانات واضغط «تأكيد وحفظ الطلب». الطلب لا يُعتبر مسجلًا إلا بعد ظهور رقم يبدأ بـ MH-.'}else if(/معاينه|معاينة|زيارة|مقاس|صوره|صورة/.test(norm(text))){prepareOrderFromSpeech(text);reply='تمام. ابعت المقاسات وصورة واضحة للمكان، واكتب الاسم ورقم الهاتف والمنطقة عشان الفريق يراجع التفاصيل ويتواصل معك عند الحاجة.'}else reply=answerFor(text,offers,products);setMessages(v=>[...v,{role:'user',text},{role:'assistant',text:reply}]);setInput('');void speak(reply)};
   const chooseService=(service:string)=>{setSelectedService(service);setBookingOpen(true);setBookingNotice('');setMessages(v=>[...v,{role:'user',text:`اختيار: ${service}`},{role:'assistant',text:`تم اختيار ${service}. أكمل بيانات الطلب والمقاسات بالأسفل، ثم اضغط «تأكيد وإرسال الطلب».`}])};
   useEffect(()=>{const openFromStore=(event:Event)=>{const service=(event as CustomEvent<string>).detail||'';setOpen(true);if(service)chooseService(service)};window.addEventListener('mh-open-assistant',openFromStore);return()=>window.removeEventListener('mh-open-assistant',openFromStore)},[]);
   const startVoice=()=>{const SR=(window as any).SpeechRecognition||(window as any).webkitSpeechRecognition;if(!SR)return;const r=new SR();r.lang='ar-KW';r.interimResults=false;r.continuous=false;r.onstart=()=>setListening(true);r.onend=()=>setListening(false);r.onerror=()=>setListening(false);r.onresult=(e:any)=>{const t=e.results?.[0]?.[0]?.transcript||'';setInput(t);submit(t)};recognitionRef.current=r;r.start()};
 
   const submitBooking=async(e:FormEvent)=>{
     e.preventDefault();setBookingNotice('');const width=toMeters(parseUserNumber(wallWidth)),height=wallHeight.trim()?toMeters(parseUserNumber(wallHeight)):null;
-    if(!selectedService||!customerPhone.trim()||!area.trim()||(!isFireService(selectedService)&&(width==null||!Number.isFinite(width)||width<=0))){setBookingNotice(`أكمل المنتج ورقم الهاتف والمنطقة${isFireService(selectedService)?'': ' وعرض الحائط'}.`);return}
+    if(!selectedService||!customerPhone.trim()||!area.trim()||(isFireService(selectedService)&&!fireSize)||(!isFireService(selectedService)&&(width==null||!Number.isFinite(width)||width<=0))){setBookingNotice(`أكمل المنتج ورقم الهاتف والمنطقة${isFireService(selectedService)?' ومقاس جهاز الفاير': ' وعرض الحائط'}.`);return}
     setBookingBusy(true);let photoPath:string|null=null,photoWarning='';
     if(placePhoto){const ext=placePhoto.name.split('.').pop()?.toLowerCase()||'jpg';photoPath=`${Date.now()}-${crypto.randomUUID()}.${ext}`;const upload=await supabase.storage.from('customer-places').upload(photoPath,placePhoto,{cacheControl:'3600',upsert:false});if(upload.error){photoPath=null;photoWarning='الصورة لم تُرفع؛ الطلب محفوظ بدونها ويمكن إضافتها لاحقًا.'}}
-    const offer=selectedService==='تصميم 198'?offerForWidth(width,offers):undefined,total=offer?Number(installation?offer.price_with_installation:offer.price_without_installation):null;
+    const offer=selectedService==='تصميم 198'?offerForWidth(width,offers):undefined,total=offer?Number(installation?offer.price_with_installation:offer.price_without_installation):(isFireService(selectedService)&&fireSize?FIRE_PRICES[fireSize]??null:null);
     const result=await createAssistantOrder({customer_name:customerName,customer_phone:customerPhone,customer_area:area,wall_width:width,wall_height:height,wants_installation:installation,quoted_total:total,requested_service:selectedService,customer_note:[customerNotes,photoWarning].filter(Boolean).join(' | ')||null,photo_path:photoPath});
     setBookingBusy(false);if(!result.ok){if(photoPath)await supabase.storage.from('customer-places').remove([photoPath]);setBookingNotice(result.error||'تعذر تسجيل الطلب.');return}
     const reply=`تم الحفظ في لوحة التحكم: ${result.order_number}. ${photoPath?'الفريق هيراجع المقاسات والصورة ويتواصل معك عند الحاجة.':'الأفضل تبعت صورة واضحة للحائط عشان نحدد المناسب بدون معاينة قدر الإمكان.'}`;
-    setBookingNotice(reply);setMessages(v=>[...v,{role:'assistant',text:reply}]);setCustomerName('');setCustomerPhone('');setArea('');setWallWidth('');setWallHeight('');setCustomerNotes('');setPlacePhoto(null);setSelectedService('')
+    setBookingNotice(reply);setMessages(v=>[...v,{role:'assistant',text:reply}]);setCustomerName('');setCustomerPhone('');setArea('');setWallWidth('');setWallHeight('');setCustomerNotes('');setFireSize('');setPlacePhoto(null);setSelectedService('')
   };
 
   const rtLabel=realtimeState==='connecting'?'جاري الاتصال...':realtimeState==='connected'?'إنهاء المحادثة الصوتية':realtimeState==='error'?'تعذر الاتصال — جرّب مرة أخرى':'محادثة صوتية مباشرة';
@@ -175,7 +182,7 @@ export default function MarcosAssistant({embedded=false}:{embedded?:boolean}){
   return <div className={embedded?'mh-assistant mh-assistant-embedded':'mh-assistant'} dir="rtl">
     {open&&<section className="mh-assistant-panel"><header><div><strong>مساعد ماركوز هوم</strong><small>صوت مباشر + أسعار + تقييم بالمقاسات والصور</small></div>{!embedded&&<button onClick={()=>setOpen(false)} aria-label="إغلاق">×</button>}</header>
       <div className="mh-realtime-bar"><button className={`mh-realtime-button ${realtimeState}`} onClick={()=>void startRealtime()} disabled={realtimeState==='connecting'}>🎧 {rtLabel}</button>{realtimeNotice&&<small>{realtimeNotice}</small>}</div>
-      <div className="mh-assistant-messages">{messages.map((m,i)=><div key={i} className={`mh-msg ${m.role}`}>{m.text}</div>)}<div className="mh-assistant-quick"><strong>اختار المنتج لبدء الطلب</strong><div>{SERVICE_CHOICES.map(service=><button key={service} className={selectedService===service?'active':''} onClick={()=>chooseService(service)}>{service}</button>)}</div></div>{bookingOpen&&<form ref={bookingFormRef} className="mh-booking" onSubmit={submitBooking}><strong>راجع طلبك قبل الحفظ</strong><small>حالة الطلب: {bookingNotice.startsWith('تم الحفظ')?bookingNotice:'غير محفوظ — المساعد يملأ الخانات وأنت تؤكد'}</small><select required value={selectedService} onChange={e=>setSelectedService(e.target.value)}><option value="">اختر المنتج أو الخدمة</option>{bookingChoices.map(service=><option key={service} value={service}>{service}</option>)}</select><input value={customerName} onChange={e=>setCustomerName(e.target.value)} placeholder="الاسم (اختياري)"/><input required value={customerPhone} onChange={e=>setCustomerPhone(e.target.value)} inputMode="tel" placeholder="رقم الهاتف"/><input required value={area} onChange={e=>setArea(e.target.value)} placeholder="المنطقة"/><input required={!isFireService(selectedService)} value={wallWidth} onChange={e=>setWallWidth(e.target.value)} inputMode="decimal" placeholder={isFireService(selectedService)?'عرض الحائط غير مطلوب للفاير':'العرض بالمتر 1.22 أو بالسنتيمتر 122'}/><input value={wallHeight} onChange={e=>setWallHeight(e.target.value)} inputMode="decimal" placeholder="الارتفاع بالمتر 2.90 أو بالسنتيمتر 290"/><input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setPlacePhoto(e.target.files?.[0]||null)}/><textarea value={customerNotes} onChange={e=>setCustomerNotes(e.target.value)} placeholder="الحجم، المكونات، اللون أو أي ملاحظات"/><div className="mh-booking-options"><button type="button" className={!installation?'active':''} onClick={()=>setInstallation(false)}>بدون تركيب</button><button type="button" className={installation?'active':''} onClick={()=>setInstallation(true)}>مع التركيب</button></div><button className="mh-booking-submit" disabled={bookingBusy}>{bookingBusy?'جاري الحفظ...':'تأكيد وحفظ الطلب'}</button>{bookingNotice&&!bookingNotice.startsWith('تم الحفظ')&&<small>{bookingNotice}</small>}</form>}</div>
+      <div className="mh-assistant-messages">{messages.map((m,i)=><div key={i} className={`mh-msg ${m.role}`}>{m.text}</div>)}<div className="mh-assistant-quick"><strong>اختار المنتج لبدء الطلب</strong><div>{SERVICE_CHOICES.map(service=><button key={service} className={selectedService===service?'active':''} onClick={()=>chooseService(service)}>{service}</button>)}</div></div>{bookingOpen&&<form ref={bookingFormRef} className="mh-booking" onSubmit={submitBooking}><strong>راجع طلبك قبل الحفظ</strong><small>حالة الطلب: {bookingNotice.startsWith('تم الحفظ')?bookingNotice:'غير محفوظ — المساعد يملأ الخانات وأنت تؤكد'}</small><select required value={selectedService} onChange={e=>setSelectedService(e.target.value)}><option value="">اختر المنتج أو الخدمة</option>{bookingChoices.map(service=><option key={service} value={service}>{service}</option>)}</select>{isFireService(selectedService)&&<div className="mh-booking-options" aria-label="مقاس جهاز الفاير">{Object.keys(FIRE_PRICES).map(size=><button type="button" key={size} className={fireSize===size?'active':''} onClick={()=>{setFireSize(size);setCustomerNotes(v=>[v.replace(/(?:\s*\|\s*)?مقاس جهاز الفاير:\s*\d+\s*سم/g,'').trim(),`مقاس جهاز الفاير: ${size} سم`].filter(Boolean).join(' | '))}}>{size} سم — {FIRE_PRICES[size]} د.ك</button>)}</div>}<input value={customerName} onChange={e=>setCustomerName(e.target.value)} placeholder="الاسم (اختياري)"/><input required value={customerPhone} onChange={e=>setCustomerPhone(e.target.value)} inputMode="tel" placeholder="رقم الهاتف"/><input required value={area} onChange={e=>setArea(e.target.value)} placeholder="المنطقة"/><input required={!isFireService(selectedService)} value={wallWidth} onChange={e=>setWallWidth(e.target.value)} inputMode="decimal" placeholder={isFireService(selectedService)?'عرض الحائط غير مطلوب للفاير':'العرض بالمتر 1.22 أو بالسنتيمتر 122'}/><input value={wallHeight} onChange={e=>setWallHeight(e.target.value)} inputMode="decimal" placeholder="الارتفاع بالمتر 2.90 أو بالسنتيمتر 290"/><input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setPlacePhoto(e.target.files?.[0]||null)}/><textarea value={customerNotes} onChange={e=>setCustomerNotes(e.target.value)} placeholder="الحجم، المكونات، اللون أو أي ملاحظات"/><div className="mh-booking-options"><button type="button" className={!installation?'active':''} onClick={()=>setInstallation(false)}>بدون تركيب</button><button type="button" className={installation?'active':''} onClick={()=>setInstallation(true)}>مع التركيب</button></div><button className="mh-booking-submit" disabled={bookingBusy}>{bookingBusy?'جاري الحفظ...':'تأكيد وحفظ الطلب'}</button>{bookingNotice&&!bookingNotice.startsWith('تم الحفظ')&&<small>{bookingNotice}</small>}</form>}</div>
       <div className="mh-assistant-input"><button className={listening?'mic listening':'mic'} onClick={startVoice} disabled={!speechSupported||realtimeState==='connected'}>{listening?'●':'🎙'}</button><input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()} placeholder="اتكلم أو اكتب سؤالك"/><button onClick={()=>submit()}>إرسال</button></div>{!speechSupported&&<p className="mh-assistant-note">يمكنك استخدام المحادثة الصوتية المباشرة أو الكتابة.</p>}</section>}
     {!embedded&&<button className="mh-assistant-launcher" onClick={()=>setOpen(v=>!v)} aria-label="اطلب أو اسأل مساعد ماركوز هوم">🎙<span>اطلب أو اسأل</span></button>}
   </div>
