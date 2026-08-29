@@ -40,6 +40,15 @@ const STATUS: Record<string, string> = {
   completed: 'تم الاستلام', cancelled: 'ملغي',
 };
 
+const orderSizeLabel = (order: PortalData['order']) => {
+  if (order.width_m || order.height_m) return `${order.width_m || '-'} × ${order.height_m || '-'} متر`;
+  const fireSize = order.customer_notes?.match(/مقاس جهاز الفاير:\s*(\d+)\s*سم/i)?.[1];
+  return fireSize ? `${fireSize} سم` : 'حسب الاتفاق';
+};
+
+const itemDescription = (description: string | null) =>
+  (description || '').replace(/^المقاس:\s*عرض\s*م\s*(?:\|\s*)?/,'').trim();
+
 export default function OrderAccessPortal() {
   const token = new URLSearchParams(window.location.search).get('token') || '';
   const [data, setData] = useState<PortalData | null>(null);
@@ -95,10 +104,10 @@ export default function OrderAccessPortal() {
       <div><dt>الحالة</dt><dd>{STATUS[order.status] || order.status}</dd></div>
       <div><dt>موعد التركيب</dt><dd>{order.installation_date ? new Date(order.installation_date).toLocaleString('ar-KW') : 'يحدد لاحقًا'}</dd></div>
     </dl></section> : <section className="portal-grid">
-      <article className="portal-card"><h2>بيانات الطلب</h2><dl><div><dt>الخدمة</dt><dd>{order.service_type}</dd></div><div><dt>المقاس</dt><dd>{order.width_m || '-'} × {order.height_m || '-'} متر</dd></div><div><dt>اللون</dt><dd>{order.color || 'حسب الاتفاق'}</dd></div><div><dt>التركيب</dt><dd>{order.installation ? 'شامل التركيب' : 'بدون تركيب'}</dd></div><div><dt>الموعد</dt><dd>{order.installation_date ? new Date(order.installation_date).toLocaleString('ar-KW') : 'يحدد لاحقًا'}</dd></div></dl></article>
+      <article className="portal-card"><h2>بيانات الطلب</h2><dl><div><dt>الخدمة</dt><dd>{order.service_type}</dd></div><div><dt>المقاس</dt><dd>{orderSizeLabel(order)}</dd></div><div><dt>اللون</dt><dd>{order.color || 'حسب الاتفاق'}</dd></div><div><dt>التركيب</dt><dd>{order.installation ? 'شامل التركيب' : 'بدون تركيب'}</dd></div><div><dt>الموعد</dt><dd>{order.installation_date ? new Date(order.installation_date).toLocaleString('ar-KW') : 'يحدد لاحقًا'}</dd></div></dl></article>
       <article className="portal-card"><h2>موقع التنفيذ</h2><dl><div><dt>الاسم</dt><dd>{data.customer.name}</dd></div><div><dt>الهاتف</dt><dd>{data.customer.phone || '-'}</dd></div><div><dt>العنوان</dt><dd>{data.customer.address || data.customer.area || '-'}</dd></div></dl></article>
     </section>}
-    {!!data.items.length && <section className="portal-card"><h2>مكونات الطلب</h2>{data.items.map((item, index) => <div className="portal-item" key={index}><strong>{item.name}</strong><span>{item.quantity} × {item.description || ''}</span></div>)}</section>}
+    {!!data.items.length && <section className="portal-card"><h2>مكونات الطلب</h2>{data.items.map((item, index) => <div className="portal-item" key={index}><strong>{item.name}</strong><span>{item.quantity} × {itemDescription(item.description)}</span></div>)}</section>}
     {isCustomer && order.customer_notes && <section className="portal-card portal-agreement"><h2>الملاحظات المتفق عليها</h2><p>{order.customer_notes}</p></section>}
     {isCustomer && (detailsConfirmation || handoverConfirmation) && <section className="portal-card portal-documentation"><h2>تم تسجيل طلبك</h2><div className="portal-proof-grid">
       <div className={detailsConfirmation ? 'portal-proof done' : 'portal-proof'}><strong>تأكيد تفاصيل الطلب</strong><span>{detailsConfirmation ? `تم التأكيد: ${new Date(detailsConfirmation.created_at).toLocaleString('ar-KW')}` : 'لم يؤكد العميل بعد'}</span>{detailsConfirmation?.comment && <small>ملاحظة العميل: {detailsConfirmation.comment}</small>}</div>
@@ -112,9 +121,9 @@ export default function OrderAccessPortal() {
         <button disabled={busy || !choice}>{isHandover ? 'تأكيد الاستلام' : 'تأكيد التفاصيل'}</button>
       </form> : <><textarea value={note} onChange={e => setNote(e.target.value)} placeholder="أضف ملاحظة اختيارية" /><div className="portal-buttons"><button disabled={busy} onClick={() => technicianStatus('en_route')}>في الطريق</button><button disabled={busy} onClick={() => technicianStatus('arrived')}>وصلت</button><button disabled={busy} onClick={() => technicianStatus('in_progress')}>بدأ التنفيذ</button><button disabled={busy} onClick={() => technicianStatus('blocked')}>توجد مشكلة</button><button className="done" disabled={busy} onClick={() => technicianStatus('technician_done')}>انتهى العمل</button></div></>}
     </section>
-    {isCustomer && <details className="portal-card portal-more"><summary>عرض التفاصيل الكاملة</summary><dl><div><dt>المقاس</dt><dd>{order.width_m || '-'} × {order.height_m || '-'} متر</dd></div><div><dt>اللون</dt><dd>{order.color || 'حسب الاتفاق'}</dd></div><div><dt>التركيب</dt><dd>{order.installation ? 'شامل التركيب' : 'بدون تركيب'}</dd></div><div><dt>الإجمالي</dt><dd>{order.total ?? 'حسب الاتفاق'} د.ك</dd></div><div><dt>المدفوع</dt><dd>{order.paid_amount ?? 0} د.ك</dd></div><div><dt>المتبقي</dt><dd>{order.balance ?? 0} د.ك</dd></div></dl>{!!data.events.length && <div className="portal-history"><h3>سجل التنفيذ</h3>{data.events.map((event, index) => <div className="portal-event" key={index}><b>{STATUS[event.status] || event.status}</b><span>{new Date(event.created_at).toLocaleString('ar-KW')}{event.note ? ` — ${event.note}` : ''}</span></div>)}</div>}</details>}
+    {isCustomer && <details className="portal-card portal-more"><summary>عرض التفاصيل الكاملة</summary><dl><div><dt>المقاس</dt><dd>{orderSizeLabel(order)}</dd></div><div><dt>اللون</dt><dd>{order.color || 'حسب الاتفاق'}</dd></div><div><dt>التركيب</dt><dd>{order.installation ? 'شامل التركيب' : 'بدون تركيب'}</dd></div><div><dt>الإجمالي</dt><dd>{order.total ?? 'حسب الاتفاق'} د.ك</dd></div><div><dt>المدفوع</dt><dd>{order.paid_amount ?? 0} د.ك</dd></div><div><dt>المتبقي</dt><dd>{order.balance ?? 0} د.ك</dd></div></dl>{!!data.events.length && <div className="portal-history"><h3>سجل التنفيذ</h3>{data.events.map((event, index) => <div className="portal-event" key={index}><b>{STATUS[event.status] || event.status}</b><span>{new Date(event.created_at).toLocaleString('ar-KW')}{event.note ? ` — ${event.note}` : ''}</span></div>)}</div>}</details>}
     {!isCustomer && !!data.events.length && <section className="portal-card"><h2>سجل الحالة</h2>{data.events.map((event, index) => <div className="portal-event" key={index}><b>{STATUS[event.status] || event.status}</b><span>{new Date(event.created_at).toLocaleString('ar-KW')}{event.note ? ` — ${event.note}` : ''}</span></div>)}</section>}
   </main>;
 }
 
-function PortalBrand() { return <header className="portal-brand"><img src={logoPath} alt="Marco’s Home" /><div><strong>Marco’s Home</strong><span>تنفيذ موثّق وواضح</span></div></header>; }
+function PortalBrand() { return <header className="portal-brand"><img src={logoPath} alt="Marco’s Home" /><div><strong>Marco’s Home</strong><span>تنفيذ ومتابعة واضحة</span></div></header>; }
