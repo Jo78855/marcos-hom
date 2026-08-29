@@ -1,130 +1,46 @@
-import React, { useMemo, useState } from 'react';
-import { LayoutDashboard, ClipboardList, Users, CalendarDays, PackageSearch, MessageCircleMore, Plus, Search, ChevronLeft, ArrowRight } from 'lucide-react';
+import React, { FormEvent, useEffect, useMemo, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { LayoutDashboard, ClipboardList, Users, CalendarDays, PackageSearch, MessageCircleMore, Plus, Search, ChevronLeft, ArrowRight, LogOut } from 'lucide-react';
+import { supabase } from './supabase';
 
 type View = 'home' | 'new-order' | 'orders' | 'customers' | 'schedule' | 'catalog' | 'assistant';
+type Order = { id:string; order_number:string; customer_name:string; customer_phone:string; area:string|null; service_type:string; measurement:string|null; color:string|null; installation:boolean; status:string };
+type CatalogItem = { id:string; name:string; category:string; price_without_installation:number|null; price_with_installation:number|null };
 
-type Order = {
-  id: string;
-  customer: string;
-  phone: string;
-  area: string;
-  service: string;
-  width: string;
-  color: string;
-  installation: boolean;
-  status: 'جديد' | 'مؤكد' | 'قيد التنفيذ' | 'مكتمل';
-};
-
-const starterOrders: Order[] = [];
-
-const navItems: { id: View; label: string; icon: React.ComponentType<{size?: number}> }[] = [
-  { id: 'home', label: 'الرئيسية', icon: LayoutDashboard },
-  { id: 'orders', label: 'الطلبات', icon: ClipboardList },
-  { id: 'customers', label: 'العملاء', icon: Users },
-  { id: 'schedule', label: 'المواعيد', icon: CalendarDays },
-  { id: 'catalog', label: 'المنتجات والأسعار', icon: PackageSearch },
-  { id: 'assistant', label: 'مساعد ماركو', icon: MessageCircleMore },
+const navItems:{id:View;label:string;icon:React.ComponentType<{size?:number}>}[]=[
+ {id:'home',label:'الرئيسية',icon:LayoutDashboard},{id:'orders',label:'الطلبات',icon:ClipboardList},{id:'customers',label:'العملاء',icon:Users},{id:'schedule',label:'المواعيد',icon:CalendarDays},{id:'catalog',label:'المنتجات والأسعار',icon:PackageSearch},{id:'assistant',label:'مساعد ماركو',icon:MessageCircleMore}
 ];
 
-export default function App() {
-  const [view, setView] = useState<View>('home');
-  const [orders, setOrders] = useState<Order[]>(starterOrders);
-
-  const title = useMemo(() => navItems.find(item => item.id === view)?.label ?? 'طلب جديد', [view]);
-
-  return (
-    <div className="app" dir="rtl">
-      <aside className="sidebar">
-        <button className="brand" onClick={() => setView('home')}>
-          <span className="brand-mark">MH</span>
-          <span><strong>ماركوز هوم</strong><small>إدارة الديكورات</small></span>
-        </button>
-        <nav>
-          {navItems.map(item => {
-            const Icon = item.icon;
-            return <button key={item.id} className={view === item.id ? 'active' : ''} onClick={() => setView(item.id)}><Icon size={20}/><span>{item.label}</span></button>;
-          })}
-        </nav>
-        <button className="new-order-side" onClick={() => setView('new-order')}><Plus size={19}/> طلب جديد</button>
-      </aside>
-
-      <main className="main">
-        <header className="topbar">
-          <div><small>Marco’s Home</small><h1>{view === 'new-order' ? 'طلب جديد' : title}</h1></div>
-          <button className="primary" onClick={() => setView('new-order')}><Plus size={18}/> طلب جديد</button>
-        </header>
-
-        {view === 'home' && <Home onOpen={setView} orderCount={orders.length} />}
-        {view === 'new-order' && <NewOrder onCancel={() => setView('home')} onCreate={(order) => { setOrders(current => [order, ...current]); setView('orders'); }} />}
-        {view === 'orders' && <Orders orders={orders} />}
-        {view === 'customers' && <Empty title="العملاء" text="هنا هتظهر ملفات العملاء وتاريخ الطلبات والعناوين في مكان واحد." />}
-        {view === 'schedule' && <Empty title="المواعيد والتركيبات" text="تقويم بسيط للمعاينات والتركيبات والمتابعات بدون قوائم معقدة." />}
-        {view === 'catalog' && <Catalog />}
-        {view === 'assistant' && <Empty title="مساعد ماركو" text="هنربطه بعد تثبيت الأساس الجديد بحيث يجهز الطلب ثم يطلب تأكيد واحد فقط قبل التسجيل." />}
-      </main>
-    </div>
-  );
+export default function App(){
+ const[session,setSession]=useState<Session|null>(null),[authLoading,setAuthLoading]=useState(true);
+ useEffect(()=>{supabase.auth.getSession().then(({data})=>{setSession(data.session);setAuthLoading(false)});const{data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s));return()=>data.subscription.unsubscribe()},[]);
+ if(authLoading)return<div className="boot" dir="rtl">جاري تشغيل ماركوز هوم…</div>;
+ if(!session)return<Login/>;
+ return <Dashboard onLogout={()=>supabase.auth.signOut()}/>;
 }
 
-function Home({ onOpen, orderCount }: { onOpen: (view: View) => void; orderCount: number }) {
-  const actions: { id: View; title: string; text: string; icon: React.ComponentType<{size?: number}> }[] = [
-    { id: 'new-order', title: 'تسجيل طلب', text: 'أسرع طريق لإضافة طلب جديد', icon: Plus },
-    { id: 'orders', title: 'الطلبات', text: `${orderCount} طلب مسجل`, icon: ClipboardList },
-    { id: 'customers', title: 'العملاء', text: 'بيانات العميل وتاريخه', icon: Users },
-    { id: 'schedule', title: 'المواعيد', text: 'المعاينات والتركيبات', icon: CalendarDays },
-    { id: 'catalog', title: 'الأسعار والمنتجات', text: 'تعديل سريع وواضح', icon: PackageSearch },
-    { id: 'assistant', title: 'مساعد ماركو', text: 'إنشاء طلب بالمحادثة', icon: MessageCircleMore },
-  ];
-  return <section className="page home-page">
-    <div className="welcome"><div><span>نسخة جديدة ونظيفة</span><h2>كل شغلك من شاشة واحدة</h2><p>أقل ضغطات، أقسام واضحة، والوصول لأي مهمة في ثوانٍ.</p></div><button onClick={() => onOpen('new-order')}>ابدأ طلب جديد <ArrowRight size={18}/></button></div>
-    <div className="quick-grid">{actions.map(action => { const Icon = action.icon; return <button key={action.id} onClick={() => onOpen(action.id)}><span className="icon"><Icon size={24}/></span><div><strong>{action.title}</strong><small>{action.text}</small></div><ChevronLeft size={18}/></button>; })}</div>
-    <div className="status-strip"><div><small>طلبات جديدة</small><strong>{orderCount}</strong></div><div><small>تركيبات اليوم</small><strong>0</strong></div><div><small>معاينات اليوم</small><strong>0</strong></div><div><small>طلبات تحتاج متابعة</small><strong>0</strong></div></div>
-  </section>;
+function Login(){
+ const[email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError('');const{error}=await supabase.auth.signInWithPassword({email,password});if(error)setError('بيانات الدخول غير صحيحة');setBusy(false)};
+ return <main className="login-page" dir="rtl"><form onSubmit={submit}><div className="brand-mark login-mark">MH</div><h1>ماركوز هوم</h1><p>لوحة الإدارة الجديدة</p><label>البريد الإلكتروني<input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></label><label>كلمة المرور<input type="password" required value={password} onChange={e=>setPassword(e.target.value)}/></label>{error&&<div className="auth-error">{error}</div>}<button className="primary" disabled={busy}>{busy?'جاري الدخول…':'دخول'}</button></form></main>;
 }
 
-function NewOrder({ onCancel, onCreate }: { onCancel: () => void; onCreate: (order: Order) => void }) {
-  const [form, setForm] = useState({ customer:'', phone:'', area:'', service:'خلفية شاشة', width:'', color:'العسلي', installation:true });
-  const set = (key: string, value: string | boolean) => setForm(current => ({ ...current, [key]: value }));
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault();
-    onCreate({ id: `MH-${Date.now().toString().slice(-6)}`, ...form, status:'جديد' });
-  };
-  return <section className="page"><div className="section-head"><div><h2>تسجيل طلب جديد</h2><p>كل البيانات المهمة في نموذج واحد فقط.</p></div></div>
-    <form className="order-form" onSubmit={submit}>
-      <div className="form-grid">
-        <label>اسم العميل<input required value={form.customer} onChange={e => set('customer', e.target.value)} placeholder="اسم العميل"/></label>
-        <label>رقم الهاتف<input required value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="رقم الهاتف" inputMode="tel"/></label>
-        <label>المنطقة<input value={form.area} onChange={e => set('area', e.target.value)} placeholder="مثال: حولي"/></label>
-        <label>نوع الخدمة<select value={form.service} onChange={e => set('service', e.target.value)}><option>خلفية شاشة</option><option>ركن قهوة</option><option>فاير معطر</option><option>طاولة شاشة</option><option>أعمدة WPC</option><option>بانوهات</option><option>طلب خاص</option></select></label>
-        <label>العرض / المقاس<input value={form.width} onChange={e => set('width', e.target.value)} placeholder="مثال: 4 متر"/></label>
-        <label>اللون<select value={form.color} onChange={e => set('color', e.target.value)}><option>العسلي</option><option>أبيض</option><option>أسود</option><option>رمادي فاتح</option><option>رمادي غامق</option><option>بيج خشبي</option></select></label>
-      </div>
-      <div className="install-choice"><span>طريقة التنفيذ</span><button type="button" className={form.installation ? 'selected' : ''} onClick={() => set('installation', true)}>مع التركيب</button><button type="button" className={!form.installation ? 'selected' : ''} onClick={() => set('installation', false)}>بدون تركيب</button></div>
-      <div className="form-actions"><button type="button" className="ghost" onClick={onCancel}>إلغاء</button><button className="primary" type="submit">تأكيد وتسجيل الطلب</button></div>
-    </form>
-  </section>;
+function Dashboard({onLogout}:{onLogout:()=>void}){
+ const[view,setView]=useState<View>('home'),[orders,setOrders]=useState<Order[]>([]),[catalog,setCatalog]=useState<CatalogItem[]>([]),[loading,setLoading]=useState(true);
+ const load=async()=>{setLoading(true);const[o,c]=await Promise.all([supabase.from('mh2_orders').select('*').order('created_at',{ascending:false}),supabase.from('mh2_catalog').select('*').eq('active',true).order('sort_order')]);setOrders((o.data||[]) as Order[]);setCatalog((c.data||[]) as CatalogItem[]);setLoading(false)};
+ useEffect(()=>{load()},[]);
+ const title=useMemo(()=>navItems.find(i=>i.id===view)?.label??'طلب جديد',[view]);
+ return <div className="app" dir="rtl"><aside className="sidebar"><button className="brand" onClick={()=>setView('home')}><span className="brand-mark">MH</span><span><strong>ماركوز هوم</strong><small>إدارة الديكورات</small></span></button><nav>{navItems.map(i=>{const Icon=i.icon;return<button key={i.id} className={view===i.id?'active':''} onClick={()=>setView(i.id)}><Icon size={20}/><span>{i.label}</span></button>})}</nav><button className="new-order-side" onClick={()=>setView('new-order')}><Plus size={19}/> طلب جديد</button></aside><main className="main"><header className="topbar"><div><small>Marco’s Home</small><h1>{view==='new-order'?'طلب جديد':title}</h1></div><div className="top-actions"><button className="primary" onClick={()=>setView('new-order')}><Plus size={18}/> طلب جديد</button><button className="logout" onClick={onLogout} title="تسجيل الخروج"><LogOut size={18}/></button></div></header>{view==='home'&&<Home onOpen={setView} orderCount={orders.length}/>} {view==='new-order'&&<NewOrder onCancel={()=>setView('home')} onCreated={async()=>{await load();setView('orders')}}/>} {view==='orders'&&<Orders orders={orders} loading={loading}/>} {view==='customers'&&<Customers orders={orders}/>} {view==='schedule'&&<Empty title="المواعيد والتركيبات" text="سيظهر هنا جدول المعاينات والتركيبات والمتابعات."/>} {view==='catalog'&&<Catalog items={catalog}/>} {view==='assistant'&&<Empty title="مساعد ماركو" text="الخطوة التالية: تجهيز الطلب داخل المحادثة ثم تأكيد واحد فقط قبل التسجيل."/>}</main></div>;
 }
 
-function Orders({ orders }: { orders: Order[] }) {
-  const [query, setQuery] = useState('');
-  const filtered = orders.filter(o => `${o.id} ${o.customer} ${o.phone} ${o.service}`.toLowerCase().includes(query.toLowerCase()));
-  return <section className="page"><div className="toolbar"><div className="search"><Search size={18}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="ابحث برقم الطلب أو العميل"/></div></div>
-    <div className="table-card">{filtered.length === 0 ? <div className="empty-inline">لا توجد طلبات حتى الآن.</div> : filtered.map(order => <div className="order-row" key={order.id}><div><small>{order.id}</small><strong>{order.customer}</strong><span>{order.phone}</span></div><div><small>الخدمة</small><strong>{order.service}</strong><span>{order.width || 'بدون مقاس'}</span></div><div><small>المنطقة</small><strong>{order.area || '—'}</strong><span>{order.color}</span></div><div><span className="badge">{order.status}</span><small>{order.installation ? 'مع التركيب' : 'بدون تركيب'}</small></div></div>)}</div>
-  </section>;
-}
+function Home({onOpen,orderCount}:{onOpen:(v:View)=>void;orderCount:number}){const actions=[['new-order','تسجيل طلب','أسرع طريق لإضافة طلب جديد',Plus],['orders','الطلبات',`${orderCount} طلب مسجل`,ClipboardList],['customers','العملاء','بيانات العميل وتاريخه',Users],['schedule','المواعيد','المعاينات والتركيبات',CalendarDays],['catalog','الأسعار والمنتجات','تعديل سريع وواضح',PackageSearch],['assistant','مساعد ماركو','إنشاء طلب بالمحادثة',MessageCircleMore]] as const;return<section className="page"><div className="welcome"><div><span>نسخة جديدة ونظيفة</span><h2>كل شغلك من شاشة واحدة</h2><p>أقل ضغطات، أقسام واضحة، والوصول لأي مهمة في ثوانٍ.</p></div><button onClick={()=>onOpen('new-order')}>ابدأ طلب جديد <ArrowRight size={18}/></button></div><div className="quick-grid">{actions.map(([id,t,txt,Icon])=><button key={id} onClick={()=>onOpen(id)}><span className="icon"><Icon size={24}/></span><div><strong>{t}</strong><small>{txt}</small></div><ChevronLeft size={18}/></button>)}</div><div className="status-strip"><div><small>كل الطلبات</small><strong>{orderCount}</strong></div><div><small>تركيبات اليوم</small><strong>0</strong></div><div><small>معاينات اليوم</small><strong>0</strong></div><div><small>تحتاج متابعة</small><strong>0</strong></div></div></section>}
 
-function Catalog() {
-  const items = [
-    ['تصميم 130','130 بدون تركيب / 170 مع التركيب'],
-    ['تصميم 198','150 بدون تركيب / 198 مع التركيب'],
-    ['ركن القهوة','35 بدون تركيب / 50 مع التركيب'],
-    ['طاولة شاشة 1.5م','40 بدون تركيب / 50 مع التركيب'],
-    ['طاولة شاشة 2م','50 بدون تركيب / 60 مع التركيب'],
-    ['أعمدة WPC','5 بدون تركيب / 7 مع التركيب'],
-  ];
-  return <section className="page"><div className="catalog-grid">{items.map(([name,price]) => <article key={name}><strong>{name}</strong><span>{price}</span><button>تعديل</button></article>)}</div></section>;
-}
+function NewOrder({onCancel,onCreated}:{onCancel:()=>void;onCreated:()=>void}){const[f,setF]=useState({customer_name:'',customer_phone:'',area:'',service_type:'خلفية شاشة',measurement:'',color:'العسلي',installation:true,notes:''}),[busy,setBusy]=useState(false),[error,setError]=useState('');const set=(k:string,v:string|boolean)=>setF(x=>({...x,[k]:v}));const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError('');const{error}=await supabase.from('mh2_orders').insert({...f,source:'admin'});if(error){setError('تعذر تسجيل الطلب');setBusy(false);return}await supabase.from('mh2_customers').upsert({name:f.customer_name,phone:f.customer_phone,area:f.area||null},{onConflict:'phone'});setBusy(false);onCreated()};return<section className="page"><div className="section-head"><h2>تسجيل طلب جديد</h2><p>كل البيانات المهمة في نموذج واحد.</p></div><form className="order-form" onSubmit={submit}><div className="form-grid"><label>اسم العميل<input required value={f.customer_name} onChange={e=>set('customer_name',e.target.value)}/></label><label>رقم الهاتف<input required inputMode="tel" value={f.customer_phone} onChange={e=>set('customer_phone',e.target.value)}/></label><label>المنطقة<input value={f.area} onChange={e=>set('area',e.target.value)} placeholder="مثال: حولي"/></label><label>نوع الخدمة<select value={f.service_type} onChange={e=>set('service_type',e.target.value)}><option>خلفية شاشة</option><option>ركن قهوة</option><option>فاير معطر</option><option>طاولة شاشة</option><option>أعمدة WPC</option><option>بانوهات</option><option>طلب خاص</option></select></label><label>العرض / المقاس<input value={f.measurement} onChange={e=>set('measurement',e.target.value)} placeholder="مثال: 4 متر"/></label><label>اللون<input value={f.color} onChange={e=>set('color',e.target.value)}/></label></div><div className="install-choice"><span>طريقة التنفيذ</span><button type="button" className={f.installation?'selected':''} onClick={()=>set('installation',true)}>مع التركيب</button><button type="button" className={!f.installation?'selected':''} onClick={()=>set('installation',false)}>بدون تركيب</button></div><label className="notes-label">ملاحظات<textarea value={f.notes} onChange={e=>set('notes',e.target.value)} placeholder="أي تفاصيل إضافية"/></label>{error&&<div className="auth-error">{error}</div>}<div className="form-actions"><button type="button" className="ghost" onClick={onCancel}>إلغاء</button><button className="primary" disabled={busy}>{busy?'جاري التسجيل…':'تأكيد وتسجيل الطلب'}</button></div></form></section>}
 
-function Empty({ title, text }: { title: string; text: string }) {
-  return <section className="page"><div className="empty-card"><h2>{title}</h2><p>{text}</p><span>سيتم ربط البيانات في المرحلة التالية بدون تغيير شكل الاستخدام.</span></div></section>;
-}
+function Orders({orders,loading}:{orders:Order[];loading:boolean}){const[q,setQ]=useState('');const filtered=orders.filter(o=>`${o.order_number} ${o.customer_name} ${o.customer_phone} ${o.service_type}`.toLowerCase().includes(q.toLowerCase()));return<section className="page"><div className="toolbar"><div className="search"><Search size={18}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="ابحث برقم الطلب أو العميل"/></div></div><div className="table-card">{loading?<div className="empty-inline">جاري التحميل…</div>:filtered.length===0?<div className="empty-inline">لا توجد طلبات حتى الآن.</div>:filtered.map(o=><div className="order-row" key={o.id}><div><small>{o.order_number}</small><strong>{o.customer_name}</strong><span>{o.customer_phone}</span></div><div><small>الخدمة</small><strong>{o.service_type}</strong><span>{o.measurement||'بدون مقاس'}</span></div><div><small>المنطقة</small><strong>{o.area||'—'}</strong><span>{o.color||'—'}</span></div><div><span className="badge">{statusLabel(o.status)}</span><small>{o.installation?'مع التركيب':'بدون تركيب'}</small></div></div>)}</div></section>}
+
+function Customers({orders}:{orders:Order[]}){const map=new Map<string,{name:string;phone:string;count:number}>();orders.forEach(o=>{const cur=map.get(o.customer_phone);if(cur)cur.count++;else map.set(o.customer_phone,{name:o.customer_name,phone:o.customer_phone,count:1})});return<section className="page"><div className="table-card">{[...map.values()].length===0?<div className="empty-inline">لا يوجد عملاء حتى الآن.</div>:[...map.values()].map(c=><div className="customer-row" key={c.phone}><strong>{c.name}</strong><span>{c.phone}</span><b>{c.count} طلب</b></div>)}</div></section>}
+
+function Catalog({items}:{items:CatalogItem[]}){return<section className="page"><div className="catalog-grid">{items.map(i=><article key={i.id}><strong>{i.name}</strong><small>{i.category}</small><span>{i.price_without_installation??'—'} بدون تركيب / {i.price_with_installation??'—'} مع التركيب</span><button>تعديل</button></article>)}</div></section>}
+function Empty({title,text}:{title:string;text:string}){return<section className="page"><div className="empty-card"><h2>{title}</h2><p>{text}</p></div></section>}
+function statusLabel(s:string){return({new:'جديد',confirmed:'مؤكد',in_progress:'قيد التنفيذ',completed:'مكتمل',cancelled:'ملغي'} as Record<string,string>)[s]||s}
