@@ -14,7 +14,7 @@ const assistantOrderTool={type:'function',name:'update_order_form',description:'
 
 const money=(v:number)=>Number(v).toLocaleString('ar-KW',{maximumFractionDigits:2});
 const latinDigits=(value:unknown)=>String(value??'').replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/٫/g,'.').replace(/،/g,',');
-const parseUserNumber=(value:unknown)=>Number(latinDigits(value).replace(',','.').trim());
+const parseUserNumber=(value:unknown)=>{const normalized=latinDigits(value).replace(',','.').trim();return normalized===''?Number.NaN:Number(normalized)};
 const toMeters=(value:number|null|undefined)=>value==null||!Number.isFinite(Number(value))?null:(Number(value)>20?Number(value)/100:Number(value));
 const rangeLabel=(o:Offer)=>o.max_width?`من ${o.min_width} إلى ${o.max_width} متر`:`من ${o.min_width} متر فأكثر`;
 const offerForWidth=(w:number,offers:Offer[])=>offers.find(o=>w>=Number(o.min_width)&&(o.max_width==null||w<=Number(o.max_width)));
