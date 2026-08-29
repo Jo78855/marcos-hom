@@ -1,6 +1,7 @@
-const CACHE_NAME = 'marcos-home-v3';
-const MANIFEST = self.location.hostname.startsWith('fire.') ? '/fire-manifest.webmanifest' : '/manifest.webmanifest';
-const APP_SHELL = ['/', MANIFEST, '/icons/icon.svg'];
+const CACHE_NAME = 'marcos-home-v5';
+const BASE = new URL(self.registration.scope).pathname.replace(/\/$/, '');
+const MANIFEST = self.location.hostname.startsWith('fire.') ? `${BASE}/fire-manifest.webmanifest` : `${BASE}/manifest.webmanifest`;
+const APP_SHELL = [`${BASE}/`, MANIFEST, `${BASE}/marcos-home-logo.jpg`];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
@@ -18,7 +19,7 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
   if (event.request.mode === 'navigate') {
-    event.respondWith(fetch(event.request, { cache: 'no-store' }).catch(() => caches.match('/')));
+    event.respondWith(fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(`${BASE}/`)));
     return;
   }
 

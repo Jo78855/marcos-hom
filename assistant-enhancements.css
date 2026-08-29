@@ -1,0 +1,64 @@
+.mh-booking select,
+.mh-booking textarea {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  padding: 10px;
+  font: inherit;
+  background: #fff;
+}
+
+.mh-booking textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+.mh-assistant-quick {
+  background: #fff;
+  border: 1px solid #dbe4ef;
+  border-radius: 14px;
+  padding: 11px;
+  margin: 8px 0 12px;
+}
+
+.mh-assistant-quick > strong {
+  display: block;
+  color: #0a376a;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.mh-assistant-quick > div {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mh-assistant-quick button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #344054;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mh-assistant-quick button.active {
+  background: #1258a6;
+  border-color: #1258a6;
+  color: #fff;
+}
+
+@media (max-width: 520px) {
+  .mh-assistant-launcher span {
+    display: inline;
+  }
+
+  .mh-assistant-launcher {
+    width: auto;
+    min-width: 132px;
+    padding: 11px 14px;
+  }
+}
