@@ -7,7 +7,7 @@ type Product='coffee'|'fire'|'assistant';
 type SourceTable='orders'|'fire_orders'|'mh_orders';
 type Technician={id:string;name:string};
 type UnifiedOrder={
-  id:string;product:Product;customerName:string;customerPhone:string;selection:string;
+  id:string;orderNumber?:string|null;product:Product;customerName:string;customerPhone:string;selection:string;
   total:number|null;status:string;createdAt:string;area?:string|null;wallWidth?:number|null;
   wallHeight?:number|null;notes?:string|null;photoUrl?:string;source?:string|null;
   followUpAt?:string|null;followUpNote?:string|null;sourceTable:SourceTable;installationDate?:string|null;
@@ -83,12 +83,14 @@ function Dashboard({onLogout}:{onLogout:()=>void}){
       id:x.id,product:'fire',customerName:x.customer_name||'عميل',customerPhone:x.customer_phone||'بدون رقم',selection:x.size_name||'مقاس غير محدد',
       total:x.total??null,status:x.status||'new',createdAt:x.created_at,source:'fire',followUpAt:x.follow_up_at,followUpNote:x.follow_up_note,sourceTable:'fire_orders'
     }));
-    const operations:UnifiedOrder[]=(m.data||[]).map((x:any)=>({
-      id:x.id,product:'assistant',customerName:x.customer?.name||'عميل',customerPhone:x.customer?.phone||'بدون رقم',selection:x.service_type||'طلب تصميم',
+    const operations:UnifiedOrder[]=(m.data||[]).map((x:any)=>{
+      const fireSize=x.customer_notes?.match(/مقاس جهاز الفاير:\s*(\d+(?:\.\d+)?)\s*سم/i)?.[1];
+      return{
+      id:x.id,orderNumber:x.order_number,product:'assistant',customerName:x.customer?.name||'عميل',customerPhone:x.customer?.phone||'بدون رقم',selection:fireSize?`${x.service_type||'جهاز الفاير'} — ${fireSize} سم`:(x.service_type||'طلب تصميم'),
       total:x.total??null,status:x.status||'confirmed',createdAt:x.created_at,area:x.customer?.area,wallWidth:x.width_m,wallHeight:x.height_m,
       notes:x.customer_notes||null,source:x.source,sourceTable:'mh_orders',installationDate:x.installation_date,
       confirmation:(x.confirmations||[]).find((c:any)=>c.confirmation_type==='handover')||(x.confirmations||[]).find((c:any)=>c.confirmation_type==='details')||null
-    }));
+    }});
     setTechnicians((t.data||[]) as Technician[]);
     setOrders([...normal,...fire,...operations].sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt)));
     setLastUpdated(new Date().toLocaleTimeString('ar-KW'));setLoading(false);
@@ -126,7 +128,7 @@ function Dashboard({onLogout}:{onLogout:()=>void}){
   };
 
   const whatsapp=(o:UnifiedOrder)=>{const p=o.customerPhone.replace(/\D/g,'');if(!p)return'';const msg=`مرحباً ${o.customerName}، معك ماركوز هوم بخصوص ${productLabel[o.product]}.`;return`https://wa.me/${p}?text=${encodeURIComponent(msg)}`};
-  const filtered=useMemo(()=>orders.filter(o=>(productFilter==='all'||o.product===productFilter)&&(!query.trim()||`${o.customerName} ${o.customerPhone} ${o.selection} ${o.area||''}`.toLowerCase().includes(query.trim().toLowerCase()))),[orders,productFilter,query]);
+  const filtered=useMemo(()=>orders.filter(o=>(productFilter==='all'||o.product===productFilter)&&(!query.trim()||`${o.orderNumber||''} ${o.customerName} ${o.customerPhone} ${o.selection} ${o.area||''} ${o.notes||''} ${o.source||''}`.toLowerCase().includes(query.trim().toLowerCase()))),[orders,productFilter,query]);
   const customers=useMemo(()=>{const m=new Map<string,{name:string;phone:string;count:number;last:string}>();orders.forEach(o=>{const k=o.customerPhone||o.id,old=m.get(k);if(old){old.count++;if(Date.parse(o.createdAt)>Date.parse(old.last))old.last=o.createdAt}else m.set(k,{name:o.customerName,phone:o.customerPhone,count:1,last:o.createdAt})});return[...m.values()].sort((a,b)=>Date.parse(b.last)-Date.parse(a.last))},[orders]);
   const newCount=orders.filter(o=>['new','needs_photo','measurements_received','ready_for_review'].includes(o.status)).length;
   const assistantCount=orders.filter(o=>o.product==='assistant').length;
@@ -137,9 +139,9 @@ function Dashboard({onLogout}:{onLogout:()=>void}){
       <nav className="unified-nav"><button className={tab==='home'?'active':''} onClick={()=>setTab('home')}>الرئيسية</button><button className={tab==='orders'?'active':''} onClick={()=>setTab('orders')}>الطلبات</button><button className={tab==='customers'?'active':''} onClick={()=>setTab('customers')}>العملاء</button></nav>
       {tab==='home'&&<><section className="unified-stats"><article><small>كل الطلبات</small><strong>{orders.length}</strong></article><article><small>طلبات جديدة / مراجعة</small><strong>{newCount}</strong></article><article><small>طلبات مساعد ماركوز</small><strong>{assistantCount}</strong></article><article><small>العملاء</small><strong>{customers.length}</strong></article></section><section className="admin-card"><h2>آخر حالة</h2><p>آخر تحديث: {lastUpdated||'—'}</p><button onClick={()=>void load()}>{loading?'جاري التحديث...':'تحديث الآن'}</button></section></>}
       {tab==='orders'&&<section className="admin-card"><div className="card-title unified-title"><div><h2>الطلبات</h2><small>أي طلب من المساعد يظهر هنا بعد التسجيل مباشرة</small></div><button onClick={()=>void load()}>{loading?'جاري التحديث...':'تحديث الآن'}</button></div>
-        <div className="unified-filters"><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث بالاسم أو الهاتف أو المنطقة"/><select value={productFilter} onChange={e=>setProductFilter(e.target.value as any)}><option value="all">كل الأقسام</option><option value="assistant">مساعد ماركوز</option><option value="coffee">ركن القهوة</option><option value="fire">الفير</option></select></div>
+        <div className="unified-filters"><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث برقم الطلب أو الاسم أو الهاتف أو المنطقة"/><select value={productFilter} onChange={e=>setProductFilter(e.target.value as any)}><option value="all">كل الأقسام</option><option value="assistant">مساعد ماركوز</option><option value="coffee">ركن القهوة</option><option value="fire">الفير</option></select></div>
         {error&&<p className="admin-error">{error}</p>}<div className="unified-orders">{filtered.length===0?<p>لا توجد طلبات مطابقة.</p>:filtered.map(o=><div className="unified-order-card" key={`${o.product}-${o.id}`}>
-          <div className="unified-order-main"><span className={`product-pill ${o.product}`}>{productLabel[o.product]}</span><strong>{o.customerName}<small>{o.customerPhone}</small></strong><span>{o.selection}{o.area?` — ${o.area}`:''}{o.wallHeight?` — ارتفاع ${o.wallHeight}م`:''}</span><b>{o.total===null?'حسب الطلب':`${o.total} د.ك`}</b>
+          <div className="unified-order-main"><span className={`product-pill ${o.product}`}>{productLabel[o.product]}</span><strong>{o.customerName}<small>{o.orderNumber?`${o.orderNumber} — `:''}{o.customerPhone}</small></strong><span>{o.selection}{o.area?` — ${o.area}`:''}{o.wallHeight?` — ارتفاع ${o.wallHeight}م`:''}</span><b>{o.total===null?'حسب الطلب':`${o.total} د.ك`}</b>
           <select value={o.status} disabled={updating===o.id} onChange={e=>void updateStatus(o,e.target.value)}>{(o.sourceTable==='mh_orders'?operationsStatusOptions:statusOptions).map(s=><option key={s} value={s}>{statusLabel[s]}</option>)}</select><time>{new Date(o.createdAt).toLocaleString('ar-KW')}</time></div>
           <div className="order-actions">{whatsapp(o)&&<a href={whatsapp(o)} target="_blank" rel="noreferrer">واتساب العميل</a>}{o.photoUrl&&<a href={o.photoUrl} target="_blank" rel="noreferrer">صورة المكان</a>}{o.sourceTable==='mh_orders'&&<><button onClick={()=>void createAccessLink(o,'customer')}>نسخ رابط العميل</button><select value={selectedTechnicians[o.id]||''} onChange={e=>setSelectedTechnicians(v=>({...v,[o.id]:e.target.value}))}><option value="">اختر الفني</option>{technicians.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select><button onClick={()=>void createAccessLink(o,'technician')}>نسخ رابط الفني</button></>}<a href={slackUrl} target="_blank" rel="noreferrer">Slack</a></div>
           {o.confirmation&&<div className="unified-confirmation"><strong>{o.confirmation.confirmation_type==='handover'?'✓ العميل استلم الأعمال':'✓ العميل أكد التفاصيل'}</strong>{o.confirmation.rating&&<span>التقييم: {o.confirmation.rating} / 5</span>}{o.confirmation.comment&&<small>{o.confirmation.comment}</small>}</div>}
