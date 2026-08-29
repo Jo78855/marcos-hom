@@ -1,166 +1,130 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import Admin from './components/Admin';
-import FireAdmin from './components/FireAdmin';
-import FireStorefront from './components/FireStorefront';
-import UnifiedAdmin from './components/UnifiedAdmin';
-import MarcosAssistant from './components/MarcosAssistant';
-import { supabase } from './supabase';
+import React, { useMemo, useState } from 'react';
+import { LayoutDashboard, ClipboardList, Users, CalendarDays, PackageSearch, MessageCircleMore, Plus, Search, ChevronLeft, ArrowRight } from 'lucide-react';
 
-type Design = { id: string; name_ar: string; image_url: string };
-type Settings = {
-  price_without_installation: number;
-  price_with_installation: number;
-  whatsapp_number: string;
+type View = 'home' | 'new-order' | 'orders' | 'customers' | 'schedule' | 'catalog' | 'assistant';
+
+type Order = {
+  id: string;
+  customer: string;
+  phone: string;
+  area: string;
+  service: string;
+  width: string;
+  color: string;
+  installation: boolean;
+  status: 'جديد' | 'مؤكد' | 'قيد التنفيذ' | 'مكتمل';
 };
 
-interface InstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
+const starterOrders: Order[] = [];
 
-const fallbackDesigns: Design[] = [
-  { id: 'white', name_ar: 'أبيض مع خشب فاتح', image_url: '/coffee/white-lightwood.webp' },
-  { id: 'brown', name_ar: 'بني مع ترافرتينو', image_url: '/coffee/brown-travertine.webp' },
-  { id: 'black', name_ar: 'أسود مع خشب فاتح', image_url: '/coffee/black-lightwood.webp' },
-  { id: 'darkgray', name_ar: 'رمادي غامق مع شيفرون', image_url: '/coffee/darkgray-chevron.webp' },
-  { id: 'lightgray', name_ar: 'رمادي فاتح مع شيفرون', image_url: '/coffee/lightgray-chevron.webp' },
-  { id: 'lightwood', name_ar: 'خشبي فاتح مع شيفرون', image_url: '/coffee/lightwood-chevron.webp' },
-  { id: 'honey', name_ar: 'عسلي ماركوز هوم', image_url: '/coffee/honey-wood.webp' },
+const navItems: { id: View; label: string; icon: React.ComponentType<{size?: number}> }[] = [
+  { id: 'home', label: 'الرئيسية', icon: LayoutDashboard },
+  { id: 'orders', label: 'الطلبات', icon: ClipboardList },
+  { id: 'customers', label: 'العملاء', icon: Users },
+  { id: 'schedule', label: 'المواعيد', icon: CalendarDays },
+  { id: 'catalog', label: 'المنتجات والأسعار', icon: PackageSearch },
+  { id: 'assistant', label: 'مساعد ماركو', icon: MessageCircleMore },
 ];
 
-const fallbackSettings: Settings = {
-  price_without_installation: 35,
-  price_with_installation: 50,
-  whatsapp_number: '96550204320',
-};
-
 export default function App() {
-  const isFireApp = window.location.hostname.startsWith('fire.') || window.location.pathname.startsWith('/fire');
-  if (window.location.pathname.startsWith('/assistant/embed')) return <MarcosAssistant embedded />;
-  if (window.location.pathname.startsWith('/admin/overview')) return <UnifiedAdmin />;
-  if (isFireApp && window.location.pathname.startsWith('/admin')) return <FireAdmin />;
-  if (isFireApp) return <FireStorefront />;
-  if (window.location.pathname.startsWith('/admin')) return <Admin />;
-  return <Storefront />;
-}
+  const [view, setView] = useState<View>('home');
+  const [orders, setOrders] = useState<Order[]>(starterOrders);
 
-function Storefront() {
-  const [designs, setDesigns] = useState<Design[]>(fallbackDesigns);
-  const [settings, setSettings] = useState<Settings>(fallbackSettings);
-  const [design, setDesign] = useState<Design>(fallbackDesigns[0]);
-  const [withInstallation, setWithInstallation] = useState(false);
-  const [approved, setApproved] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [orderError, setOrderError] = useState('');
-  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(window.matchMedia('(display-mode: standalone)').matches);
-
-  useEffect(() => {
-    Promise.all([
-      supabase.from('store_settings').select('*').eq('id', 1).single(),
-      supabase.from('designs').select('id,name_ar,image_url').eq('active', true).order('sort_order'),
-    ]).then(([settingsResult, designsResult]) => {
-      if (settingsResult.data) setSettings(settingsResult.data as Settings);
-      if (designsResult.data?.length) {
-        setDesigns(designsResult.data as Design[]);
-        setDesign(designsResult.data[0] as Design);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    const capturePrompt = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as InstallPromptEvent);
-    };
-    const markInstalled = () => { setInstalled(true); setInstallPrompt(null); };
-    window.addEventListener('beforeinstallprompt', capturePrompt);
-    window.addEventListener('appinstalled', markInstalled);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', capturePrompt);
-      window.removeEventListener('appinstalled', markInstalled);
-    };
-  }, []);
-
-  const installApp = async () => {
-    if (installPrompt) {
-      await installPrompt.prompt();
-      const choice = await installPrompt.userChoice;
-      if (choice.outcome === 'accepted') setInstallPrompt(null);
-      return;
-    }
-    alert('على آيفون: افتح الموقع في Safari، اضغط زر المشاركة، ثم اختر «إضافة إلى الشاشة الرئيسية».');
-  };
-
-  const price = withInstallation ? settings.price_with_installation : settings.price_without_installation;
-  const optionLabel = withInstallation ? 'شامل التركيب' : 'بدون تركيب';
-  const total = approved ? price : 0;
-  const message = useMemo(() => [
-    'مرحباً ماركوز هوم، أرغب بطلب ركن القهوة التالي:',
-    `الاسم: ${customerName}`,
-    `رقم الهاتف: ${customerPhone}`,
-    `اللون: ${design.name_ar}`,
-    `طريقة الطلب: ${optionLabel}`,
-    `السعر الإجمالي: ${price} د.ك`,
-  ].join('\n'), [customerName, customerPhone, design, optionLabel, price]);
-
-  const chooseDesign = (next: Design) => { setDesign(next); setApproved(false); };
-  const chooseOption = (installed: boolean) => { setWithInstallation(installed); setApproved(false); };
-  const sendOrder = async () => {
-    setOrderError('');
-    if (!customerName.trim() || !customerPhone.trim()) {
-      setOrderError('اكتب الاسم ورقم الهاتف أولًا');
-      return;
-    }
-    setSending(true);
-    const { error } = await supabase.from('orders').insert({
-      customer_name: customerName.trim(),
-      customer_phone: customerPhone.trim(),
-      design_id: design.id.length === 36 ? design.id : null,
-      installation: withInstallation,
-      total: price,
-      status: 'new',
-    });
-    if (error) {
-      setOrderError(`تعذر تسجيل الطلب: ${error.message}`);
-      setSending(false);
-      return;
-    }
-    window.open(`https://wa.me/${settings.whatsapp_number}?text=${encodeURIComponent(message)}`, '_blank');
-    setSending(false);
-  };
+  const title = useMemo(() => navItems.find(item => item.id === view)?.label ?? 'طلب جديد', [view]);
 
   return (
-    <main dir="rtl" className="site-shell">
-      <header className="topbar">
-        <div className="brand"><span className="brand-mark">MH</span><span><strong>ماركوز هوم</strong><small>ركن القهوة</small></span></div>
-        <div className="top-actions"><span className="status">متاح للطلب الآن</span>{!installed && <button className="install-app" onClick={installApp}>تثبيت التطبيق</button>}</div>
-      </header>
-      <section className="hero">
-        <div><span className="eyebrow">ركن القهوة من ماركوز هوم</span><h1>اختر اللون وطريقة الطلب، وأرسله مباشرة</h1><p>سبعة ألوان جاهزة بسعر {settings.price_without_installation} د.ك بدون تركيب أو {settings.price_with_installation} د.ك شامل التركيب.</p></div>
-        <div className="total-card"><small>إجمالي طلبك</small><strong>{total} د.ك</strong></div>
-      </section>
-      <section className="workspace">
-        <aside className="controls">
-          <div className="step"><span>1</span><div><h2>اختر طريقة الطلب</h2><div className="option-grid">
-            <button className={!withInstallation ? 'option active' : 'option'} onClick={() => chooseOption(false)}><strong>بدون تركيب</strong><small>{settings.price_without_installation} د.ك</small></button>
-            <button className={withInstallation ? 'option active' : 'option'} onClick={() => chooseOption(true)}><strong>شامل التركيب</strong><small>{settings.price_with_installation} د.ك</small></button>
-          </div></div></div>
-          <div className="step"><span>2</span><div><h2>اختر اللون: {design.name_ar}</h2><div className="design-grid">
-            {designs.map((item) => <button key={item.id} className={design.id === item.id ? 'design active' : 'design'} onClick={() => chooseDesign(item)}><img src={item.image_url} alt={item.name_ar} loading="lazy"/><span>{item.name_ar}</span></button>)}
-          </div></div></div>
-          <div className="step"><span>3</span><div><h2>بيانات التواصل</h2><div className="customer-fields"><input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="الاسم"/><input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} inputMode="tel" placeholder="رقم الهاتف"/></div>{orderError && <p className="order-error">{orderError}</p>}</div></div>
-          <button className="approve" onClick={() => setApproved(true)}>اعتماد الاختيار — {price} د.ك</button>
-        </aside>
-        <section className="preview">
-          <div className="preview-title"><div><small>الصورة الفعلية</small><h2>ركن القهوة المختار</h2></div><span>{approved ? 'تم الاعتماد' : 'اختر ثم اعتمد'}</span></div>
-          <div className="photo-wrap"><img src={design.image_url} alt={`ركن القهوة - ${design.name_ar}`}/><div className="photo-label"><strong>{design.name_ar}</strong><span>{price} د.ك — {optionLabel}</span></div></div>
-          <div className="summary"><div><small>السعر الإجمالي</small><strong>{total} د.ك</strong></div><button disabled={!approved || sending} onClick={sendOrder}>{sending ? 'جاري التسجيل...' : 'إرسال الطلب عبر واتساب'}</button></div>
-          <p className="hint">غيّر اللون أو طريقة الطلب ثم اضغط «اعتماد الاختيار» قبل الإرسال.</p>
-        </section>
-      </section>
-    </main>
+    <div className="app" dir="rtl">
+      <aside className="sidebar">
+        <button className="brand" onClick={() => setView('home')}>
+          <span className="brand-mark">MH</span>
+          <span><strong>ماركوز هوم</strong><small>إدارة الديكورات</small></span>
+        </button>
+        <nav>
+          {navItems.map(item => {
+            const Icon = item.icon;
+            return <button key={item.id} className={view === item.id ? 'active' : ''} onClick={() => setView(item.id)}><Icon size={20}/><span>{item.label}</span></button>;
+          })}
+        </nav>
+        <button className="new-order-side" onClick={() => setView('new-order')}><Plus size={19}/> طلب جديد</button>
+      </aside>
+
+      <main className="main">
+        <header className="topbar">
+          <div><small>Marco’s Home</small><h1>{view === 'new-order' ? 'طلب جديد' : title}</h1></div>
+          <button className="primary" onClick={() => setView('new-order')}><Plus size={18}/> طلب جديد</button>
+        </header>
+
+        {view === 'home' && <Home onOpen={setView} orderCount={orders.length} />}
+        {view === 'new-order' && <NewOrder onCancel={() => setView('home')} onCreate={(order) => { setOrders(current => [order, ...current]); setView('orders'); }} />}
+        {view === 'orders' && <Orders orders={orders} />}
+        {view === 'customers' && <Empty title="العملاء" text="هنا هتظهر ملفات العملاء وتاريخ الطلبات والعناوين في مكان واحد." />}
+        {view === 'schedule' && <Empty title="المواعيد والتركيبات" text="تقويم بسيط للمعاينات والتركيبات والمتابعات بدون قوائم معقدة." />}
+        {view === 'catalog' && <Catalog />}
+        {view === 'assistant' && <Empty title="مساعد ماركو" text="هنربطه بعد تثبيت الأساس الجديد بحيث يجهز الطلب ثم يطلب تأكيد واحد فقط قبل التسجيل." />}
+      </main>
+    </div>
   );
+}
+
+function Home({ onOpen, orderCount }: { onOpen: (view: View) => void; orderCount: number }) {
+  const actions: { id: View; title: string; text: string; icon: React.ComponentType<{size?: number}> }[] = [
+    { id: 'new-order', title: 'تسجيل طلب', text: 'أسرع طريق لإضافة طلب جديد', icon: Plus },
+    { id: 'orders', title: 'الطلبات', text: `${orderCount} طلب مسجل`, icon: ClipboardList },
+    { id: 'customers', title: 'العملاء', text: 'بيانات العميل وتاريخه', icon: Users },
+    { id: 'schedule', title: 'المواعيد', text: 'المعاينات والتركيبات', icon: CalendarDays },
+    { id: 'catalog', title: 'الأسعار والمنتجات', text: 'تعديل سريع وواضح', icon: PackageSearch },
+    { id: 'assistant', title: 'مساعد ماركو', text: 'إنشاء طلب بالمحادثة', icon: MessageCircleMore },
+  ];
+  return <section className="page home-page">
+    <div className="welcome"><div><span>نسخة جديدة ونظيفة</span><h2>كل شغلك من شاشة واحدة</h2><p>أقل ضغطات، أقسام واضحة، والوصول لأي مهمة في ثوانٍ.</p></div><button onClick={() => onOpen('new-order')}>ابدأ طلب جديد <ArrowRight size={18}/></button></div>
+    <div className="quick-grid">{actions.map(action => { const Icon = action.icon; return <button key={action.id} onClick={() => onOpen(action.id)}><span className="icon"><Icon size={24}/></span><div><strong>{action.title}</strong><small>{action.text}</small></div><ChevronLeft size={18}/></button>; })}</div>
+    <div className="status-strip"><div><small>طلبات جديدة</small><strong>{orderCount}</strong></div><div><small>تركيبات اليوم</small><strong>0</strong></div><div><small>معاينات اليوم</small><strong>0</strong></div><div><small>طلبات تحتاج متابعة</small><strong>0</strong></div></div>
+  </section>;
+}
+
+function NewOrder({ onCancel, onCreate }: { onCancel: () => void; onCreate: (order: Order) => void }) {
+  const [form, setForm] = useState({ customer:'', phone:'', area:'', service:'خلفية شاشة', width:'', color:'العسلي', installation:true });
+  const set = (key: string, value: string | boolean) => setForm(current => ({ ...current, [key]: value }));
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault();
+    onCreate({ id: `MH-${Date.now().toString().slice(-6)}`, ...form, status:'جديد' });
+  };
+  return <section className="page"><div className="section-head"><div><h2>تسجيل طلب جديد</h2><p>كل البيانات المهمة في نموذج واحد فقط.</p></div></div>
+    <form className="order-form" onSubmit={submit}>
+      <div className="form-grid">
+        <label>اسم العميل<input required value={form.customer} onChange={e => set('customer', e.target.value)} placeholder="اسم العميل"/></label>
+        <label>رقم الهاتف<input required value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="رقم الهاتف" inputMode="tel"/></label>
+        <label>المنطقة<input value={form.area} onChange={e => set('area', e.target.value)} placeholder="مثال: حولي"/></label>
+        <label>نوع الخدمة<select value={form.service} onChange={e => set('service', e.target.value)}><option>خلفية شاشة</option><option>ركن قهوة</option><option>فاير معطر</option><option>طاولة شاشة</option><option>أعمدة WPC</option><option>بانوهات</option><option>طلب خاص</option></select></label>
+        <label>العرض / المقاس<input value={form.width} onChange={e => set('width', e.target.value)} placeholder="مثال: 4 متر"/></label>
+        <label>اللون<select value={form.color} onChange={e => set('color', e.target.value)}><option>العسلي</option><option>أبيض</option><option>أسود</option><option>رمادي فاتح</option><option>رمادي غامق</option><option>بيج خشبي</option></select></label>
+      </div>
+      <div className="install-choice"><span>طريقة التنفيذ</span><button type="button" className={form.installation ? 'selected' : ''} onClick={() => set('installation', true)}>مع التركيب</button><button type="button" className={!form.installation ? 'selected' : ''} onClick={() => set('installation', false)}>بدون تركيب</button></div>
+      <div className="form-actions"><button type="button" className="ghost" onClick={onCancel}>إلغاء</button><button className="primary" type="submit">تأكيد وتسجيل الطلب</button></div>
+    </form>
+  </section>;
+}
+
+function Orders({ orders }: { orders: Order[] }) {
+  const [query, setQuery] = useState('');
+  const filtered = orders.filter(o => `${o.id} ${o.customer} ${o.phone} ${o.service}`.toLowerCase().includes(query.toLowerCase()));
+  return <section className="page"><div className="toolbar"><div className="search"><Search size={18}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="ابحث برقم الطلب أو العميل"/></div></div>
+    <div className="table-card">{filtered.length === 0 ? <div className="empty-inline">لا توجد طلبات حتى الآن.</div> : filtered.map(order => <div className="order-row" key={order.id}><div><small>{order.id}</small><strong>{order.customer}</strong><span>{order.phone}</span></div><div><small>الخدمة</small><strong>{order.service}</strong><span>{order.width || 'بدون مقاس'}</span></div><div><small>المنطقة</small><strong>{order.area || '—'}</strong><span>{order.color}</span></div><div><span className="badge">{order.status}</span><small>{order.installation ? 'مع التركيب' : 'بدون تركيب'}</small></div></div>)}</div>
+  </section>;
+}
+
+function Catalog() {
+  const items = [
+    ['تصميم 130','130 بدون تركيب / 170 مع التركيب'],
+    ['تصميم 198','150 بدون تركيب / 198 مع التركيب'],
+    ['ركن القهوة','35 بدون تركيب / 50 مع التركيب'],
+    ['طاولة شاشة 1.5م','40 بدون تركيب / 50 مع التركيب'],
+    ['طاولة شاشة 2م','50 بدون تركيب / 60 مع التركيب'],
+    ['أعمدة WPC','5 بدون تركيب / 7 مع التركيب'],
+  ];
+  return <section className="page"><div className="catalog-grid">{items.map(([name,price]) => <article key={name}><strong>{name}</strong><span>{price}</span><button>تعديل</button></article>)}</div></section>;
+}
+
+function Empty({ title, text }: { title: string; text: string }) {
+  return <section className="page"><div className="empty-card"><h2>{title}</h2><p>{text}</p><span>سيتم ربط البيانات في المرحلة التالية بدون تغيير شكل الاستخدام.</span></div></section>;
 }
