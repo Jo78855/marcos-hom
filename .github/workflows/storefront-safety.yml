@@ -1,0 +1,42 @@
+name: Storefront safety
+
+on:
+  push:
+    branches:
+      - v2/marcos-home-clean
+  pull_request:
+    branches:
+      - v2/marcos-home-clean
+
+permissions:
+  contents: read
+
+jobs:
+  verify-storefronts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Verify storefront routes, styling and images
+        run: |
+          grep -q "import './storefront.css';" index.tsx
+          grep -Rqs '\.site-shell' dist/assets/*.css
+          test -s dist/coffee/white-lightwood.webp
+          test -s dist/coffee/brown-travertine.webp
+          test -s dist/coffee/black-lightwood.webp
+          test -s dist/coffee/lightgray-chevron.webp
+          test -s dist/coffee/darkgray-chevron.webp
+          test -s dist/coffee/lightwood-chevron.webp
+          test -s dist/coffee/honey-wood.webp
+          test -s dist/fire/main-product.webp
+      - name: Verify production routing
+        run: |
+          docker compose config >/tmp/marcos-compose.yml
+          grep -q 'fire.marcohom.com' /tmp/marcos-compose.yml
+          grep -q 'coffee.marcohom.com' /tmp/marcos-compose.yml
+          grep -q 'root_default' /tmp/marcos-compose.yml
