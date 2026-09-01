@@ -6,3 +6,25 @@ services:
     restart: unless-stopped
     ports:
       - "8085:80"
+    networks:
+      - default
+      - marcos_traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=root_default"
+      - "traefik.http.routers.marcos-fire.rule=Host(`fire.marcohom.com`)"
+      - "traefik.http.routers.marcos-fire.entrypoints=websecure"
+      - "traefik.http.routers.marcos-fire.tls=true"
+      - "traefik.http.routers.marcos-fire.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.marcos-fire.service=marcos-designer"
+      - "traefik.http.routers.marcos-coffee.rule=Host(`coffee.marcohom.com`)"
+      - "traefik.http.routers.marcos-coffee.entrypoints=websecure"
+      - "traefik.http.routers.marcos-coffee.tls=true"
+      - "traefik.http.routers.marcos-coffee.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.marcos-coffee.service=marcos-designer"
+      - "traefik.http.services.marcos-designer.loadbalancer.server.port=80"
+
+networks:
+  marcos_traefik:
+    external: true
+    name: root_default
