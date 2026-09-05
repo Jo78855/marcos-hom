@@ -21,21 +21,41 @@ const slackUrl='https://marcoshome.slack.com/archives/C0BRVGRB3T3';
 export default function UnifiedAdmin(){
   const[session,setSession]=useState<Session|null>(null),[loading,setLoading]=useState(true);
   useEffect(()=>{
-    supabase.auth.getSession().then(({data})=>{setSession(data.session);setLoading(false)});
-    const{data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s));
-    return()=>data.subscription.unsubscribe();
+    let active=true;
+    const{data}=supabase.auth.onAuthStateChange((_e,s)=>{
+      if(!active)return;
+      setSession(s);
+      setLoading(false);
+    });
+    supabase.auth.getSession().then(({data:sessionData})=>{
+      if(!active)return;
+      setSession(sessionData.session);
+      setLoading(false);
+    }).catch(()=>{
+      if(!active)return;
+      setSession(null);
+      setLoading(false);
+    });
+    return()=>{active=false;data.subscription.unsubscribe()};
   },[]);
   if(loading)return<div className="admin-center" dir="rtl">جاري التحميل...</div>;
-  return session?<Dashboard onLogout={()=>supabase.auth.signOut()}/>:<Login/>;
+  return session?<Dashboard onLogout={()=>supabase.auth.signOut()}/>:<Login onSignedIn={setSession}/>;
 }
 
-function Login(){
+function Login({onSignedIn}:{onSignedIn:(session:Session)=>void}){
   const[email,setEmail]=useState('joseph.sobhy2022@gmail.com'),[password,setPassword]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
-  const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError('');const{error:x}=await supabase.auth.signInWithPassword({email,password});if(x)setError('بيانات الدخول غير صحيحة');setBusy(false)};
+  const submit=async(e:FormEvent)=>{
+    e.preventDefault();setBusy(true);setError('');
+    const normalizedEmail=email.trim().toLowerCase();
+    const{data,error:x}=await supabase.auth.signInWithPassword({email:normalizedEmail,password});
+    if(x||!data.session){setError('بيانات الدخول غير صحيحة أو تعذر إنشاء جلسة. حاول مرة أخرى.');setBusy(false);return}
+    onSignedIn(data.session);
+    setBusy(false);
+  };
   return<main className="admin-login" dir="rtl"><form onSubmit={submit}>
     <div className="brand-mark unified-mark">MH</div><h1>لوحة طلبات ماركوز هوم</h1><p>طلبات المساعد والمنتجات في مكان واحد</p>
-    <label>البريد الإلكتروني<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label>
-    <label>كلمة المرور<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required/></label>
+    <label>البريد الإلكتروني<input type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="username" required/></label>
+    <label>كلمة المرور<input type="password" value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password" required/></label>
     {error&&<div className="admin-error">{error}</div>}<button disabled={busy}>{busy?'جاري الدخول...':'دخول'}</button>
   </form></main>;
 }
