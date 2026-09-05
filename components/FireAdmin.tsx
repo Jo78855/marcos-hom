@@ -11,43 +11,81 @@ export default function FireAdmin() {
   const [loading, setLoading] = useState(true);
   const [recoveringPassword, setRecoveringPassword] = useState(() => window.location.hash.includes('type=recovery'));
   const [authMessage, setAuthMessage] = useState('');
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setLoading(false); });
+    let active = true;
     const { data } = supabase.auth.onAuthStateChange((event, next) => {
+      if (!active) return;
       setSession(next);
+      setLoading(false);
       if (event === 'PASSWORD_RECOVERY') setRecoveringPassword(true);
     });
-    return () => data.subscription.unsubscribe();
+
+    supabase.auth.getSession()
+      .then(({ data: sessionData }) => {
+        if (!active) return;
+        setSession(sessionData.session);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setSession(null);
+        setLoading(false);
+      });
+
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
   }, []);
+
   if (loading) return <div className="admin-center" dir="rtl">جاري التحميل...</div>;
   if (recoveringPassword) return <ResetPassword onComplete={() => {
     window.history.replaceState({}, document.title, '/admin');
     setRecoveringPassword(false);
     setAuthMessage('تم تعيين كلمة المرور الجديدة. يمكنك تسجيل الدخول الآن.');
   }} />;
-  return session ? <FireDashboard onLogout={() => supabase.auth.signOut()} /> : <Login initialMessage={authMessage} />;
+  return session
+    ? <FireDashboard onLogout={() => supabase.auth.signOut()} />
+    : <Login initialMessage={authMessage} onSignedIn={setSession} />;
 }
 
-function Login({ initialMessage = '' }: { initialMessage?: string }) {
+function Login({ initialMessage = '', onSignedIn }: { initialMessage?: string; onSignedIn: (session: Session) => void }) {
   const [email, setEmail] = useState('joseph.sobhy2022@gmail.com');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState(initialMessage);
   const [busy, setBusy] = useState(false);
+
   const submit = async (event: FormEvent) => {
-    event.preventDefault(); setBusy(true); setError(''); setMessage('');
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setError('بيانات الدخول غير صحيحة');
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    setMessage('');
+    const normalizedEmail = email.trim().toLowerCase();
+    const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+    if (error || !data.session) {
+      setError('بيانات الدخول غير صحيحة أو تعذر إنشاء جلسة. حاول مرة أخرى.');
+      setBusy(false);
+      return;
+    }
+    onSignedIn(data.session);
     setBusy(false);
   };
+
   const sendRecoveryEmail = async () => {
+    if (!email.trim()) {
+      setError('اكتب البريد الإلكتروني أولًا');
+      return;
+    }
     setBusy(true); setError(''); setMessage('');
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/admin` });
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo: `${window.location.origin}/admin` });
     if (error) setError('تعذر إرسال رابط الاستعادة. حاول مرة أخرى بعد قليل.');
     else setMessage('تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني.');
     setBusy(false);
   };
-  return <main className="admin-login" dir="rtl"><form onSubmit={submit}><div className="brand-mark fire-mark">MH</div><h1>لوحة تحكم الفير المعطر</h1><p>أدخل بيانات حساب المدير</p><label>البريد الإلكتروني<input type="email" value={email} onChange={e => setEmail(e.target.value)} required/></label><label>كلمة المرور<input type="password" value={password} onChange={e => setPassword(e.target.value)} required/></label>{error && <div className="admin-error">{error}</div>}{message && <div className="admin-success-box">{message}</div>}<button disabled={busy}>{busy ? 'جاري التنفيذ...' : 'دخول'}</button><button className="forgot-password" type="button" onClick={sendRecoveryEmail} disabled={busy}>نسيت كلمة المرور؟</button><a href="/">العودة للتطبيق</a></form></main>;
+
+  return <main className="admin-login" dir="rtl"><form onSubmit={submit}><div className="brand-mark fire-mark">MH</div><h1>لوحة تحكم الفير المعطر</h1><p>أدخل بيانات حساب المدير</p><label>البريد الإلكتروني<input type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="username" required/></label><label>كلمة المرور<input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" required/></label>{error && <div className="admin-error">{error}</div>}{message && <div className="admin-success-box">{message}</div>}<button disabled={busy}>{busy ? 'جاري التنفيذ...' : 'دخول'}</button><button className="forgot-password" type="button" onClick={sendRecoveryEmail} disabled={busy}>نسيت كلمة المرور؟</button><a href="/">العودة للتطبيق</a></form></main>;
 }
 
 function ResetPassword({ onComplete }: { onComplete: () => void }) {
@@ -65,7 +103,7 @@ function ResetPassword({ onComplete }: { onComplete: () => void }) {
     await supabase.auth.signOut();
     onComplete();
   };
-  return <main className="admin-login" dir="rtl"><form onSubmit={submit}><div className="brand-mark fire-mark">MH</div><h1>تعيين كلمة مرور جديدة</h1><p>اكتب كلمة مرور جديدة لحساب المدير.</p><label>كلمة المرور الجديدة<input type="password" value={password} onChange={e => setPassword(e.target.value)} minLength={8} required/></label><label>تأكيد كلمة المرور<input type="password" value={confirmation} onChange={e => setConfirmation(e.target.value)} minLength={8} required/></label>{error && <div className="admin-error">{error}</div>}<button disabled={busy}>{busy ? 'جاري الحفظ...' : 'حفظ كلمة المرور'}</button></form></main>;
+  return <main className="admin-login" dir="rtl"><form onSubmit={submit}><div className="brand-mark fire-mark">MH</div><h1>تعيين كلمة مرور جديدة</h1><p>اكتب كلمة مرور جديدة لحساب المدير.</p><label>كلمة المرور الجديدة<input type="password" value={password} onChange={e => setPassword(e.target.value)} minLength={8} autoComplete="new-password" required/></label><label>تأكيد كلمة المرور<input type="password" value={confirmation} onChange={e => setConfirmation(e.target.value)} minLength={8} autoComplete="new-password" required/></label>{error && <div className="admin-error">{error}</div>}<button disabled={busy}>{busy ? 'جاري الحفظ...' : 'حفظ كلمة المرور'}</button></form></main>;
 }
 
 function FireDashboard({ onLogout }: { onLogout: () => void }) {
